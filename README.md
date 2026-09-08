@@ -178,12 +178,20 @@ Tamaño:
   especies, capturas y lo que falta para la siguiente evolución) y a partir de
   200 px la **caja PC** (rejilla adaptativa: más ancho = más columnas). El botón
   de la esquina despliega/pliega a 320×380 sin buscar el borde, que en una
-  ventana sin marco no se ve. Acotado a 520×620 y persistido.
+  ventana sin marco no se ve, y al plegar cierra la ficha y la caja. Acotado a
+  520×620 y persistido.
+
+Abrir una ficha con el panel plegado lo agranda para que quepa, y **cerrarla lo
+devuelve** a como estaba; si entre medias se ha redimensionado a mano, ese
+tamaño manda y no se toca. Sin eso, un clic dejaba el HUD grande con la caja
+abierta y había que ir a buscar el botón de plegar.
 
 Estados de ratón:
 - desbloqueado (por defecto): se arrastra y su **menú contextual** (clic
-  derecho) permite cambiar de compañero, recolocarlo, bloquearlo, ocultarlo o
-  salir — sin depender del ítem de la barra de menú;
+  derecho) lleva a la caja PC para cambiar de compañero, cierra la caja, y
+  permite recolocarlo, bloquearlo, ocultarlo o salir — sin depender del ítem de
+  la barra de menú. El menú **no enumera Pokémon**: listaba los 8 últimos, y con
+  la caja llena eso ni cabe ni se busca;
 - bloqueado: click-through, se ve pero no recibe clics.
 
 Mientras no haya compañero elegido el HUD muestra el selector de inicial y
@@ -556,6 +564,9 @@ tiene líderes de gimnasio.
   gesto barato. El clic derecho sigue abriendo la ficha, y se captura en AppKit
   porque SwiftUI no distingue botones del ratón (solo ofrece `contextMenu`, que
   abre un menú); el detector es invisible al izquierdo para no robárselo.
+- Las secciones del popover (Consumo, Rango, Ligas, Legendarios, Zonas y la
+  escalera) se **pliegan tocando su cabecera**, y queda recordado: plegar algo es
+  decir "esto no me interesa ahora", y reabrir la app no lo cambia.
 - **Ficha grande**, en la caja, en el rival y en cada gimnasio: sprite a tamaño,
   tipos, etapa, progreso hacia la siguiente forma y sus números (combates
   ganados, gimnasios, veces vencido en libertad, cuándo se capturó). Desde ahí

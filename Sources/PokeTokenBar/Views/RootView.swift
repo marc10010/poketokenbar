@@ -82,39 +82,35 @@ struct CombatTabView: View {
             }
 
             Divider()
-            MetricsView()
+            SectionCard(title: "Consumo", collapsible: true) {
+                MetricsView()
+            }
         }
     }
 }
 
 /// Progreso: la escalera de desbloqueo, y debajo el detalle de cada sistema.
 struct ProgressTabView: View {
-    @EnvironmentObject private var store: GameStore
-    @State private var showLadder = true
-
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionCard(title: "Rango") {
+            SectionCard(title: "Rango", collapsible: true) {
                 MedalsView()
             }
             Divider()
-            SectionCard(title: "Ligas") {
+            SectionCard(title: "Ligas", collapsible: true) {
                 LeaguesView()
             }
             Divider()
-            SectionCard(title: "Legendarios") {
+            SectionCard(title: "Legendarios", collapsible: true) {
                 MilestonesView()
             }
             Divider()
-            SectionCard(title: "Zonas") {
+            SectionCard(title: "Zonas", collapsible: true) {
                 ZonesView()
             }
             Divider()
-            DisclosureGroup(isExpanded: $showLadder) {
-                LadderView().padding(.top, 4)
-            } label: {
-                Label("Escalera de desbloqueo", systemImage: "list.number")
-                    .font(.caption.weight(.semibold))
+            SectionCard(title: "Escalera de desbloqueo", collapsible: true) {
+                LadderView()
             }
         }
     }

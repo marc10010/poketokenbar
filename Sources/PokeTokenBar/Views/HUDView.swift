@@ -183,7 +183,8 @@ struct HUDView: View {
         store.inspectingRival = rival
         store.selectedBoxGroupID = rival ? nil : store.activeGroupID
         guard !Self.showsBox(forHeight: panelHeight) else { return }
-        store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
+        // Recordando el tamaño de antes: al cerrar la ficha, el panel vuelve.
+        store.expandHUDForDetail(to: HUDSize(width: 380, height: 460))
     }
 
     private func battleHeader(
@@ -245,8 +246,10 @@ struct HUDView: View {
     /// borde de una ventana sin marco no se ve, y nadie lo encuentra solo.
     private func resizeButton(expanded: Bool) -> some View {
         Button {
-            store.updateSettings { settings in
-                settings.hudSize = expanded ? nil : HUDSize(width: 380, height: 460)
+            if expanded {
+                store.collapseHUD()
+            } else {
+                store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
             }
         } label: {
             Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
@@ -254,7 +257,7 @@ struct HUDView: View {
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
-        .help(expanded ? "Plegar" : "Desplegar la caja PC")
+        .help(expanded ? "Plegar y cerrar la caja PC" : "Desplegar la caja PC")
     }
 
     /// Marco de jefe, con el borde del color que lo distinga del combate normal.
@@ -345,27 +348,20 @@ struct HUDView: View {
     /// el ítem de la barra de menú.
     @ViewBuilder
     private var hudMenu: some View {
-        // Solo los últimos grupos: el menú no puede crecer con las capturas.
-        let recent = store.boxGroups
-            .sorted { $0.latestCapturedAt > $1.latestCapturedAt }
-            .prefix(8)
+        // Sin lista de Pokémon: enumeraba los últimos 8 en el menú y con la
+        // caja llena eso ni cabe ni se busca. La caja tiene búsqueda, filtros,
+        // tramos y teclado; el menú solo tiene que llevar hasta ella.
         if store.boxGroups.count > 1 {
-            Text("Compañero")
-            ForEach(Array(recent)) { group in
-                Button {
-                    store.setActiveCompanion(group.representative.id)
-                } label: {
-                    Text(group.displayForm.localizedName + (group.isShiny ? " ✦" : "")
-                        + (group.count > 1 ? " ×\(group.count)" : "")
-                        + (store.activeGroupID == group.id ? "  ✓" : ""))
-                }
-            }
-            Button("Caja PC completa (\(store.speciesCaught)/251)…") {
+            Button("Cambiar de compañero en la caja PC (\(store.speciesCaught)/251)…") {
                 store.selectedTab = "caja"
-                store.selectedBoxGroupID = nil
+                store.selectedBoxGroupID = store.activeGroupID
                 NotificationCenter.default.post(name: .poketokenbarShowPopover, object: nil)
             }
             Divider()
+        }
+
+        if store.state.settings.hudSize != nil {
+            Button("Cerrar la caja PC (plegar el HUD)") { store.collapseHUD() }
         }
 
         if store.state.settings.hudFreeOrigin != nil {

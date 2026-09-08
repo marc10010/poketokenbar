@@ -167,17 +167,46 @@ enum Layout {
 }
 
 struct SectionCard<Content: View>: View {
+    @EnvironmentObject private var store: GameStore
     let title: String
+    /// Si se puede plegar tocando su cabecera. La clave con la que se recuerda
+    /// es el propio título.
+    var collapsible = false
     @ViewBuilder var content: Content
+
+    private var collapsed: Bool { collapsible && store.isCollapsed(title) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title.uppercased())
-                .font(.system(size: 11, weight: .bold))
+            if collapsible {
+                Button {
+                    store.toggleSection(title)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: collapsed ? "chevron.right" : "chevron.down")
+                            .font(.system(size: 8, weight: .bold))
+                        heading
+                        Spacer(minLength: 0)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
-                .tracking(0.6)
-            content
+                .help(collapsed ? "Desplegar" : "Plegar")
+            } else {
+                heading
+            }
+            if !collapsed {
+                content
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var heading: some View {
+        Text(title.uppercased())
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(.secondary)
+            .tracking(0.6)
     }
 }

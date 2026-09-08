@@ -229,6 +229,35 @@ enum UISmokeTest {
         }
         store.selectedTab = "combate"
 
+        // Plegar y desplegar secciones: plegadas ocupan menos y se recuerda.
+        store.selectedTab = "progreso"
+        let progressOpen = { () -> CGFloat in
+            controller.view.layoutSubtreeIfNeeded()
+            return controller.view.fittingSize.height
+        }
+        _ = progressOpen()
+        let sections = ["Rango", "Ligas", "Legendarios", "Zonas", "Escalera de desbloqueo"]
+        for section in sections {
+            store.toggleSection(section)
+            ok = store.isCollapsed(section) && ok
+        }
+        ok = layout("progreso con todo plegado") && ok
+        let folded = NSHostingView(rootView: ProgressTabView()
+            .environmentObject(store)
+            .environmentObject(sprites)
+            .frame(width: 360))
+        folded.layoutSubtreeIfNeeded()
+        let foldedHeight = folded.fittingSize.height
+        for section in sections { store.toggleSection(section) }
+        let unfolded = NSHostingView(rootView: ProgressTabView()
+            .environmentObject(store)
+            .environmentObject(sprites)
+            .frame(width: 360))
+        unfolded.layoutSubtreeIfNeeded()
+        print("  progreso: plegado \(Int(foldedHeight)) pt · desplegado \(Int(unfolded.fittingSize.height)) pt")
+        ok = foldedHeight < unfolded.fittingSize.height && ok
+        store.selectedTab = "combate"
+
         // Las zonas: la lista y la ficha de algo cuya zona está cerrada.
         print("  zonas abiertas: \(store.unlockedZones.count)/\(store.zoneCatalog.all.count) · \(store.zoneCatalog.availableSpecies(store.zoneAccess).count) especies disponibles")
         ok = layout("lista de zonas") && ok
@@ -433,6 +462,34 @@ enum UISmokeTest {
         print("  HUD plegado: ×1 → \(Int(compactAtOne.width))x\(Int(compactAtOne.height)) · ×2 → \(Int(compactAtTwo.width))x\(Int(compactAtTwo.height))")
         ok = compactAtTwo.width > compactAtOne.width && compactAtTwo.height > compactAtOne.height && ok
         store.updateSettings { $0.spriteScale = 1 }
+
+        // Abrir una ficha con el panel plegado lo agranda, y cerrarla tiene que
+        // devolverlo: si no, el panel se queda grande con la caja PC abierta y
+        // sin manera evidente de cerrarla.
+        store.updateSettings { $0.hudSize = nil }
+        let collapsed = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        store.selectedBoxGroupID = store.activeGroupID
+        store.expandHUDForDetail(to: HUDSize(width: 380, height: 460))
+        let grown = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        store.closeDetail()
+        let back = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        print("  ficha en el HUD: plegado \(Int(collapsed.height)) pt → \(Int(grown.height)) pt → \(Int(back.height)) pt")
+        ok = grown.height > collapsed.height && back == collapsed && store.selectedBoxGroupID == nil && ok
+
+        // Redimensionado a mano tras abrirse: ese tamaño es del usuario y
+        // cerrar la ficha no puede quitárselo.
+        store.selectedBoxGroupID = store.activeGroupID
+        store.expandHUDForDetail(to: HUDSize(width: 380, height: 460))
+        store.updateSettings { $0.hudSize = HUDSize(width: 420, height: 520) }
+        store.closeDetail()
+        let kept = store.state.settings.hudSize
+        print("  tras redimensionar a mano: \(kept.map { "\(Int($0.width))x\(Int($0.height))" } ?? "plegado")")
+        ok = kept == HUDSize(width: 420, height: 520) && ok
+
+        // Y plegar cierra la caja PC de una vez, que es lo que hace el botón
+        // de la esquina y la entrada del menú.
+        store.collapseHUD()
+        ok = store.state.settings.hudSize == nil && ok
 
         // Desbloqueado (por defecto): recibe clics y hay un panel por pantalla.
         var panels = NSApp.windows.compactMap { $0 as? NSPanel }

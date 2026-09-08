@@ -131,7 +131,7 @@ struct PokemonDetailView: View {
             }
 
             Spacer(minLength: 0)
-            Button("Cerrar") { store.selectedBoxGroupID = nil }
+            Button("Cerrar") { store.closeDetail() }
                 .buttonStyle(.link)
         }
         .font(.caption)
@@ -169,7 +169,7 @@ struct RivalDetailView: View {
             Text(ownedNotice)
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
-            Button("Cerrar") { store.inspectingRival = false }
+            Button("Cerrar") { store.closeDetail() }
                 .buttonStyle(.link)
                 .font(.caption)
         }

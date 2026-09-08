@@ -215,6 +215,9 @@ public struct GameSettings: Codable, Hashable, Sendable {
     /// lectura, no una consulta: quien quiere ver los números los quiere
     /// siempre.
     public var boxDensity: BoxDensity = .rejilla
+    /// Secciones plegadas del popover, por título. Se persiste: plegar algo es
+    /// decir "esto no me interesa ahora", y volver a abrir la app no lo cambia.
+    public var collapsedSections: Set<String> = []
 
     public init() {}
 
@@ -239,6 +242,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
         let detail = try container.decodeIfPresent(Double.self, forKey: .detailSpriteScale) ?? 1
         detailSpriteScale = min(max(detail, GameRules.minimumSpriteScale), GameRules.maximumSpriteScale)
         boxDensity = try container.decodeIfPresent(BoxDensity.self, forKey: .boxDensity) ?? .rejilla
+        collapsedSections = try container.decodeIfPresent(Set<String>.self, forKey: .collapsedSections) ?? []
     }
 }
 

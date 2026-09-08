@@ -26,6 +26,10 @@ public final class GameStore: ObservableObject {
     @Published public var pokedexFilter = PokedexFilter()
     @Published public var selectedDexSpeciesID: Int?
     @Published public var inspectingRival = false
+    /// Si el HUD creció solo para poder mostrar una ficha. Guarda el tamaño de
+    /// antes y el que se puso, para no encoger un panel que luego se haya
+    /// redimensionado a mano.
+    private var detailExpansion: (from: HUDSize?, to: HUDSize)?
 
     public let pokedex: Pokedex
     public let typeChart: TypeChart
@@ -537,6 +541,50 @@ public final class GameStore: ObservableObject {
         inspectingRival = false
         boxFilter.reset()
         flush()
+    }
+
+    /// Agranda el HUD para que quepa una ficha, recordando cómo estaba.
+    public func expandHUDForDetail(to size: HUDSize) {
+        if detailExpansion == nil {
+            detailExpansion = (from: state.settings.hudSize, to: size)
+        }
+        updateSettings { $0.hudSize = size }
+    }
+
+    /// Cierra la ficha abierta y, si el HUD había crecido solo para mostrarla,
+    /// lo devuelve a su tamaño: si no, cerrar la ficha dejaba el panel grande
+    /// con la caja PC abierta y sin manera evidente de plegarlo.
+    public func closeDetail() {
+        selectedBoxGroupID = nil
+        inspectingRival = false
+        guard let expansion = detailExpansion else { return }
+        detailExpansion = nil
+        // Redimensionado a mano después de abrirse: ese tamaño es del usuario.
+        guard state.settings.hudSize == expansion.to else { return }
+        updateSettings { $0.hudSize = expansion.from }
+    }
+
+    /// Pliega o despliega una sección del popover.
+    public func toggleSection(_ id: String) {
+        updateSettings { settings in
+            if settings.collapsedSections.contains(id) {
+                settings.collapsedSections.remove(id)
+            } else {
+                settings.collapsedSections.insert(id)
+            }
+        }
+    }
+
+    public func isCollapsed(_ id: String) -> Bool {
+        state.settings.collapsedSections.contains(id)
+    }
+
+    /// Pliega el HUD a su tira de combate, que es lo que cierra la caja PC.
+    public func collapseHUD() {
+        detailExpansion = nil
+        selectedBoxGroupID = nil
+        inspectingRival = false
+        updateSettings { $0.hudSize = nil }
     }
 
     public func updateSettings(_ transform: (inout GameSettings) -> Void) {

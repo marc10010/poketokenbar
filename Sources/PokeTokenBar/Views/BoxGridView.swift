@@ -59,7 +59,7 @@ struct BoxGridView: View {
                 else { return }
                 withAnimation(.easeOut(duration: 0.15)) { scroller.scrollTo(moved, anchor: .center) }
             }
-            .onExitCommand { store.selectedBoxGroupID = nil }
+            .onExitCommand { store.closeDetail() }
         }
     }
 
