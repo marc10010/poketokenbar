@@ -19,8 +19,10 @@ te toca por sorteo.
 
 Tal cual, para no perderlas de vista:
 
-1. Cada **300.000 tokens acumulados** o tras vencer **10 Pokémon salvajes**, el
-   siguiente encuentro se **pausa** y aparece un Líder de Gimnasio (Gen 1 o 2).
+1. Cada **300.000 tokens acumulados** o tras vencer **10 Pokémon salvajes**,
+   aparece un Líder de Gimnasio (Gen 1 o 2) en lugar del siguiente encuentro
+   salvaje. **Decidido**: el gimnasio se abre **al terminar el Pokémon en
+   curso**, no interrumpiéndolo (ver §5).
 2. Los líderes tienen **500.000 – 1.000.000 HP**.
 3. Al derrotarlo **no se captura** a su Pokémon: se otorga una **medalla**.
 4. Tener X medallas es **requisito obligatorio** para subir de **Rango de
@@ -33,7 +35,7 @@ Tal cual, para no perderlas de vista:
 |---|---|
 | `SpawnService` gatea tiers por `unlockThreshold` en tokens | El gate pasa a ser el **rango**; los umbrales de tokens desaparecen o se combinan (ver decisión D5) |
 | `BattleEngine.apply` reparte daño y captura al llegar a 0 HP | Necesita un modo "sin captura" y un tope de gasto (ver D2) |
-| `WildEncounter` es el único tipo de rival | Aparece un segundo tipo de combate; el encuentro salvaje en curso se **guarda**, no se descarta |
+| `WildEncounter` es el único tipo de rival | Aparece un segundo tipo de combate, y ocupa el sitio del salvaje **siguiente**: el de en curso se acaba primero |
 | Multiplicador de tipos por rival | Es la mecánica central del gimnasio: el tipo del líder se conoce antes de entrar |
 | `state.box` guarda capturas | Las medallas van aparte: no son Pokémon |
 
@@ -55,8 +57,7 @@ Tal cual, para no perderlas de vista:
       "tokenBudget": 1080000,                          // ver D2
       "startedAt": "..."
     }
-  },
-  "pausedEncounter": { "speciesID": 147, "currentHP": 240000, "...": "..." }
+  }
 }
 ```
 
@@ -83,22 +84,30 @@ siguiente sin derrotar.
 
 ## 5. El disparador
 
+El gimnasio **no interrumpe**: se comprueba en el momento en que capturas, justo
+donde hoy se sortea el rival siguiente.
+
 ```
-si (tokensSinceLastGym >= 300_000) o (capturesSinceLastGym >= 10)
-   y queda algún gimnasio sin derrotar
-   y no hay gimnasio activo
-entonces el próximo evento de tokens abre gimnasio
+al capturar un salvaje:
+  si (tokensSinceLastGym >= 300_000) o (capturesSinceLastGym >= 10)
+     y queda algún gimnasio sin derrotar
+     y no hay gimnasio activo
+  entonces el rival siguiente es el líder, en vez de otro salvaje
 ```
 
+- **No hay encuentro pausado ni estado que restaurar.** Esto es lo que hace la
+  regla simple: el sitio del gimnasio es el hueco que deja el Pokémon que
+  acabas de terminar. Se cae `pausedEncounter` del modelo y con él todo el
+  riesgo de perder un rival a medio bajar.
 - Los dos contadores se ponen a cero **cuando el gimnasio termina**, no cuando
   empieza. Si se reiniciaran al empezar, los 500k–1M tokens del propio combate
   volverían a llenar el contador de 300k y encadenarías gimnasios sin descanso
   (ver D4).
-- El encuentro salvaje en curso se guarda en `pausedEncounter` con su HP tal
-  como estaba y se restaura al acabar. No se descarta: perder un legendario a
-  medio bajar por un gimnasio sería inaceptable.
-- El daño que sobra del evento que abre el gimnasio entra ya al líder, igual que
-  el arrastre entre rivales que ya existe.
+- El daño que sobra del evento que remató al salvaje entra ya al líder, igual
+  que el arrastre entre rivales que ya existe.
+- Efecto que hay que aceptar: un legendario de 4M HP **retrasa** el gimnasio
+  hasta que lo acabes, por mucho que los contadores estén pasados. Es el precio
+  de no interrumpir, y a cambio nunca pierdes progreso.
 
 ## 6. El combate
 
@@ -154,7 +163,8 @@ Lo que hay que fijar con tests antes de dar esto por bueno:
 - el disparador salta por tokens **y** por capturas, y solo una vez;
 - los contadores se reinician al **terminar**, y un gimnasio de 1M tokens no
   encadena el siguiente;
-- el encuentro salvaje se restaura con **el mismo HP** que tenía;
+- el gimnasio se abre **en la captura** y no antes: un evento que deja al
+  salvaje a 1 HP no lo abre, aunque los contadores estén pasados;
 - derrotar a un líder **no** añade nada a la caja;
 - la medalla se otorga **una sola vez** aunque un único evento gigante pase de
   sobra del HP del líder;
