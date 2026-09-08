@@ -8,6 +8,8 @@ public final class GameStore: ObservableObject {
     @Published public private(set) var state: GameState
     /// Última captura, para que la UI pueda celebrarla.
     @Published public private(set) var lastCapture: CapturedPokemon?
+    /// Liga recién ganada, para celebrarla.
+    @Published public private(set) var lastLeague: League?
     /// Medalla recién ganada, mientras se celebra. Se limpia sola.
     @Published public private(set) var lastMedal: MedalCelebration?
     /// Búsqueda y filtros de la caja PC. No se persiste: es estado de consulta,
@@ -29,6 +31,7 @@ public final class GameStore: ObservableObject {
     public let gymCatalog: GymCatalog
     public let zoneCatalog: ZoneCatalog
     public let milestoneCatalog: MilestoneCatalog
+    public let leagueCatalog: LeagueCatalog
     private let file: StateFileStore
     private let battle: BattleEngine
     private let evolution: EvolutionService
@@ -60,6 +63,7 @@ public final class GameStore: ObservableObject {
         gymCatalog: GymCatalog = .shared,
         zoneCatalog: ZoneCatalog = .shared,
         milestoneCatalog: MilestoneCatalog = .shared,
+        leagueCatalog: LeagueCatalog = .shared,
         file: StateFileStore = StateFileStore(),
         rng: any RandomProvider = SystemRandomProvider()
     ) {
@@ -68,6 +72,7 @@ public final class GameStore: ObservableObject {
         self.gymCatalog = gymCatalog
         self.zoneCatalog = zoneCatalog
         self.milestoneCatalog = milestoneCatalog
+        self.leagueCatalog = leagueCatalog
         self.file = file
         self.rng = rng
         self.battle = BattleEngine(pokedex: pokedex)
@@ -106,11 +111,14 @@ public final class GameStore: ObservableObject {
 
     public var medals: Int { state.gyms.medals }
 
-    /// Qué zonas están abiertas. `kantoOpen` y `isChampion` se derivan de las
-    /// medallas **provisionalmente**: cuando exista la Liga (fase 3 de la spec)
-    /// pasarán a depender de haberla ganado, que es lo que dice el diseño.
+    /// Qué zonas están abiertas. Kanto se abre **ganando el Alto Mando de
+    /// Johto**, no acumulando medallas: la liga es la puerta entre regiones.
     public var zoneAccess: ZoneAccess {
-        ZoneAccess(medals: medals, kantoOpen: medals >= 8, isChampion: medals >= 16)
+        ZoneAccess(
+            medals: medals,
+            kantoOpen: state.leagues.kantoOpen,
+            isChampion: state.leagues.isChampion
+        )
     }
 
     public var unlockedZones: [Zone] { zoneCatalog.unlocked(zoneAccess) }
@@ -124,6 +132,70 @@ public final class GameStore: ObservableObject {
         zoneCatalog.isAvailable(speciesID, zoneAccess) || zoneCatalog.unassigned.contains(speciesID)
     }
     public var rank: TrainerRank { state.gyms.rank }
+
+    // MARK: - Ligas
+
+    public var activeLeague: (league: League, member: LeagueMember, run: ActiveLeagueRun)? {
+        guard let run = state.leagues.current,
+              let league = leagueCatalog[run.leagueID],
+              let member = league.member(at: run.memberIndex)
+        else { return nil }
+        return (league, member, run)
+    }
+
+    public func availability(of league: League) -> LeagueAvailability {
+        if state.leagues.wonIDs.contains(league.id) { return .won }
+        if state.leagues.current != nil || state.gyms.current != nil || state.milestones.current != nil {
+            return .busy
+        }
+        if let previous = leagueCatalog.previous(of: league), !state.leagues.wonIDs.contains(previous.id) {
+            return .needsPreviousLeague(previous.name)
+        }
+        if medals < league.requiredMedals { return .needsMedals(league.requiredMedals - medals) }
+        return .available
+    }
+
+    public func matchup(against member: LeagueMember) -> TypeMatchup {
+        guard state.settings.typeEffectivenessEnabled,
+              let attacker = activeForm,
+              let defender = pokedex[member.signatureSpeciesID]
+        else { return .neutral }
+        return typeChart.matchup(attacker: attacker.types, defender: defender.types)
+    }
+
+    public func damagePerToken(against member: LeagueMember) -> Double {
+        gymCombat.damagePerToken(
+            matchup: matchup(against: member).multiplier,
+            absorption: member.absorption,
+            stage: stage
+        )
+    }
+
+    public func isBlocked(against member: LeagueMember) -> Bool {
+        damagePerToken(against: member) <= 0
+    }
+
+    @discardableResult
+    public func startLeague(_ id: String) -> Bool {
+        guard let league = leagueCatalog[id],
+              availability(of: league).isAvailable,
+              let first = league.member(at: 0)
+        else { return false }
+        let hp = rng.nextInt(in: first.hpRange)
+        state.leagues.current = ActiveLeagueRun(leagueID: id, maxHP: hp)
+        state.encounter = nil
+        persist()
+        return true
+    }
+
+    /// Abandonar **reinicia la tirada**: es un gauntlet, no cinco combates
+    /// sueltos. Se recuperan los salvajes.
+    public func abandonLeague() {
+        guard state.leagues.current != nil else { return }
+        state.leagues.current = nil
+        ensureEncounter()
+        persist()
+    }
 
     // MARK: - Hitos legendarios
 
@@ -196,8 +268,22 @@ public final class GameStore: ObservableObject {
         return (gym, battle)
     }
 
-    /// Próximo gimnasio por afrontar.
-    public var nextGym: Gym? { gymCatalog.next(defeated: state.gyms.defeatedIDs) }
+    /// Próximo gimnasio por afrontar, **respetando la puerta de región**: los
+    /// de Kanto no aparecen hasta ganar el Alto Mando de Johto. Sin esta
+    /// puerta, la región sería solo una etiqueta.
+    public var nextGym: Gym? {
+        guard let candidate = gymCatalog.next(defeated: state.gyms.defeatedIDs) else { return nil }
+        if candidate.region == "kanto", !state.leagues.kantoOpen { return nil }
+        return candidate
+    }
+
+    /// Qué bloquea el avance de gimnasios, si algo lo bloquea.
+    public var gymGate: League? {
+        guard gymCatalog.next(defeated: state.gyms.defeatedIDs)?.region == "kanto",
+              !state.leagues.kantoOpen
+        else { return nil }
+        return leagueCatalog["johto"]
+    }
 
     public func medalGyms() -> [Gym] { gymCatalog.medals(defeated: state.gyms.defeatedIDs) }
 
@@ -402,7 +488,10 @@ public final class GameStore: ObservableObject {
     public func ensureEncounter() -> WildEncounter? {
         guard state.hasStarter else { return nil }
         // Con un jefe abierto no hay salvaje: ocupa ese hueco.
-        guard state.gyms.current == nil, state.milestones.current == nil else { return nil }
+        guard state.gyms.current == nil,
+              state.milestones.current == nil,
+              state.leagues.current == nil
+        else { return nil }
         if state.encounter == nil || state.encounter?.isFainted == true {
             state.encounter = battle.freshEncounter(rank: rank, access: zoneAccess, using: &rng)
         }
@@ -430,6 +519,14 @@ public final class GameStore: ObservableObject {
         // Con gimnasio abierto, el evento entero va contra el líder. Si cae,
         // los tokens que sobran siguen contra un salvaje nuevo.
         var tokens = damage
+        if state.leagues.current != nil {
+            tokens = resolveLeagueBattle(tokens: tokens, now: event.timestamp)
+            guard tokens > 0 else {
+                creditActiveCompanion(tokens: damage)
+                persist()
+                return nil
+            }
+        }
         if state.milestones.current != nil {
             tokens = resolveMilestoneBattle(tokens: tokens, now: event.timestamp)
             guard tokens > 0 else {
@@ -454,7 +551,9 @@ public final class GameStore: ObservableObject {
         let chart = typeChart
         let pokedex = pokedex
         let progress = state.gyms
-        let hasPendingGym = nextGym != nil && state.milestones.current == nil
+        let hasPendingGym = nextGym != nil
+            && state.milestones.current == nil
+            && state.leagues.current == nil
 
         let result = battle.apply(
             damage: tokens,
@@ -559,6 +658,72 @@ public final class GameStore: ObservableObject {
               let index = state.box.firstIndex(where: { $0.id == companionID })
         else { return }
         state.box[index].wildDefeats += 1
+    }
+
+    /// Aplica tokens al miembro de liga en curso y encadena el siguiente sin
+    /// salvajes en medio, que es lo que hace de esto un gauntlet. Al caer el
+    /// último, la liga se gana y su recompensa abre región o corona.
+    @discardableResult
+    private func resolveLeagueBattle(tokens: Int, now: Date) -> Int {
+        var remaining = tokens
+
+        while remaining > 0 {
+            guard var run = state.leagues.current,
+                  let league = leagueCatalog[run.leagueID],
+                  let member = league.member(at: run.memberIndex)
+            else { return remaining }
+
+            let matchup = matchup(against: member).multiplier
+            guard damagePerToken(against: member) > 0 else {
+                run.tokensSpent += remaining
+                state.leagues.current = run
+                return 0
+            }
+
+            let needed = gymCombat.tokensNeeded(
+                for: run.currentHP,
+                matchup: matchup,
+                absorption: member.absorption,
+                stage: stage
+            ) ?? remaining
+
+            guard remaining >= needed else {
+                let hit = gymCombat.damage(
+                    tokens: remaining,
+                    matchup: matchup,
+                    absorption: member.absorption,
+                    stage: stage
+                )
+                run.currentHP -= min(run.currentHP, hit)
+                run.tokensSpent += remaining
+                state.leagues.current = run
+                return 0
+            }
+
+            remaining -= needed
+            run.tokensSpent += needed
+
+            guard let next = league.member(at: run.memberIndex + 1) else {
+                // Cae el último: liga ganada.
+                state.leagues.current = nil
+                state.leagues.award(league.id)
+                lastLeague = league
+                ensureEncounter()
+                return remaining
+            }
+
+            run.memberIndex += 1
+            run.currentHP = rng.nextInt(in: next.hpRange)
+            state.leagues.current = ActiveLeagueRun(
+                leagueID: run.leagueID,
+                memberIndex: run.memberIndex,
+                maxHP: run.currentHP,
+                tokensSpent: run.tokensSpent,
+                startedAt: run.startedAt
+            )
+        }
+
+        return 0
     }
 
     /// Aplica tokens al legendario del hito y devuelve los que sobren si cae.
@@ -760,6 +925,11 @@ public final class GameStore: ObservableObject {
                 tokensEarned: tokensEarned
             )
         )
+    }
+
+    /// Da una liga por ganada. Solo para tests.
+    public func debugWinLeague(_ id: String) {
+        state.leagues.award(id)
     }
 
     /// Abre ya el siguiente gimnasio. Solo para tests.

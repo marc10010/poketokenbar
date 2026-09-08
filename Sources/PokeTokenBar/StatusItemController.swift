@@ -140,8 +140,12 @@ final class StatusItemController {
         let playerImage = playerForm.flatMap { sprites.image(speciesID: $0.id, shiny: playerShiny) }
         let gym = store.activeGym
         let boss = store.activeMilestone
-        let rivalSpeciesID = boss?.milestone.speciesID ?? gym?.gym.signatureSpeciesID ?? encounter?.speciesID
-        let rivalShiny = (boss == nil && gym == nil) ? (encounter?.isShiny ?? false) : false
+        let league = store.activeLeague
+        let rivalSpeciesID = league?.member.signatureSpeciesID
+            ?? boss?.milestone.speciesID
+            ?? gym?.gym.signatureSpeciesID
+            ?? encounter?.speciesID
+        let rivalShiny = (league == nil && boss == nil && gym == nil) ? (encounter?.isShiny ?? false) : false
         let rivalImage = rivalSpeciesID.flatMap { sprites.image(speciesID: $0, shiny: rivalShiny) }
         button.image = Self.composite(player: playerImage, rival: rivalImage)
 
@@ -155,6 +159,9 @@ final class StatusItemController {
            let speciesID = store.state.lastCaptureSpeciesID,
            let species = store.pokedex[speciesID] {
             button.title = " ¡\(species.localizedName) capturado!"
+        } else if let league {
+            let blocked = store.isBlocked(against: league.member)
+            button.title = " \(blocked ? "⚠︎ " : "♛ ")\(Fmt.compact(league.run.currentHP))/\(Fmt.compact(league.run.maxHP))"
         } else if let boss {
             let blocked = store.isBlocked(against: boss.milestone)
             button.title = " \(blocked ? "⚠︎ " : "✦ ")\(Fmt.compact(boss.battle.currentHP))/\(Fmt.compact(boss.battle.maxHP))"
@@ -172,7 +179,10 @@ final class StatusItemController {
     private func tooltip() -> String {
         var lines: [String] = []
         if let form = store.activeForm { lines.append("Compañero: \(form.localizedName) (\(store.stage.label))") }
-        if let boss = store.activeMilestone {
+        if let league = store.activeLeague {
+            lines.append("\(league.league.name): \(league.member.name) (\(league.run.memberIndex + 1)/\(league.league.members.count))")
+            lines.append("\(Fmt.tokens(league.run.currentHP))/\(Fmt.tokens(league.run.maxHP)) HP · \(store.isBlocked(against: league.member) ? "bloqueado" : "\(Fmt.rate(store.damagePerToken(against: league.member))) HP por token")")
+        } else if let boss = store.activeMilestone {
             let name = store.pokedex[boss.milestone.speciesID]?.localizedName ?? "Legendario"
             lines.append("Hito: \(name) en \(boss.milestone.place)")
             lines.append("\(Fmt.tokens(boss.battle.currentHP))/\(Fmt.tokens(boss.battle.maxHP)) HP · \(store.isBlocked(against: boss.milestone) ? "bloqueado: hace falta ventaja de tipo" : "\(Fmt.rate(store.damagePerToken(against: boss.milestone))) HP por token")")

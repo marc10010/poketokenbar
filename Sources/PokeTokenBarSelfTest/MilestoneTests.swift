@@ -97,17 +97,31 @@ enum MilestoneTests: TestSuite {
         }
     }
 
+    /// Solo un jefe a la vez, por las dos vías: otro hito y un gimnasio.
+    ///
+    /// Ojo al orden: con 8 medallas el gimnasio siguiente ya es de Kanto y está
+    /// tras la puerta de región, así que para tener un gimnasio en curso hay
+    /// que abrir Kanto antes.
     static func testCannotStartWhileBusy() throws {
         let store = withJohtoDone()
+        let raikou = try unwrap(catalog["torre-quemada-raikou"])
+        let entei = try unwrap(catalog["torre-quemada-entei"])
+
+        expectTrue(store.startMilestone(raikou.id))
+        expectEqual(store.availability(of: entei), .busy)
+        expectFalse(store.startMilestone(entei.id), "no se pueden abrir dos hitos")
+        expectEqual(try unwrap(store.activeMilestone).milestone.id, raikou.id)
+        store.abandonMilestone()
+
+        // Ahora con un gimnasio en curso, que requiere Kanto abierta.
+        store.debugWinLeague("johto")
+        store.updateSettings { $0.typeEffectivenessEnabled = false }
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
-        store.updateSettings { $0.typeEffectivenessEnabled = false }
         store.ingest(event("abre-gim", tokens: 10))
-        expectNotNil(store.activeGym, "hay gimnasio en curso")
-
-        let raikou = try unwrap(catalog["torre-quemada-raikou"])
+        expectNotNil(store.activeGym, "con Kanto abierta sí hay gimnasio siguiente")
         expectEqual(store.availability(of: raikou), .busy)
-        expectFalse(store.startMilestone(raikou.id), "no se puede abrir un hito a la vez")
+        expectFalse(store.startMilestone(raikou.id))
         expectNil(store.activeMilestone)
     }
 

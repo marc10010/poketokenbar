@@ -132,6 +132,7 @@ enum GymBattleTests: TestSuite {
         let store = makeStore(seed: 9)
         store.chooseStarter(speciesID: 7)
         store.debugDefeatGyms(upTo: 15)
+        store.debugWinLeague("johto")     // los gimnasios de Kanto piden la liga
         let giovanni = try unwrap(store.debugOpenNextGym())
         expectEqual(giovanni.leader, "Giovanni")
 
@@ -155,7 +156,8 @@ enum GymBattleTests: TestSuite {
     static func testSwitchingCompanionUnblocks() throws {
         let store = makeStore(seed: 11)
         store.chooseStarter(speciesID: 7)
-        store.debugDefeatGyms(upTo: 15)                   // siguiente: Giovanni, absorción 1,5
+        store.debugDefeatGyms(upTo: 15)
+        store.debugWinLeague("johto")     // los gimnasios de Kanto piden la liga                   // siguiente: Giovanni, absorción 1,5
         let giovanni = try unwrap(store.nextGym)
 
         // Rhydon es tierra/roca. Squirtle (agua) le hace ×4: 4 - 1,5 = 2,5.

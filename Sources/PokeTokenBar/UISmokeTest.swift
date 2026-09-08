@@ -21,6 +21,13 @@ enum UISmokeTest {
         ok = bounded && ok
     }
 
+    /// La puerta entre regiones: con las 8 medallas de Johto, el gimnasio
+    /// siguiente es de Kanto y no debe aparecer hasta ganar el Alto Mando.
+    private static func expectGate(_ store: GameStore) {
+        let blocked = store.nextGym == nil && store.gymGate != nil
+        print("  puerta de región con \(store.medals) medallas: bloquea=\(blocked)")
+    }
+
     static func run() -> Int32 {
         let directory = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("poketokenbar-ui-smoke/\(UUID().uuidString)")
@@ -246,6 +253,29 @@ enum UISmokeTest {
             ok = false
         }
 
+        // Ligas: la lista y un gauntlet abierto de verdad.
+        ok = layout("lista de ligas") && ok
+        expectGate(store)
+        store.debugCapture(speciesID: 95)      // Onix: x2 contra Xatu
+        if let onix = store.state.box.last { store.setActiveCompanion(onix.id) }
+        if store.startLeague("johto"), let run = store.activeLeague {
+            print("  liga abierta: \(run.member.name) 1/\(run.league.members.count) · \(Fmt.tokens(run.run.maxHP)) HP · bloqueado=\(store.isBlocked(against: run.member))")
+            ok = layout("liga en curso") && ok
+            let hudLeague = NSHostingView(
+                rootView: HUDView()
+                    .environmentObject(store)
+                    .environmentObject(sprites)
+                    .frame(width: 268, height: 240)
+            )
+            hudLeague.layoutSubtreeIfNeeded()
+            ok = hudLeague.fittingSize == NSSize(width: 268, height: 240) && ok
+            store.abandonLeague()
+            ok = (store.activeLeague == nil) && ok
+        } else {
+            print("  ✗ no se pudo abrir la liga")
+            ok = false
+        }
+
         // La Pokédex completa y la ficha de algo que no tienes.
         store.showingPokedex = true
         ok = layout("pokédex (\(store.pokedexCaptured)/251)") && ok
@@ -293,6 +323,8 @@ enum UISmokeTest {
 
         // Gimnasio abierto: el HUD y el popover cambian de tarjeta.
         store.debugDefeatGyms(upTo: 15)
+        // Giovanni es de Kanto, que está tras el Alto Mando de Johto.
+        store.debugWinLeague("johto")
         if let gym = store.debugOpenNextGym() {
             ok = layout("gimnasio (\(gym.leader))") && ok
             // El panel del HUD tiene tamaño fijo y su raíz es un GeometryReader,
