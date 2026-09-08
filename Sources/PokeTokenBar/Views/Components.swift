@@ -33,7 +33,7 @@ struct SpriteView: View {
 
 struct HPBar: View {
     let fraction: Double
-    var height: CGFloat = 10
+    var height: CGFloat = 12
 
     private var color: Color {
         switch fraction {
@@ -76,6 +76,32 @@ struct RarityBadge: View {
             .padding(.vertical, 2)
             .background(tint.opacity(0.16), in: Capsule())
             .foregroundStyle(tint)
+    }
+}
+
+/// Multiplicador de tipos del combate actual. Neutro no se pinta: si no cambia
+/// nada, no merece espacio.
+struct MatchupBadge: View {
+    let matchup: TypeMatchup
+    var compact = false
+
+    private var tint: Color {
+        if matchup.isImmune { return .red }
+        if matchup.raw > 1 { return .green }
+        if matchup.raw < 1 { return .orange }
+        return .secondary
+    }
+
+    var body: some View {
+        if !matchup.isNeutral {
+            Text(compact ? matchup.badge : "\(matchup.badge) \(matchup.label)")
+                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(tint.opacity(0.18), in: Capsule())
+                .foregroundStyle(tint)
+                .help(matchup.attacking.map { "Atacando con \($0.capitalized): \(matchup.label)" } ?? matchup.label)
+        }
     }
 }
 
@@ -136,7 +162,7 @@ struct SectionCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title.uppercased())
-                .font(.system(size: 10, weight: .bold))
+                .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(.secondary)
                 .tracking(0.6)
             content

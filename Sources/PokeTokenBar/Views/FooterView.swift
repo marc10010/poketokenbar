@@ -26,6 +26,14 @@ struct FooterView: View {
             .toggleStyle(.checkbox)
 
             Toggle(isOn: Binding(
+                get: { store.state.settings.typeEffectivenessEnabled },
+                set: { newValue in store.updateSettings { $0.typeEffectivenessEnabled = newValue } }
+            )) {
+                Text("Efectividad por tipos (agua > fuego…)").font(.system(size: 10))
+            }
+            .toggleStyle(.checkbox)
+
+            Toggle(isOn: Binding(
                 get: { store.state.settings.hudEnabled },
                 set: { newValue in store.updateSettings { $0.hudEnabled = newValue } }
             )) {

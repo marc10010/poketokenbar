@@ -14,6 +14,12 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp ".build/release/PokeTokenBar" "$APP/Contents/MacOS/PokeTokenBar"
 
+if [ -f assets/AppIcon.icns ]; then
+  cp assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+else
+  echo "aviso: sin assets/AppIcon.icns; regenéralo con ./tools/make_icon.sh"
+fi
+
 # El bundle de recursos que genera SPM lleva la Pokédex embebida.
 for resource in .build/release/*.bundle; do
   [ -e "$resource" ] && cp -R "$resource" "$APP/Contents/Resources/"
@@ -28,6 +34,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleDisplayName</key><string>PokeTokenBar</string>
   <key>CFBundleExecutable</key><string>PokeTokenBar</string>
   <key>CFBundleIdentifier</key><string>${BUNDLE_ID}</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>${VERSION}</string>
   <key>CFBundleVersion</key><string>${VERSION}</string>

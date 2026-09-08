@@ -6,14 +6,14 @@ import SwiftUI
 struct BoxGridView: View {
     @EnvironmentObject private var store: GameStore
 
-    var cellSize: CGFloat = 44
+    var cellSize: CGFloat = 52
     var showsHeader = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             if showsHeader {
                 Text("\(store.speciesCaught) de 251 especies · \(Fmt.tokens(store.state.box.count)) capturas")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
             ScrollView {
@@ -58,13 +58,13 @@ struct BoxGridView: View {
             }
             .overlay(alignment: .topTrailing) {
                 if group.isShiny {
-                    Text("✦").font(.system(size: 8)).foregroundStyle(.yellow).padding(2)
+                    Text("✦").font(.system(size: 10)).foregroundStyle(.yellow).padding(2)
                 }
             }
             .overlay(alignment: .bottomTrailing) {
                 if group.count > 1 {
                     Text("×\(group.count)")
-                        .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
                         .padding(.horizontal, 3)
                         .padding(.vertical, 1)
                         .background(Color.secondary.opacity(0.22), in: Capsule())

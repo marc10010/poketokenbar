@@ -40,11 +40,11 @@ private struct ActiveCompanionCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             if let companion = store.state.activeCompanion, let form = store.activeForm {
-                SpriteView(speciesID: form.id, shiny: companion.isShiny, size: 72)
+                SpriteView(speciesID: form.id, shiny: companion.isShiny, size: 84)
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 5) {
                         Text(form.localizedName)
-                            .font(.headline)
+                            .font(.title3.weight(.semibold))
                         if companion.isShiny {
                             Text("✦").foregroundStyle(.yellow).help("Variocolor")
                         }
@@ -73,17 +73,17 @@ private struct EvolutionProgress: View {
         VStack(alignment: .leading, spacing: 3) {
             if let remaining, let next = store.activeNextForm {
                 Text("\(Fmt.tokens(remaining)) tokens para \(next.localizedName)")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 HPBar(fraction: stageFraction, height: 5)
                     .frame(width: 180)
             } else if remaining != nil {
                 Text("Esta línea evolutiva ya está al final")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             } else {
                 Text("Etapa máxima alcanzada")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
         }
@@ -110,19 +110,20 @@ private struct EncounterCard: View {
         SectionCard(title: "Combate") {
             if let encounter = store.state.encounter, let rival = store.rivalSpecies {
                 HStack(alignment: .center, spacing: 10) {
-                    SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 52, flipped: true)
+                    SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 62, flipped: true)
                     VStack(alignment: .leading, spacing: 5) {
                         HStack(spacing: 5) {
-                            Text(rival.localizedName).font(.subheadline.weight(.semibold))
+                            Text(rival.localizedName).font(.body.weight(.semibold))
                             if encounter.isShiny {
                                 Text("✦").foregroundStyle(.yellow).help("Variocolor")
                             }
                             RarityBadge(rarity: encounter.rarity)
                         }
-                        HPBar(fraction: encounter.hpFraction)
+                        MatchupBadge(matchup: store.currentMatchup)
+                        HPBar(fraction: encounter.hpFraction, height: 12)
                         HStack {
                             Text("\(Fmt.tokens(encounter.currentHP)) / \(Fmt.tokens(encounter.maxHP)) HP")
-                                .font(.caption2.monospaced())
+                                .font(.caption.monospaced())
                             Spacer()
                             Text("\(Int((1 - encounter.hpFraction) * 100))%")
                                 .font(.caption2.monospaced())
@@ -136,7 +137,7 @@ private struct EncounterCard: View {
 
             if let capture = store.lastCapture, let species = store.pokedex[capture.speciesID] {
                 Text("Última captura: \(species.localizedName)\(capture.isShiny ? " ✦" : "")")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
         }
@@ -150,6 +151,7 @@ private struct MetricsView: View {
         VStack(alignment: .leading, spacing: 6) {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
+            metric("Daño por token", store.currentMatchup.isNeutral ? "×1" : "\(store.currentMatchup.badge) \(store.currentMatchup.label)")
             metric("Eventos registrados", Fmt.tokens(store.state.ledger.eventCount))
             metric("Especies conseguidas", "\(store.speciesCaught) / 251")
             metric("Capturas totales", Fmt.tokens(store.state.box.count))
