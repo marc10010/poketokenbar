@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-09-08T10:43:54.792Z",
+ "generatedAt": "2026-09-08T18:01:07.350Z",
  "source": "https://pokeapi.co/api/v2 (CC-BY / dominio publico para datos de juego)",
  "pokemon": [
   {
@@ -2211,10 +2211,12 @@
    ],
    "baseStatTotal": 450,
    "captureRate": 30,
-   "rarity": "uncommon",
+   "rarity": "rare",
    "stage": 0,
    "baseFormID": 113,
-   "evolvesInto": [],
+   "evolvesInto": [
+    242
+   ],
    "isLegendary": false,
    "isStarter": false
   },
@@ -3567,7 +3569,9 @@
    "rarity": "common",
    "stage": 0,
    "baseFormID": 183,
-   "evolvesInto": [],
+   "evolvesInto": [
+    184
+   ],
    "isLegendary": false,
    "isStarter": false
   },
@@ -3584,8 +3588,8 @@
    "baseStatTotal": 420,
    "captureRate": 75,
    "rarity": "uncommon",
-   "stage": 0,
-   "baseFormID": 184,
+   "stage": 1,
+   "baseFormID": 183,
    "evolvesInto": [],
    "isLegendary": false,
    "isStarter": false
@@ -4690,8 +4694,8 @@
    "baseStatTotal": 540,
    "captureRate": 30,
    "rarity": "rare",
-   "stage": 0,
-   "baseFormID": 242,
+   "stage": 1,
+   "baseFormID": 113,
    "evolvesInto": [],
    "isLegendary": false,
    "isStarter": false
