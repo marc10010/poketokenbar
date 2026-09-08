@@ -13,9 +13,9 @@ import SwiftUI
 /// del ítem de la barra de menú, que en barras llenas puede quedar oculto.
 @MainActor
 final class HUDController {
-    private static let battleSize = NSSize(width: 208, height: 76)
-    private static let pickerSize = NSSize(width: 268, height: 92)
-    private static let maxSize = NSSize(width: 520, height: 620)
+    private static let battleSize = NSSize(width: 268, height: 104)
+    private static let pickerSize = NSSize(width: 336, height: 112)
+    private static let maxSize = NSSize(width: 620, height: 760)
     private static let margin: CGFloat = 12
 
     private let store: GameStore

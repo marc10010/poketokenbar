@@ -16,7 +16,7 @@ enum UISmokeTest {
     ) {
         store.updateSettings { $0.hudSize = HUDSize(width: 9_000, height: 9_000) }
         let clamped = panelsProvider().first?.frame.size ?? .zero
-        let bounded = clamped.width <= 520 && clamped.height <= 620
+        let bounded = clamped.width <= 620 && clamped.height <= 760
         print("  tamaño absurdo acotado a \(Int(clamped.width))x\(Int(clamped.height)) ok=\(bounded)")
         ok = bounded && ok
     }
@@ -113,7 +113,7 @@ enum UISmokeTest {
         store.updateSettings {
             $0.hudFreeOrigin = nil
             $0.hudLocked = false
-            $0.hudSize = HUDSize(width: 320, height: 380)
+            $0.hudSize = HUDSize(width: 380, height: 460)
         }
         panels = NSApp.windows.compactMap { $0 as? NSPanel }.filter { $0.isVisible }
         let expanded = panels.first?.frame.size ?? .zero
@@ -121,10 +121,10 @@ enum UISmokeTest {
         let showsBox = HUDView.showsBox(forHeight: expanded.height)
         let showsMetrics = HUDView.showsMetrics(forHeight: expanded.height)
         print("  desplegado: \(Int(expanded.width))x\(Int(expanded.height)) redimensionable=\(resizable) métricas=\(showsMetrics) cajaPC=\(showsBox)")
-        ok = expanded == NSSize(width: 320, height: 380) && resizable && showsMetrics && showsBox && ok
+        ok = expanded == NSSize(width: 380, height: 460) && resizable && showsMetrics && showsBox && ok
 
         // Compacto: ni métricas ni caja, que si no tapa media pantalla.
-        let compactHidesExtras = !HUDView.showsMetrics(forHeight: 76) && !HUDView.showsBox(forHeight: 76)
+        let compactHidesExtras = !HUDView.showsMetrics(forHeight: 104) && !HUDView.showsBox(forHeight: 104)
         print("  compacto oculta métricas y caja=\(compactHidesExtras)")
         ok = compactHidesExtras && ok
         expectCompact(&ok, store: store, panelsProvider: { NSApp.windows.compactMap { $0 as? NSPanel }.filter { $0.isVisible } })

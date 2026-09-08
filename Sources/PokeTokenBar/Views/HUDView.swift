@@ -21,13 +21,13 @@ struct HUDView: View {
     private var starterPicker: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("PokeTokenBar · elige tu compañero")
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
             HStack(spacing: 2) {
                 ForEach(store.pokedex.starters) { starter in
                     Button {
                         store.chooseStarter(speciesID: starter.id)
                     } label: {
-                        SpriteView(speciesID: starter.id, shiny: false, size: 38)
+                        SpriteView(speciesID: starter.id, shiny: false, size: 46)
                             .background(
                                 RoundedRectangle(cornerRadius: 7, style: .continuous)
                                     .fill(Color.secondary.opacity(0.12))
@@ -38,7 +38,7 @@ struct HUDView: View {
                 }
             }
             Text("\(Fmt.tokens(store.totalTokens)) tokens acumulados")
-                .font(.system(size: 9, design: .monospaced))
+                .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 10)
@@ -55,8 +55,8 @@ struct HUDView: View {
     }
 
     /// Alturas a las que el HUD va revelando contenido al crecer.
-    static let metricsThreshold: CGFloat = 118
-    static let boxThreshold: CGFloat = 200
+    static let metricsThreshold: CGFloat = 140
+    static let boxThreshold: CGFloat = 248
 
     static func showsMetrics(forHeight height: CGFloat) -> Bool { height >= metricsThreshold }
     static func showsBox(forHeight height: CGFloat) -> Bool { height >= boxThreshold }
@@ -86,10 +86,10 @@ struct HUDView: View {
                         Divider()
                         if store.state.box.isEmpty {
                             Text("Caja vacía todavía.")
-                                .font(.system(size: 9))
+                                .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
                         } else {
-                            BoxGridView(cellSize: 36)
+                            BoxGridView(cellSize: 46)
                         }
                     }
                 }
@@ -129,11 +129,11 @@ struct HUDView: View {
     private func metric(_ label: String, _ value: String) -> some View {
         HStack(spacing: 6) {
             Text(label)
-                .font(.system(size: 9))
+                .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             Spacer(minLength: 4)
             Text(value)
-                .font(.system(size: 9, design: .monospaced))
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
         }
     }
 
@@ -146,30 +146,30 @@ struct HUDView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
-                SpriteView(speciesID: form.id, shiny: companion.isShiny, size: 30)
+                SpriteView(speciesID: form.id, shiny: companion.isShiny, size: 42)
                 Text("vs")
-                    .font(.system(size: 9, weight: .bold))
+                    .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.secondary)
-                SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 30, flipped: true)
+                SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 42, flipped: true)
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 3) {
                         Text(rival.localizedName)
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .lineLimit(1)
                         if encounter.isShiny {
-                            Text("✦").font(.system(size: 8)).foregroundStyle(.yellow)
+                            Text("✦").font(.system(size: 11)).foregroundStyle(.yellow)
                         }
                     }
-                    Text(encounter.rarity.badge)
-                        .font(.system(size: 8))
+                    Text(encounter.rarity.label)
+                        .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 2)
                 resizeButton(expanded: expanded)
             }
-            HPBar(fraction: encounter.hpFraction, height: 5)
-            Text("\(Fmt.compact(encounter.currentHP)) / \(Fmt.compact(encounter.maxHP))")
-                .font(.system(size: 9, design: .monospaced))
+            HPBar(fraction: encounter.hpFraction, height: 8)
+            Text("\(Fmt.tokens(encounter.currentHP)) / \(Fmt.tokens(encounter.maxHP)) HP")
+                .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
     }
@@ -179,11 +179,11 @@ struct HUDView: View {
     private func resizeButton(expanded: Bool) -> some View {
         Button {
             store.updateSettings { settings in
-                settings.hudSize = expanded ? nil : HUDSize(width: 320, height: 380)
+                settings.hudSize = expanded ? nil : HUDSize(width: 380, height: 460)
             }
         } label: {
             Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
-                .font(.system(size: 9, weight: .semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
