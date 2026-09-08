@@ -276,13 +276,24 @@ que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-## 10. Regenerar la Pokédex
+## 10. Regenerar el icono
+
+`assets/AppIcon.icns` está commiteado, pero se genera:
+
+```bash
+./tools/make_icon.sh
+```
+
+Dibuja una barra de HP pixelada con AppKit y la empaqueta con `iconutil`. No
+usa ningún recurso con dueño: es geometría, así que el repo puede llevarlo.
+
+## 11. Regenerar la Pokédex
 
 ```bash
 node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
 ```
 
-## 11. Límites conocidos del MVP
+## 12. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Sin red, la app

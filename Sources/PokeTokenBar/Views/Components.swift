@@ -33,7 +33,7 @@ struct SpriteView: View {
 
 struct HPBar: View {
     let fraction: Double
-    var height: CGFloat = 10
+    var height: CGFloat = 12
 
     private var color: Color {
         switch fraction {
@@ -136,7 +136,7 @@ struct SectionCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title.uppercased())
-                .font(.system(size: 10, weight: .bold))
+                .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(.secondary)
                 .tracking(0.6)
             content
