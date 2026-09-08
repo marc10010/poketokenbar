@@ -184,6 +184,7 @@ struct HUDView: View {
                     SpriteView(speciesID: form.id, shiny: companion.displaysShiny, size: 42)
                 }
                 .buttonStyle(.plain)
+                .onRightClick { openDetail(rival: false, panelHeight: panelHeight) }
                 .help("Ver la ficha de \(form.localizedName)")
                 Text("vs")
                     .font(.system(size: 11, weight: .bold))
@@ -194,6 +195,7 @@ struct HUDView: View {
                     SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 42, flipped: true)
                 }
                 .buttonStyle(.plain)
+                .onRightClick { openDetail(rival: true, panelHeight: panelHeight) }
                 .help("Ver la ficha de \(rival.localizedName)")
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 3) {

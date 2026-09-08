@@ -16,6 +16,7 @@ public final class GameStore: ObservableObject {
     /// Ficha abierta de la caja, y si se está mirando la del rival. Estado de
     /// consulta: no se persiste.
     @Published public var selectedBoxGroupID: String?
+    @Published public var selectedGymID: String?
     @Published public var inspectingRival = false
 
     public let pokedex: Pokedex
@@ -118,6 +119,17 @@ public final class GameStore: ObservableObject {
     }
 
     public func isBlocked(against gym: Gym) -> Bool { gymDamagePerToken(for: gym) <= 0 }
+
+    /// Qué falta para que se abra el próximo gimnasio. Se cumple con lo que
+    /// llegue antes de las dos condiciones.
+    public var gymTriggerProgress: (tokensLeft: Int, capturesLeft: Int) {
+        (
+            max(0, GameRules.gymTokenInterval - state.gyms.tokensSinceLastGym),
+            max(0, GameRules.gymCaptureInterval - state.gyms.capturesSinceLastGym)
+        )
+    }
+
+    public func hasMedal(_ gymID: String) -> Bool { state.gyms.defeatedIDs.contains(gymID) }
 
     /// Tokens que faltan para tumbar al líder. `nil` si está bloqueado.
     public func gymTokensNeeded(for gym: Gym, battle: ActiveGymBattle) -> Int? {
@@ -225,6 +237,29 @@ public final class GameStore: ObservableObject {
         state.box[index].prefersShiny.toggle()
         groupCache = nil
         persist()
+    }
+
+    /// Borra la partida entera y deja el juego como una instalación nueva:
+    /// caja, medallas, contadores, estadísticas y el histórico de tokens.
+    ///
+    /// Los ajustes (HUD, tipos, fuentes) se conservan porque son preferencias,
+    /// no progreso, y los ids de eventos ya procesados también: si se borraran,
+    /// el consumo que ya se contabilizó podría volver a entrar como daño.
+    public func resetGame() {
+        selectedGymID = nil
+        let settings = state.settings
+        let processed = state.processedEventIDs
+
+        state = GameState()
+        state.settings = settings
+        state.processedEventIDs = processed
+        groupCache = nil
+        lastCapture = nil
+        lastMedal = nil
+        selectedBoxGroupID = nil
+        inspectingRival = false
+        boxFilter.reset()
+        flush()
     }
 
     public func updateSettings(_ transform: (inout GameSettings) -> Void) {

@@ -4,6 +4,7 @@ import SwiftUI
 struct FooterView: View {
     @EnvironmentObject private var store: GameStore
     @EnvironmentObject private var sources: TokenSourceCoordinator
+    @State private var confirmingReset = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -83,6 +84,19 @@ struct FooterView: View {
                         .font(.system(size: 10))
                     }
                 }
+            }
+
+            HStack {
+                Button("Reiniciar partida…") { confirmingReset = true }
+                    .alert("¿Empezar de cero?", isPresented: $confirmingReset) {
+                        Button("Reiniciar", role: .destructive) { store.resetGame() }
+                        Button("Cancelar", role: .cancel) {}
+                    } message: {
+                        Text("Se borran la caja, las medallas, las estadísticas y el histórico de tokens. Los ajustes se mantienen. No hay vuelta atrás.")
+                    }
+                    .buttonStyle(.link)
+                    .font(.caption)
+                Spacer()
             }
 
             HStack {

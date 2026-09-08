@@ -94,10 +94,21 @@ struct MedalsView: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 8), spacing: 4) {
                 ForEach(store.gymCatalog.all) { gym in
                     let won = earned.contains(gym.id)
-                    SpriteView(speciesID: gym.signatureSpeciesID, shiny: false, size: 30)
-                        .opacity(won ? 1 : 0.18)
-                        .grayscale(won ? 0 : 1)
-                        .help("\(gym.medal) · \(gym.leader) (\(gym.city))\(won ? " ✓" : "")")
+                    let isNext = store.nextGym?.id == gym.id
+                    Button {
+                        store.selectedGymID = gym.id
+                    } label: {
+                        SpriteView(speciesID: gym.signatureSpeciesID, shiny: false, size: 30)
+                            .opacity(won ? 1 : (isNext ? 0.75 : 0.18))
+                            .grayscale(won ? 0 : 1)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(isNext ? Color.orange.opacity(0.22) : .clear)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .onRightClick { store.selectedGymID = gym.id }
+                    .help("\(gym.medal) · \(gym.leader) (\(gym.city))\(won ? " ✓" : "")\(isNext ? " · el siguiente" : "")")
                 }
             }
         }

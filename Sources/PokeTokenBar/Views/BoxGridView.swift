@@ -47,12 +47,21 @@ struct BoxGridView: View {
         .padding(.vertical, 10)
     }
 
+    private func tooltip(for group: BoxGroup, isActive: Bool) -> String {
+        var parts: [String] = [group.displayForm.localizedName]
+        if group.isShiny { parts.append("✦") }
+        parts.append("· \(group.count) en la caja")
+        parts.append("· #\(String(format: "%03d", group.species.id)) \(group.species.localizedName)")
+        if group.hasEvolved { parts.append("· \(group.stage.label)") }
+        if isActive { parts.append("· equipado") }
+        parts.append("· clic para enviarlo a luchar, clic derecho para su ficha")
+        return parts.joined(separator: " ")
+    }
+
     private func cell(_ group: BoxGroup) -> some View {
         let isActive = store.activeGroupID == group.id
         return Button {
-            // Abrir ficha en vez de equipar a ciegas: equipar está dentro, con
-            // los números delante.
-            store.selectedBoxGroupID = group.id
+            store.setActiveCompanion(group.representative.id)
         } label: {
             VStack(spacing: 0) {
                 SpriteView(speciesID: group.displayForm.id, shiny: group.displaysShiny, size: cellSize)
@@ -92,11 +101,7 @@ struct BoxGridView: View {
             }
         }
         .buttonStyle(.plain)
-        .help(
-            "\(group.displayForm.localizedName)\(group.isShiny ? " ✦" : "") · \(group.count) en la caja · "
-                + "#\(String(format: "%03d", group.species.id)) \(group.species.localizedName)"
-                + (group.hasEvolved ? " · \(group.stage.label)" : "")
-                + (isActive ? " · equipado" : "")
-        )
+        .onRightClick { store.selectedBoxGroupID = group.id }
+        .help(tooltip(for: group, isActive: isActive))
     }
 }
