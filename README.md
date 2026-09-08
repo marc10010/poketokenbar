@@ -367,6 +367,14 @@ node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
   funciona y muestra el número de Pokédex como placeholder.
 - No hay notificaciones del sistema en las capturas (evita pedir permisos): la
   barra muestra "¡X capturado!" durante 6 segundos.
+- **No se repiten líneas evolutivas.** Un Squirtle salvaje sigue apareciendo
+  aunque tengas un Wartortle, pero al vencerlo no se queda: cuenta como
+  victoria (`familyDefeats`) y nada más. La excepción es el variocolor, que sí
+  entra aunque tengas la línea en normal, porque es otra cosa a la vista.
+- **Ficha grande al hacer clic**, en la caja y en el rival: sprite a tamaño,
+  tipos, etapa, progreso hacia la siguiente forma y sus números (combates
+  ganados, gimnasios, veces vencido en libertad, cuándo se capturó). Desde ahí
+  se envía a luchar, y un variocolor puede alternar a su paleta normal.
 - La caja PC apila por especie + variante + etapa alcanzada, con contador `×N`,
   así que la rejilla tiene techo (251 × 2 × 3), y se puede buscar y filtrar
   (nombre en español o inglés, nº de Pokédex, tipo, generación, variocolor,

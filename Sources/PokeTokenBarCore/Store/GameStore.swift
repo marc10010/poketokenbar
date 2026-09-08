@@ -13,6 +13,10 @@ public final class GameStore: ObservableObject {
     /// Búsqueda y filtros de la caja PC. No se persiste: es estado de consulta,
     /// y arrancar con un filtro puesto de la sesión anterior desconcierta.
     @Published public var boxFilter = BoxFilter()
+    /// Ficha abierta de la caja, y si se está mirando la del rival. Estado de
+    /// consulta: no se persiste.
+    @Published public var selectedBoxGroupID: String?
+    @Published public var inspectingRival = false
 
     public let pokedex: Pokedex
     public let typeChart: TypeChart
@@ -214,6 +218,15 @@ public final class GameStore: ObservableObject {
         persist()
     }
 
+    /// Alterna entre la paleta variocolor y la normal. Solo tiene efecto en un
+    /// variocolor de verdad: no se puede "pintar" uno normal.
+    public func toggleShinyDisplay(_ capturedID: UUID) {
+        guard let index = state.box.firstIndex(where: { $0.id == capturedID }), state.box[index].isShiny else { return }
+        state.box[index].prefersShiny.toggle()
+        groupCache = nil
+        persist()
+    }
+
     public func updateSettings(_ transform: (inout GameSettings) -> Void) {
         transform(&state.settings)
         persist()
@@ -289,12 +302,7 @@ public final class GameStore: ObservableObject {
             now: event.timestamp
         )
         state.encounter = result.encounter
-        if !result.captures.isEmpty {
-            state.box.append(contentsOf: result.captures)
-            state.gyms.capturesSinceLastGym += result.captures.count
-            state.lastCaptureSpeciesID = result.captures.last?.speciesID
-            lastCapture = result.captures.last
-        }
+        collect(result.defeated, at: event.timestamp)
 
         if result.stoppedForGym {
             openGym(now: event.timestamp)
@@ -314,6 +322,69 @@ public final class GameStore: ObservableObject {
 
     public func ingest(_ events: [UsageEvent]) {
         for event in events { _ = ingest(event) }
+    }
+
+    /// Líneas evolutivas ya conseguidas, separando variocolor: un Wartortle
+    /// bloquea al Squirtle, pero un Squirtle variocolor sigue siendo otra cosa.
+    public var ownedFamilies: Set<String> {
+        Set(state.box.compactMap { captured in
+            pokedex[captured.speciesID].map { familyKey(baseFormID: $0.baseFormID, shiny: captured.isShiny) }
+        })
+    }
+
+    private func familyKey(baseFormID: Int, shiny: Bool) -> String { "\(baseFormID)-\(shiny)" }
+
+    /// Veces que se ha vencido a esa línea en libertad, con captura o sin ella.
+    /// Si ya tienes esa línea (en esa variante de color).
+    public func ownsFamily(of speciesID: Int, shiny: Bool) -> Bool {
+        guard let base = pokedex[speciesID]?.baseFormID else { return false }
+        return ownedFamilies.contains(familyKey(baseFormID: base, shiny: shiny))
+    }
+
+    /// Siguiente forma de un capturado concreto, para su ficha.
+    public func nextForm(of captured: CapturedPokemon) -> Pokemon? {
+        evolution.nextForm(of: captured)
+    }
+
+    public func timesDefeated(familyOf speciesID: Int) -> Int {
+        guard let base = pokedex[speciesID]?.baseFormID else { return 0 }
+        return state.familyDefeats[base] ?? 0
+    }
+
+    /// Decide qué se queda de lo vencido. Una línea repetida **no** se captura:
+    /// cuenta como victoria y nada más, así que la caja no acumula Squirtles
+    /// cuando ya tienes un Wartortle.
+    private func collect(_ defeated: [WildEncounter], at date: Date) {
+        guard !defeated.isEmpty else { return }
+        var owned = ownedFamilies
+
+        for wild in defeated {
+            let base = pokedex[wild.speciesID]?.baseFormID ?? wild.speciesID
+            state.familyDefeats[base, default: 0] += 1
+            state.gyms.capturesSinceLastGym += 1
+            creditCompanionWildDefeat()
+
+            let key = familyKey(baseFormID: base, shiny: wild.isShiny)
+            guard !owned.contains(key) else { continue }
+            owned.insert(key)
+
+            let captured = CapturedPokemon(
+                speciesID: wild.speciesID,
+                isShiny: wild.isShiny,
+                capturedAt: date,
+                capturedAtTotalTokens: state.ledger.total
+            )
+            state.box.append(captured)
+            state.lastCaptureSpeciesID = wild.speciesID
+            lastCapture = captured
+        }
+    }
+
+    private func creditCompanionWildDefeat() {
+        guard let companionID = state.activeCompanion?.id,
+              let index = state.box.firstIndex(where: { $0.id == companionID })
+        else { return }
+        state.box[index].wildDefeats += 1
     }
 
     /// Abre el siguiente gimnasio: sortea su HP y deja el combate en curso.
@@ -365,6 +436,10 @@ public final class GameStore: ObservableObject {
         state.gyms.current = nil
         state.gyms.award(gymID: gym.id)
         state.gyms.resetCounters()
+        if let companionID = state.activeCompanion?.id,
+           let index = state.box.firstIndex(where: { $0.id == companionID }) {
+            state.box[index].gymsWon += 1
+        }
         lastMedal = gym
         // Un salvaje nuevo ya: si no, al cerrar el gimnasio sin tokens de
         // sobra el jugador se queda sin rival hasta el evento siguiente.

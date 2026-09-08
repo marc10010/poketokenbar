@@ -129,7 +129,7 @@ final class StatusItemController {
         }
 
         let playerForm = store.activeForm
-        let playerShiny = store.state.activeCompanion?.isShiny ?? false
+        let playerShiny = store.state.activeCompanion?.displaysShiny ?? false
         let encounter = store.state.encounter
 
         let playerImage = playerForm.flatMap { sprites.image(speciesID: $0.id, shiny: playerShiny) }

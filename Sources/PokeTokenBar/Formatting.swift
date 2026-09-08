@@ -36,6 +36,14 @@ enum Fmt {
         return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
     }
 
+    static func day(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "es_ES")
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+
     static func month(_ key: String) -> String {
         let parts = key.split(separator: "-")
         guard parts.count == 2, let year = Int(parts[0]), let month = Int(parts[1]) else { return key }

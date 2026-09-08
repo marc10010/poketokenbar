@@ -63,6 +63,21 @@ struct HUDView: View {
     static func showsMetrics(forHeight height: CGFloat) -> Bool { height >= metricsThreshold }
     static func showsBox(forHeight height: CGFloat) -> Bool { height >= boxThreshold }
 
+    /// La caja dentro del HUD: ficha si hay una abierta, rejilla si no.
+    @ViewBuilder
+    private var boxSection: some View {
+        if store.state.box.isEmpty {
+            Text("Caja vacía todavía.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        } else if let selected = store.selectedBoxGroupID,
+                  let group = store.boxGroups.first(where: { $0.id == selected }) {
+            ScrollView { PokemonDetailView(group: group) }
+        } else {
+            BoxGridView(cellSize: 46, compactToolbar: true)
+        }
+    }
+
     @ViewBuilder
     private var battle: some View {
         if let encounter = store.state.encounter,
@@ -86,13 +101,7 @@ struct HUDView: View {
                     }
                     if showsBox {
                         Divider()
-                        if store.state.box.isEmpty {
-                            Text("Caja vacía todavía.")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                        } else {
-                            BoxGridView(cellSize: 46, compactToolbar: true)
-                        }
+                        boxSection
                     }
                 }
                 .padding(.horizontal, 9)
@@ -150,7 +159,7 @@ struct HUDView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
-                SpriteView(speciesID: form.id, shiny: companion.isShiny, size: 42)
+                SpriteView(speciesID: form.id, shiny: companion.displaysShiny, size: 42)
                 Text("vs")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.secondary)
@@ -208,7 +217,7 @@ struct HUDView: View {
                 }
                 if Self.showsBox(forHeight: geometry.size.height) {
                     Divider()
-                    BoxGridView(cellSize: 46, compactToolbar: true)
+                    boxSection
                 }
             }
             .padding(.horizontal, 9)

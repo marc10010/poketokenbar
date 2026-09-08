@@ -15,7 +15,17 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
     /// evolucionar, y solo crece: una evolución conseguida no se pierde al
     /// cambiar de compañero.
     public var tokensEarned: Int
+    /// Si se muestra con su paleta variocolor. Solo significa algo cuando
+    /// `isShiny`: quien captura un variocolor puede querer el look clásico.
+    public var prefersShiny: Bool
+    /// Salvajes vencidos llevándolo equipado.
+    public var wildDefeats: Int
+    /// Medallas ganadas llevándolo equipado.
+    public var gymsWon: Int
     public var nickname: String?
+
+    /// Cómo se dibuja: variocolor solo si lo es y así lo quiere.
+    public var displaysShiny: Bool { isShiny && prefersShiny }
 
     public init(
         id: UUID = UUID(),
@@ -25,6 +35,9 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         capturedAtTotalTokens: Int,
         evolutionSeed: UInt64 = UInt64.random(in: 0..<UInt64.max),
         tokensEarned: Int = 0,
+        prefersShiny: Bool = true,
+        wildDefeats: Int = 0,
+        gymsWon: Int = 0,
         nickname: String? = nil
     ) {
         self.id = id
@@ -34,6 +47,9 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         self.capturedAtTotalTokens = capturedAtTotalTokens
         self.evolutionSeed = evolutionSeed
         self.tokensEarned = tokensEarned
+        self.prefersShiny = prefersShiny
+        self.wildDefeats = wildDefeats
+        self.gymsWon = gymsWon
         self.nickname = nickname
     }
 
@@ -48,6 +64,9 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         capturedAtTotalTokens = try container.decode(Int.self, forKey: .capturedAtTotalTokens)
         evolutionSeed = try container.decode(UInt64.self, forKey: .evolutionSeed)
         tokensEarned = try container.decodeIfPresent(Int.self, forKey: .tokensEarned) ?? 0
+        prefersShiny = try container.decodeIfPresent(Bool.self, forKey: .prefersShiny) ?? true
+        wildDefeats = try container.decodeIfPresent(Int.self, forKey: .wildDefeats) ?? 0
+        gymsWon = try container.decodeIfPresent(Int.self, forKey: .gymsWon) ?? 0
         nickname = try container.decodeIfPresent(String.self, forKey: .nickname)
     }
 }
@@ -193,7 +212,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
 /// Estado persistido completo. Cualquier cambio de forma requiere subir
 /// `schemaVersion` y añadir migración en `GameStore`.
 public struct GameState: Codable, Sendable {
-    public static let currentSchemaVersion = 3
+    public static let currentSchemaVersion = 4
 
     public var schemaVersion: Int = GameState.currentSchemaVersion
     public var ledger = TokenLedger()
@@ -202,6 +221,9 @@ public struct GameState: Codable, Sendable {
     public var encounter: WildEncounter?
     public var settings = GameSettings()
     public var gyms = GymProgress()
+    /// Veces que se ha vencido a cada línea evolutiva en libertad, con captura
+    /// o sin ella. Clave: id de la forma base.
+    public var familyDefeats: [Int: Int] = [:]
     /// IDs de eventos ya aplicados, en orden de llegada (ventana acotada).
     public var processedEventIDs: [String] = []
     public var lastCaptureSpeciesID: Int?
@@ -220,6 +242,7 @@ public struct GameState: Codable, Sendable {
         encounter = try container.decodeIfPresent(WildEncounter.self, forKey: .encounter)
         settings = try container.decodeIfPresent(GameSettings.self, forKey: .settings) ?? GameSettings()
         gyms = try container.decodeIfPresent(GymProgress.self, forKey: .gyms) ?? GymProgress()
+        familyDefeats = try container.decodeIfPresent([Int: Int].self, forKey: .familyDefeats) ?? [:]
         processedEventIDs = try container.decodeIfPresent([String].self, forKey: .processedEventIDs) ?? []
         lastCaptureSpeciesID = try container.decodeIfPresent(Int.self, forKey: .lastCaptureSpeciesID)
     }
