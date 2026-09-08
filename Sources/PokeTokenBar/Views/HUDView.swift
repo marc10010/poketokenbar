@@ -89,7 +89,7 @@ struct HUDView: View {
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
                         } else {
-                            BoxGridView(cellSize: 46)
+                            BoxGridView(cellSize: 46, compactToolbar: true)
                         }
                     }
                 }
