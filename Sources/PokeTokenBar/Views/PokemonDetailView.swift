@@ -90,7 +90,6 @@ struct PokemonDetailView: View {
             row("Combates ganados", Fmt.tokens(captured.wildDefeats))
             row("Gimnasios ganados", Fmt.tokens(captured.gymsWon))
             row("Veces vencido en libertad", Fmt.tokens(store.timesDefeated(familyOf: group.species.id)))
-            row("En la caja", Fmt.tokens(group.count))
             row("Capturado", Fmt.day(captured.capturedAt))
             row("Tu histórico entonces", "\(Fmt.tokens(captured.capturedAtTotalTokens)) tokens")
         }

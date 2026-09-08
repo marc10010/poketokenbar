@@ -12,7 +12,7 @@ enum BoxFilterTests: TestSuite {
         ("busca por número de pokédex", testSearchByDexNumber),
         ("encuentra por la forma evolucionada", testSearchFindsEvolvedName),
         ("filtra por tipo", testFilterByType),
-        ("filtra shiny, evolucionados y repetidos", testFlagFilters),
+        ("filtra shiny y evolucionados", testFlagFilters),
         ("filtra por generación", testFilterByGeneration),
         ("los cuatro órdenes colocan bien", testSortModes),
         ("filtrar nunca inventa ni duplica huecos", testFilterIsASubset),
@@ -119,9 +119,8 @@ enum BoxFilterTests: TestSuite {
         filter.onlyEvolved = true
         expectEqual(ids(filter), [104])
 
-        filter = BoxFilter()
-        filter.onlyDuplicates = true
-        expectEqual(ids(filter), [19], "solo el hueco con ×2")
+        // El filtro de repetidos ya no existe: desde que no se capturan líneas
+        // repetidas nunca podría encontrar nada.
     }
 
     static func testFilterByGeneration() {

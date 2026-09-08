@@ -50,10 +50,11 @@ struct BoxGridView: View {
     private func tooltip(for group: BoxGroup, isActive: Bool) -> String {
         var parts: [String] = [group.displayForm.localizedName]
         if group.isShiny { parts.append("✦") }
-        parts.append("· \(group.count) en la caja")
         parts.append("· #\(String(format: "%03d", group.species.id)) \(group.species.localizedName)")
         if group.hasEvolved { parts.append("· \(group.stage.label)") }
         if isActive { parts.append("· equipado") }
+        let wins = store.timesDefeated(familyOf: group.species.id)
+        if wins > 0 { parts.append("· \(wins) victorias contra su línea") }
         parts.append("· clic para enviarlo a luchar, clic derecho para su ficha")
         return parts.joined(separator: " ")
     }
@@ -90,8 +91,11 @@ struct BoxGridView: View {
                 }
             }
             .overlay(alignment: .bottomTrailing) {
-                if group.count > 1 {
-                    Text("×\(group.count)")
+                // Ya no puede haber repetidos, así que el hueco lo ocupa el
+                // número que sí crece: victorias contra esa línea.
+                let wins = store.timesDefeated(familyOf: group.species.id)
+                if wins > 1 {
+                    Text("\(wins)⚔")
                         .font(.system(size: 10, weight: .semibold, design: .monospaced))
                         .padding(.horizontal, 3)
                         .padding(.vertical, 1)

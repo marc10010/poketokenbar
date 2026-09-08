@@ -420,10 +420,12 @@ tiene líderes de gimnasio.
   tipos, etapa, progreso hacia la siguiente forma y sus números (combates
   ganados, gimnasios, veces vencido en libertad, cuándo se capturó). Desde ahí
   se envía a luchar, y un variocolor puede alternar a su paleta normal.
-- La caja PC apila por especie + variante + etapa alcanzada, con contador `×N`,
-  así que la rejilla tiene techo (251 × 2 × 3), y se puede buscar y filtrar
-  (nombre en español o inglés, nº de Pokédex, tipo, generación, variocolor,
-  evolucionados, repetidos; y cuatro órdenes) por muchas capturas que acumules; el menú
+- La caja PC apila por especie + variante + etapa alcanzada, así que la rejilla
+  tiene techo (251 × 2 × 3), y se puede buscar y filtrar (nombre en español o
+  inglés, nº de Pokédex, tipo, generación, shiny, evolucionados; y cuatro
+  órdenes). El contador de la celda son las **victorias contra esa línea**: el
+  `×N` de repetidos se retiró porque desde que no se capturan líneas repetidas
+  no podía crecer por muchas capturas que acumules; el menú
   del HUD lista solo los 8 grupos más recientes y enlaza a la caja completa.
   Los registros individuales sí se guardan todos (~178 bytes cada uno), pero no
   se muestran de uno en uno.

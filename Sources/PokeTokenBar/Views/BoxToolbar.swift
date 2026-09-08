@@ -88,7 +88,6 @@ struct BoxToolbar: View {
 
             Toggle("Solo shiny", isOn: binding(\.onlyShiny))
             Toggle("Solo evolucionados", isOn: binding(\.onlyEvolved))
-            Toggle("Solo repetidos", isOn: binding(\.onlyDuplicates))
 
             Divider()
 
