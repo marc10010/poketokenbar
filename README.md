@@ -297,5 +297,6 @@ node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
 - La caja PC no permite liberar ni renombrar todavía (`nickname` ya está en el
   modelo).
 - Sin tipos ni efectividad en combate: el daño es plano, 1 token = 1 HP.
-- Los sprites son propiedad de Nintendo/Game Freak; esto es un juguete de uso
-  personal, no distribuible.
+- Los sprites son propiedad de Nintendo/Game Freak: **no van en el repo**, se
+  bajan de PokeAPI en tiempo de ejecución. El código es MIT (ver `LICENSE`),
+  los sprites no.
