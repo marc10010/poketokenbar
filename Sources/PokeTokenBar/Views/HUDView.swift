@@ -177,14 +177,32 @@ struct HUDView: View {
         }
     }
 
-    /// Abre una ficha y, si el panel está plegado, lo despliega: si no, el clic
-    /// dejaría estado abierto que no se ve en ninguna parte.
+    /// Dónde cabe la ficha que pide un clic en un sprite.
+    enum DetailTarget: Equatable {
+        /// En el propio panel, que ya está desplegado.
+        case hud
+        /// En el popover: el panel no se agranda solo, eso lo decide el botón.
+        case popover
+    }
+
+    static func detailTarget(forHeight height: CGFloat) -> DetailTarget {
+        showsBox(forHeight: height) ? .hud : .popover
+    }
+
+    /// Abre la ficha donde haya sitio. El panel no crece por un clic: crecer
+    /// es cosa del botón de la esquina.
     private func openDetail(rival: Bool, panelHeight: CGFloat) {
         store.inspectingRival = rival
         store.selectedBoxGroupID = rival ? nil : store.activeGroupID
-        guard !Self.showsBox(forHeight: panelHeight) else { return }
-        // Recordando el tamaño de antes: al cerrar la ficha, el panel vuelve.
-        store.expandHUDForDetail(to: HUDSize(width: 380, height: 460))
+        guard Self.detailTarget(forHeight: panelHeight) == .popover else { return }
+        store.selectedTab = rival ? "combate" : "caja"
+        NotificationCenter.default.post(name: .poketokenbarShowPopover, object: nil)
+    }
+
+    private func detailHelp(_ name: String, panelHeight: CGFloat) -> String {
+        Self.detailTarget(forHeight: panelHeight) == .hud
+            ? "Ver la ficha de \(name)"
+            : "Abrir la ficha de \(name) (el panel no se agranda solo: usa el botón de la esquina)"
     }
 
     private func battleHeader(
@@ -204,7 +222,7 @@ struct HUDView: View {
                 }
                 .buttonStyle(.plain)
                 .onRightClick { openDetail(rival: false, panelHeight: panelHeight) }
-                .help("Ver la ficha de \(form.localizedName)")
+                .help(detailHelp(form.localizedName, panelHeight: panelHeight))
                 Text("vs")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.secondary)
@@ -215,7 +233,7 @@ struct HUDView: View {
                 }
                 .buttonStyle(.plain)
                 .onRightClick { openDetail(rival: true, panelHeight: panelHeight) }
-                .help("Ver la ficha de \(rival.localizedName)")
+                .help(detailHelp(rival.localizedName, panelHeight: panelHeight))
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 3) {
                         Text(rival.localizedName)
@@ -240,6 +258,13 @@ struct HUDView: View {
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// El botón de plegar en los paneles que no lo llevan en su cabecera.
+    private func panelResizeButton(height: CGFloat) -> some View {
+        resizeButton(expanded: Self.showsMetrics(forHeight: height) || Self.showsBox(forHeight: height))
+            .padding(.top, 6)
+            .padding(.trailing, 7)
     }
 
     /// Además de arrastrar los bordes, un botón para plegar y desplegar: el
@@ -277,6 +302,10 @@ struct HUDView: View {
                     boxSection
                 }
             }
+            // Hueco para el botón de plegar, que antes no estaba en este panel:
+            // durante una liga o un hito no había ninguna manera visible de
+            // desplegar el HUD.
+            .padding(.trailing, 14)
             .padding(.horizontal, 9)
             .padding(.vertical, 7)
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
@@ -288,6 +317,7 @@ struct HUDView: View {
                             .strokeBorder(border.opacity(0.6), lineWidth: 1.5)
                     )
             )
+            .overlay(alignment: .topTrailing) { panelResizeButton(height: geometry.size.height) }
             .contextMenu { hudMenu }
         }
         .padding(4)
@@ -328,6 +358,7 @@ struct HUDView: View {
                     boxSection
                 }
             }
+            .padding(.trailing, 14)
             .padding(.horizontal, 9)
             .padding(.vertical, 7)
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)

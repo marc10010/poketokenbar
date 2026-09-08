@@ -26,8 +26,7 @@ enum GameStoreTests: TestSuite {
         ("el multiplicador de tipos escala el daño real", testTypeMultiplierScalesDamage),
         ("la colección suma daño solo a los salvajes", testCollectionBonus),
         ("las secciones plegadas se recuerdan", testCollapsedSectionsPersist),
-        ("cerrar la ficha devuelve el HUD a su tamaño", testClosingDetailRestoresTheHUD),
-        ("redimensionar a mano gana a la restauración", testManualResizeWinsOverRestore),
+        ("abrir una ficha no cambia el tamaño del HUD", testOpeningDetailNeverResizesTheHUD),
         ("plegar el HUD cierra la ficha y la caja", testCollapsingTheHUDClosesEverything),
     ]
 
@@ -46,42 +45,23 @@ enum GameStoreTests: TestSuite {
         expectTrue(!reopened.isCollapsed("Zonas"), "y se puede volver a abrir")
     }
 
-    /// Abrir una ficha en el HUD plegado lo agranda; cerrarla tiene que
-    /// devolverlo. Si no, el panel se queda grande con la caja PC abierta y
-    /// hay que ir a buscar el botón de plegar.
-    static func testClosingDetailRestoresTheHUD() {
+    /// El tamaño del HUD es del botón de plegar, no de los clics: abrir y
+    /// cerrar fichas no puede moverlo ni plegado ni desplegado.
+    static func testOpeningDetailNeverResizesTheHUD() {
         let store = makeStore()
         store.chooseStarter(speciesID: 7)
-        store.updateSettings { $0.hudSize = nil }
 
-        store.selectedBoxGroupID = store.activeGroupID
-        store.expandHUDForDetail(to: HUDSize(width: 380, height: 460))
-        expectEqual(store.state.settings.hudSize, HUDSize(width: 380, height: 460))
-
-        store.closeDetail()
-        expectEqual(store.state.settings.hudSize, nil, "vuelve a la tira de combate")
-        expectEqual(store.selectedBoxGroupID, nil)
-        expectTrue(!store.inspectingRival)
+        for size in [nil, HUDSize(width: 420, height: 520)] {
+            store.updateSettings { $0.hudSize = size }
+            store.selectedBoxGroupID = store.activeGroupID
+            expectEqual(store.state.settings.hudSize, size, "abrir la ficha movió el panel")
+            store.closeDetail()
+            expectEqual(store.state.settings.hudSize, size, "cerrarla también")
+            expectEqual(store.selectedBoxGroupID, nil)
+            expectTrue(!store.inspectingRival)
+        }
     }
 
-    static func testManualResizeWinsOverRestore() {
-        let store = makeStore()
-        store.chooseStarter(speciesID: 7)
-        store.updateSettings { $0.hudSize = nil }
-
-        store.expandHUDForDetail(to: HUDSize(width: 380, height: 460))
-        let mine = HUDSize(width: 420, height: 520)
-        store.updateSettings { $0.hudSize = mine }
-        store.closeDetail()
-        expectEqual(store.state.settings.hudSize, mine, "ese tamaño lo puso el usuario")
-
-        // Y ya no hay expansión pendiente: la siguiente ficha parte de ahí.
-        store.closeDetail()
-        expectEqual(store.state.settings.hudSize, mine)
-    }
-
-    /// El HUD que ya estaba desplegado a mano no se restaura a nada: la ficha
-    /// no lo agrandó, así que cerrarla no puede encogerlo.
     static func testCollapsingTheHUDClosesEverything() {
         let store = makeStore()
         store.chooseStarter(speciesID: 7)

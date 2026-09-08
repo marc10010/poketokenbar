@@ -463,33 +463,22 @@ enum UISmokeTest {
         ok = compactAtTwo.width > compactAtOne.width && compactAtTwo.height > compactAtOne.height && ok
         store.updateSettings { $0.spriteScale = 1 }
 
-        // Abrir una ficha con el panel plegado lo agranda, y cerrarla tiene que
-        // devolverlo: si no, el panel se queda grande con la caja PC abierta y
-        // sin manera evidente de cerrarla.
+        // El panel no se agranda por un clic: con el HUD plegado la ficha se
+        // abre en el popover, y el tamaño solo lo mueve el botón.
         store.updateSettings { $0.hudSize = nil }
         let collapsed = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
         store.selectedBoxGroupID = store.activeGroupID
-        store.expandHUDForDetail(to: HUDSize(width: 380, height: 460))
-        let grown = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
-        store.closeDetail()
-        let back = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
-        print("  ficha en el HUD: plegado \(Int(collapsed.height)) pt → \(Int(grown.height)) pt → \(Int(back.height)) pt")
-        ok = grown.height > collapsed.height && back == collapsed && store.selectedBoxGroupID == nil && ok
-
-        // Redimensionado a mano tras abrirse: ese tamaño es del usuario y
-        // cerrar la ficha no puede quitárselo.
-        store.selectedBoxGroupID = store.activeGroupID
-        store.expandHUDForDetail(to: HUDSize(width: 380, height: 460))
-        store.updateSettings { $0.hudSize = HUDSize(width: 420, height: 520) }
-        store.closeDetail()
-        let kept = store.state.settings.hudSize
-        print("  tras redimensionar a mano: \(kept.map { "\(Int($0.width))x\(Int($0.height))" } ?? "plegado")")
-        ok = kept == HUDSize(width: 420, height: 520) && ok
+        let afterClick = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        print("  ficha con el HUD plegado: \(Int(collapsed.height)) pt → \(Int(afterClick.height)) pt · destino=\(HUDView.detailTarget(forHeight: collapsed.height))")
+        ok = afterClick == collapsed && ok
+        ok = HUDView.detailTarget(forHeight: collapsed.height) == .popover && ok
+        ok = HUDView.detailTarget(forHeight: 460) == .hud && ok
 
         // Y plegar cierra la caja PC de una vez, que es lo que hace el botón
         // de la esquina y la entrada del menú.
+        store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
         store.collapseHUD()
-        ok = store.state.settings.hudSize == nil && ok
+        ok = store.state.settings.hudSize == nil && store.selectedBoxGroupID == nil && ok
 
         // Desbloqueado (por defecto): recibe clics y hay un panel por pantalla.
         var panels = NSApp.windows.compactMap { $0 as? NSPanel }

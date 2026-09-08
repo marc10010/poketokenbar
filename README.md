@@ -181,10 +181,11 @@ Tamaño:
   ventana sin marco no se ve, y al plegar cierra la ficha y la caja. Acotado a
   520×620 y persistido.
 
-Abrir una ficha con el panel plegado lo agranda para que quepa, y **cerrarla lo
-devuelve** a como estaba; si entre medias se ha redimensionado a mano, ese
-tamaño manda y no se toca. Sin eso, un clic dejaba el HUD grande con la caja
-abierta y había que ir a buscar el botón de plegar.
+**El panel no se agranda solo:** crecer y plegarse es cosa del botón, no de un
+clic. Con el HUD plegado, un clic en un sprite abre la ficha en el popover, que
+es donde hay sitio. El botón de plegar está ahora en los cuatro paneles —
+combate, gimnasio, hito y liga: en los tres últimos no había ninguno, así que
+durante una liga o un hito no había manera visible de desplegar el HUD.
 
 Estados de ratón:
 - desbloqueado (por defecto): se arrastra y su **menú contextual** (clic

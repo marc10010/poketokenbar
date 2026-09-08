@@ -26,10 +26,6 @@ public final class GameStore: ObservableObject {
     @Published public var pokedexFilter = PokedexFilter()
     @Published public var selectedDexSpeciesID: Int?
     @Published public var inspectingRival = false
-    /// Si el HUD creció solo para poder mostrar una ficha. Guarda el tamaño de
-    /// antes y el que se puso, para no encoger un panel que luego se haya
-    /// redimensionado a mano.
-    private var detailExpansion: (from: HUDSize?, to: HUDSize)?
 
     public let pokedex: Pokedex
     public let typeChart: TypeChart
@@ -543,25 +539,11 @@ public final class GameStore: ObservableObject {
         flush()
     }
 
-    /// Agranda el HUD para que quepa una ficha, recordando cómo estaba.
-    public func expandHUDForDetail(to size: HUDSize) {
-        if detailExpansion == nil {
-            detailExpansion = (from: state.settings.hudSize, to: size)
-        }
-        updateSettings { $0.hudSize = size }
-    }
-
-    /// Cierra la ficha abierta y, si el HUD había crecido solo para mostrarla,
-    /// lo devuelve a su tamaño: si no, cerrar la ficha dejaba el panel grande
-    /// con la caja PC abierta y sin manera evidente de plegarlo.
+    /// Cierra la ficha abierta. El tamaño del HUD no se toca: lo decide el
+    /// botón de plegar, no un clic en un sprite.
     public func closeDetail() {
         selectedBoxGroupID = nil
         inspectingRival = false
-        guard let expansion = detailExpansion else { return }
-        detailExpansion = nil
-        // Redimensionado a mano después de abrirse: ese tamaño es del usuario.
-        guard state.settings.hudSize == expansion.to else { return }
-        updateSettings { $0.hudSize = expansion.from }
     }
 
     /// Pliega o despliega una sección del popover.
@@ -581,7 +563,6 @@ public final class GameStore: ObservableObject {
 
     /// Pliega el HUD a su tira de combate, que es lo que cierra la caja PC.
     public func collapseHUD() {
-        detailExpansion = nil
         selectedBoxGroupID = nil
         inspectingRival = false
         updateSettings { $0.hudSize = nil }
