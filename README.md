@@ -390,8 +390,12 @@ usa ningún recurso con dueño: es geometría, así que el repo puede llevarlo.
 ## 14. Regenerar los datos
 
 ```bash
-node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
+node tools/generate_pokedex.mjs     # ~580 peticiones a PokeAPI, ~30 s
+node tools/generate_typechart.mjs   # 18 peticiones
 ```
+
+`gyms.json` no se genera: es el único dato curado a mano, porque PokeAPI no
+tiene líderes de gimnasio.
 
 ## 15. Límites conocidos del MVP
 
