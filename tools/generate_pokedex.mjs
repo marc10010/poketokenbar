@@ -56,27 +56,39 @@ const stageOf = new Map();
 const baseOf = new Map();
 const familyOf = new Map(); // id -> [ids de toda la familia]
 
+// `baseId` se resuelve por el camino y no por la raíz de la cadena: hay líneas
+// cuya raíz es una cría de una generación posterior (Azurill -> Marill, Happiny
+// -> Chansey, Munchlax -> Snorlax). Cortar la cadena entera por eso dejaba a
+// Marill sin su Azumarill y a Chansey sin su Blissey.
 function walk(node, stage, baseId, family) {
   const id = idOfName.get(node.species.name);
+  let nextBase = baseId;
+  let nextStage = stage;
+
   if (id && id <= MAX_DEX) {
-    stageOf.set(id, stage);
-    baseOf.set(id, baseId);
+    // El primer miembro dentro de rango del camino es la forma base.
+    if (nextBase === null) {
+      nextBase = id;
+      nextStage = 0;
+    }
+    stageOf.set(id, nextStage);
+    baseOf.set(id, nextBase);
     family.push(id);
     const kids = node.evolves_to
       .map((n) => idOfName.get(n.species.name))
       .filter((x) => x && x <= MAX_DEX);
     evolvesInto.set(id, kids);
   }
+
   for (const child of node.evolves_to) {
-    walk(child, stage + 1, baseId, family);
+    // Mientras no haya base, los eslabones fuera de rango no cuentan etapa.
+    walk(child, nextBase === null ? 0 : nextStage + 1, nextBase, family);
   }
 }
 
 for (const chain of chains) {
-  const rootId = idOfName.get(chain.chain.species.name);
-  if (!rootId || rootId > MAX_DEX) continue;
   const family = [];
-  walk(chain.chain, 0, rootId, family);
+  walk(chain.chain, 0, null, family);
   for (const id of family) familyOf.set(id, family);
 }
 

@@ -130,6 +130,11 @@ La tabla se genera de PokeAPI (`tools/generate_typechart.mjs`) e incluye Hada:
 la Pokédex embebida trae los tipos actuales, así que Clefairy, Togepi o Marill
 son Hada aunque en Gen 1 y 2 no existiera ese tipo.
 
+- **Las cadenas cuya raíz es una cría posterior sí enlazan.** Azurill y Happiny
+  son de Gen 3 y 4, así que caen fuera del #1-251; el generador descartaba la
+  cadena entera por eso y dejaba a Marill sin su Azumarill y a Chansey sin su
+  Blissey. Ahora la forma base es el **primer miembro dentro de rango** del
+  camino, y hay tests que fijan el invariante.
 - Los tiers salen de los datos de PokeAPI (legendario/mítico, `capture_rate` y
   mejor BST de la familia), no de una lista a mano. La regla está en
   `tools/generate_pokedex.mjs`.
