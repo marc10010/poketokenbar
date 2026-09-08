@@ -8,12 +8,17 @@ struct SpriteView: View {
     let shiny: Bool
     let size: CGFloat
     var flipped: Bool = false
+    /// El multiplicador de los ajustes. Se puede desactivar donde el tamaño lo
+    /// manda otra cosa (la barra de menú, que tiene la altura que tiene).
+    var scalable: Bool = true
+
+    private var displaySize: CGFloat { scalable ? size * sprites.scale : size }
 
     var body: some View {
         Group {
             if let image = sprites.image(speciesID: speciesID, shiny: shiny) {
                 Image(nsImage: image)
-                    .interpolation(.none)
+                    .interpolation(sprites.scaling.interpolation)
                     .resizable()
                     .scaledToFit()
                     .scaleEffect(x: flipped ? -1 : 1, y: 1)
@@ -22,12 +27,12 @@ struct SpriteView: View {
                     .fill(Color.secondary.opacity(0.12))
                     .overlay(
                         Text("#\(speciesID)")
-                            .font(.system(size: max(8, size * 0.22), weight: .semibold, design: .monospaced))
+                            .font(.system(size: max(8, displaySize * 0.22), weight: .semibold, design: .monospaced))
                             .foregroundStyle(.secondary)
                     )
             }
         }
-        .frame(width: size, height: size)
+        .frame(width: displaySize, height: displaySize)
     }
 }
 

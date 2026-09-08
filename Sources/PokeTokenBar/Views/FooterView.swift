@@ -6,6 +6,26 @@ struct FooterView: View {
     @EnvironmentObject private var sources: TokenSourceCoordinator
     @State private var confirmingReset = false
 
+    private func scaleSlider(
+        title: String,
+        value: Double,
+        help: String,
+        set: @escaping (Double) -> Void
+    ) -> some View {
+        HStack(spacing: 6) {
+            Text("\(title) ×\(Fmt.rate(value))")
+                .font(.system(size: 10))
+                .frame(width: 92, alignment: .leading)
+            Slider(
+                value: Binding(get: { value }, set: set),
+                in: GameRules.minimumSpriteScale...GameRules.maximumSpriteScale,
+                step: 0.25
+            )
+            .frame(width: 108)
+            .help(help)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(sources.descriptions, id: \.name) { source in
@@ -33,6 +53,36 @@ struct FooterView: View {
                 Text("Efectividad por tipos (agua > fuego…)").font(.system(size: 10))
             }
             .toggleStyle(.checkbox)
+
+            HStack(spacing: 6) {
+                Text("Sprites").font(.system(size: 10))
+                Picker("", selection: Binding(
+                    get: { store.state.settings.spriteScaling },
+                    set: { newValue in store.updateSettings { $0.spriteScaling = newValue } }
+                )) {
+                    ForEach(SpriteScaling.allCases, id: \.self) { option in
+                        Text(option.label).tag(option)
+                    }
+                }
+                .labelsHidden()
+                .frame(width: 130)
+            }
+
+            scaleSlider(
+                title: "Miniaturas",
+                value: store.state.settings.spriteScale,
+                help: "HUD, caja, Pokédex y medallas"
+            ) { newValue in
+                store.updateSettings { $0.spriteScale = newValue }
+            }
+
+            scaleSlider(
+                title: "Ficha",
+                value: store.state.settings.detailSpriteScale,
+                help: "El sprite grande de la vista de detalle"
+            ) { newValue in
+                store.updateSettings { $0.detailSpriteScale = newValue }
+            }
 
             Toggle(isOn: Binding(
                 get: { store.state.settings.hudEnabled },

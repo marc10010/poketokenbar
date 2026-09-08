@@ -7,7 +7,11 @@ import SwiftUI
 struct PokedexView: View {
     @EnvironmentObject private var store: GameStore
 
-    private let columns = [GridItem(.adaptive(minimum: 54), spacing: 6)]
+    @EnvironmentObject private var sprites: SpriteStore
+
+    private var columns: [GridItem] {
+        [GridItem(.adaptive(minimum: 54 * sprites.scale), spacing: 6)]
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -150,7 +154,7 @@ struct PokedexView: View {
     private func unseenDetail(_ entry: PokedexEntry) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 12) {
-                SpriteView(speciesID: entry.species.id, shiny: false, size: 84)
+                AnimatedSpriteView(speciesID: entry.species.id, shiny: false, size: 116)
                     .opacity(opacity(entry.state))
                     .grayscale(1)
                 VStack(alignment: .leading, spacing: 3) {

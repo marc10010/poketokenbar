@@ -102,6 +102,93 @@ enum UISmokeTest {
         }
         print("  clic derecho: \(clickCases.count) casos comprobados")
 
+        // Los sprites animados: que la URL exista no prueba que animen, así
+        // que se comprueban los fotogramas de lo que se ha cargado.
+        _ = sprites.image(speciesID: 7, shiny: false, animated: true)
+        var frames: Int?
+        for _ in 0..<40 {
+            frames = sprites.frameCount(speciesID: 7, shiny: false, animated: true)
+            if frames != nil { break }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+        }
+        switch frames {
+        case .some(let count) where count > 1:
+            print("  sprite animado: \(count) fotogramas")
+        case .some(let count):
+            print("  ✗ el sprite animado trae \(count) fotograma(s): no animaría")
+            ok = false
+        case nil:
+            print("  sprite animado: sin red o sin caché, no se puede comprobar")
+        }
+
+        // Los dos multiplicadores: la ficha se mueve con el suyo y NO con el
+        // de las miniaturas, que es justo lo que se pidió separar.
+        if let group = store.boxGroups.first {
+            func fichaHeight(detail: Double, thumbs: Double) -> CGFloat {
+                store.updateSettings {
+                    $0.detailSpriteScale = detail
+                    $0.spriteScale = thumbs
+                }
+                sprites.detailScale = detail
+                sprites.scale = thumbs
+                let view = NSHostingView(rootView: PokemonDetailView(group: group)
+                    .environmentObject(store)
+                    .environmentObject(sprites))
+                view.layoutSubtreeIfNeeded()
+                return view.fittingSize.height
+            }
+
+            let small = fichaHeight(detail: 0.75, thumbs: 1)
+            let big = fichaHeight(detail: 2, thumbs: 1)
+            let thumbsOnly = fichaHeight(detail: 0.75, thumbs: 2)
+            print("  ficha: ×0,75 → \(Int(small)) pt · ×2 → \(Int(big)) pt · miniaturas ×2 → \(Int(thumbsOnly)) pt")
+            ok = big > small && ok
+            ok = (abs(thumbsOnly - small) < 1) && ok
+
+            store.updateSettings { $0.detailSpriteScale = 1; $0.spriteScale = 1 }
+            sprites.detailScale = 1
+            sprites.scale = 1
+        }
+
+        // Que "pixel nítido" llegue de verdad al GIF: el filtro es de capa, y
+        // si NSImageView escalara al dibujar no tendría ningún efecto.
+        if let group = store.boxGroups.first {
+            store.updateSettings { $0.spriteScaling = .pixel }
+            sprites.scaling = .pixel
+
+            // Sin el GIF cacheado, la vista cae al sprite estático y aquí no
+            // habría NSImageView que comprobar.
+            _ = sprites.image(speciesID: group.displayForm.id, shiny: group.displaysShiny, animated: true)
+            for _ in 0..<40 where sprites.frameCount(
+                speciesID: group.displayForm.id,
+                shiny: group.displaysShiny,
+                animated: true
+            ) == nil {
+                RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            }
+            let view = NSHostingView(rootView: PokemonDetailView(group: group)
+                .environmentObject(store)
+                .environmentObject(sprites))
+            view.frame = NSRect(x: 0, y: 0, width: 340, height: 700)
+            view.layoutSubtreeIfNeeded()
+            view.displayIfNeeded()
+
+            func imageViews(in root: NSView) -> [NSImageView] {
+                (root as? NSImageView).map { [$0] } ?? root.subviews.flatMap(imageViews)
+            }
+            let found = imageViews(in: view)
+            if let gif = found.first(where: { $0.image?.representations.count ?? 0 > 0 }) {
+                let nearest = gif.layer?.magnificationFilter == .nearest
+                let nativeDraw = gif.imageScaling == .scaleNone
+                print("  pixel nítido en la ficha: filtro=\(nearest) sinEscalarAlDibujar=\(nativeDraw)")
+                ok = nearest && nativeDraw && ok
+            } else {
+                print("  pixel nítido: sin sprite cargado, no se puede comprobar")
+            }
+            store.updateSettings { $0.spriteScaling = .medio }
+            sprites.scaling = .medio
+        }
+
         // Celebración de medalla: gana un gimnasio de verdad y mírala.
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
@@ -200,6 +287,16 @@ enum UISmokeTest {
 
         var hudController: HUDController? = HUDController(store: store, sprites: sprites)
 
+        // El panel plegado tiene que crecer con el multiplicador: si no, los
+        // sprites grandes no caben en 268x104.
+        store.updateSettings { $0.spriteScale = 1; $0.hudSize = nil }
+        let compactAtOne = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        store.updateSettings { $0.spriteScale = 2 }
+        let compactAtTwo = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        print("  HUD plegado: ×1 → \(Int(compactAtOne.width))x\(Int(compactAtOne.height)) · ×2 → \(Int(compactAtTwo.width))x\(Int(compactAtTwo.height))")
+        ok = compactAtTwo.width > compactAtOne.width && compactAtTwo.height > compactAtOne.height && ok
+        store.updateSettings { $0.spriteScale = 1 }
+
         // Desbloqueado (por defecto): recibe clics y hay un panel por pantalla.
         var panels = NSApp.windows.compactMap { $0 as? NSPanel }
         let screens = NSScreen.screens
@@ -257,6 +354,7 @@ enum UISmokeTest {
             $0.hudSize = nil
             $0.hudLocked = false
         }
+        hudController?.shutdown()
         hudController = nil
 
         print(ok ? "  ✓ el árbol de vistas renderiza" : "  ✗ algo no cuadra")

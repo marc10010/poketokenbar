@@ -15,7 +15,12 @@ struct MedalCelebrationView: View {
                     Circle()
                         .fill(Color.orange.opacity(0.22))
                         .frame(width: compact ? 54 : 72, height: compact ? 54 : 72)
-                    SpriteView(speciesID: celebration.gym.signatureSpeciesID, shiny: false, size: compact ? 44 : 60, flipped: true)
+                    AnimatedSpriteView(
+                        speciesID: celebration.gym.signatureSpeciesID,
+                        shiny: false,
+                        size: compact ? 44 : 60,
+                        flipped: true
+                    )
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text("¡\(celebration.gym.medal)!")

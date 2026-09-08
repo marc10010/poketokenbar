@@ -18,6 +18,7 @@ enum GameStoreTests: TestSuite {
         ("processed event window is bounded", testProcessedEventWindowIsBounded),
         ("corrupt state file is quarantined not crashing", testCorruptStateFileIsQuarantinedNotCrashing),
         ("legacy settings decode with defaults", testLegacySettingsDecodeWithDefaults),
+        ("el tamaño de sprite se acota al cargar", testSpriteScaleIsClampedOnLoad),
         ("species count ignores duplicates", testSpeciesCountIgnoresDuplicates),
         ("solo el equipado evoluciona", testOnlyTheActiveCompanionShowsEvolved),
         ("la evolución se queda al cambiar de compañero", testEvolutionSticksAfterSwitchingCompanion),
@@ -302,5 +303,22 @@ enum GameStoreTests: TestSuite {
         expectEqual(store.currentMatchup.multiplier, 1, accuracy: 0.001)
         store.ingest(event("plain", input: 500, output: 0))
         expectEqual(store.state.encounter?.currentHP, 39_000)
+    }
+
+    /// El deslizador está acotado, pero un state.json editado a mano no: el
+    /// acotado tiene que estar en la carga, que es la puerta de verdad.
+    static func testSpriteScaleIsClampedOnLoad() throws {
+        let url = temporaryStateURL()
+        for (written, expected) in [(99.0, GameRules.maximumSpriteScale), (0.01, GameRules.minimumSpriteScale)] {
+            let json = """
+            {
+              "schemaVersion": 4,
+              "settings": { "spriteScale": \(written) }
+            }
+            """
+            try Data(json.utf8).write(to: url)
+            let store = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 1))
+            expectEqual(store.state.settings.spriteScale, expected, accuracy: 0.0001, "escrito \(written)")
+        }
     }
 }

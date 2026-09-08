@@ -172,6 +172,22 @@ public struct HUDSize: Codable, Hashable, Sendable {
     }
 }
 
+/// Cómo se escala el pixel art al agrandarlo. Entre el pixel duro y el
+/// suavizado completo hay grados, y cuál gusta es cuestión de ojo.
+public enum SpriteScaling: String, Codable, CaseIterable, Sendable {
+    case pixel
+    case medio
+    case suave
+
+    public var label: String {
+        switch self {
+        case .pixel: return "Pixel nítido"
+        case .medio: return "Intermedio"
+        case .suave: return "Suavizado"
+        }
+    }
+}
+
 public struct GameSettings: Codable, Hashable, Sendable {
     public var countCacheTokens: Bool = false
     public var watchClaudeCodeTranscripts: Bool = true
@@ -188,6 +204,13 @@ public struct GameSettings: Codable, Hashable, Sendable {
     public var hudSize: HUDSize?
     /// Multiplicador de daño por tipos (agua > fuego y compañía).
     public var typeEffectivenessEnabled: Bool = true
+    public var spriteScaling: SpriteScaling = .medio
+    /// Multiplicador de las miniaturas: HUD, rejillas de la caja, de la
+    /// Pokédex y de medallas.
+    public var spriteScale: Double = 1
+    /// Multiplicador de la ficha, donde el sprite es el protagonista y se
+    /// quiere más grande que en una rejilla.
+    public var detailSpriteScale: Double = 1
 
     public init() {}
 
@@ -206,6 +229,11 @@ public struct GameSettings: Codable, Hashable, Sendable {
         hudFreeOrigin = try container.decodeIfPresent(HUDOrigin.self, forKey: .hudFreeOrigin)
         hudSize = try container.decodeIfPresent(HUDSize.self, forKey: .hudSize)
         typeEffectivenessEnabled = try container.decodeIfPresent(Bool.self, forKey: .typeEffectivenessEnabled) ?? true
+        spriteScaling = try container.decodeIfPresent(SpriteScaling.self, forKey: .spriteScaling) ?? .medio
+        let scale = try container.decodeIfPresent(Double.self, forKey: .spriteScale) ?? 1
+        spriteScale = min(max(scale, GameRules.minimumSpriteScale), GameRules.maximumSpriteScale)
+        let detail = try container.decodeIfPresent(Double.self, forKey: .detailSpriteScale) ?? 1
+        detailSpriteScale = min(max(detail, GameRules.minimumSpriteScale), GameRules.maximumSpriteScale)
     }
 }
 

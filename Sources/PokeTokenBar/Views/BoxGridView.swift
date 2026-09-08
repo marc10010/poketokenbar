@@ -5,6 +5,7 @@ import SwiftUI
 /// el HUD expandido; las columnas son adaptativas para que crezcan al ensanchar.
 struct BoxGridView: View {
     @EnvironmentObject private var store: GameStore
+    @EnvironmentObject private var sprites: SpriteStore
 
     var cellSize: CGFloat = 52
     var showsToolbar = true
@@ -20,7 +21,7 @@ struct BoxGridView: View {
             } else {
                 ScrollView {
                     LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: cellSize + 8), spacing: 6)],
+                        columns: [GridItem(.adaptive(minimum: cellSize * sprites.scale + 8), spacing: 6)],
                         spacing: 6
                     ) {
                         ForEach(store.filteredBoxGroups) { group in
