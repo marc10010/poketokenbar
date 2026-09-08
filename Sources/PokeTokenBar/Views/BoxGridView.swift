@@ -28,6 +28,7 @@ struct BoxGridView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                    .padding(.trailing, Layout.scrollGutter)
                 }
             }
         }
@@ -49,10 +50,12 @@ struct BoxGridView: View {
     private func cell(_ group: BoxGroup) -> some View {
         let isActive = store.activeGroupID == group.id
         return Button {
-            store.setActiveCompanion(group.representative.id)
+            // Abrir ficha en vez de equipar a ciegas: equipar está dentro, con
+            // los números delante.
+            store.selectedBoxGroupID = group.id
         } label: {
             VStack(spacing: 0) {
-                SpriteView(speciesID: group.displayForm.id, shiny: group.isShiny, size: cellSize)
+                SpriteView(speciesID: group.displayForm.id, shiny: group.displaysShiny, size: cellSize)
                 Text(group.displayForm.localizedName)
                     .font(.system(size: 10))
                     .lineLimit(1)

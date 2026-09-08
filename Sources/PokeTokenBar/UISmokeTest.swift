@@ -74,6 +74,21 @@ enum UISmokeTest {
         print("  HUD flotante: \(Int(hudSize.width))x\(Int(hudSize.height))")
         ok = hudSize.width > 0 && hudSize.height > 0 && ok
 
+        // Ficha de un Pokémon de la caja, que es lo que abre un clic.
+        if let group = store.boxGroups.first {
+            store.selectedBoxGroupID = group.id
+            ok = layout("ficha de \(group.displayForm.name)") && ok
+            store.selectedBoxGroupID = nil
+        } else {
+            print("  ✗ la caja está vacía, no se puede abrir ficha")
+            ok = false
+        }
+
+        // Ficha del rival.
+        store.inspectingRival = true
+        ok = layout("ficha del rival") && ok
+        store.inspectingRival = false
+
         // Gimnasio abierto: el HUD y el popover cambian de tarjeta.
         store.debugDefeatGyms(upTo: 15)
         if let gym = store.debugOpenNextGym() {

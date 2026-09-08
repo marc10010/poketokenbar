@@ -5,7 +5,9 @@ public struct BattleResult: Equatable, Sendable {
     /// HP quitados, que con multiplicador de tipos ya no coincide con tokens.
     public var damageApplied: Int = 0
     public var tokensSpent: Int = 0
-    public var captures: [CapturedPokemon] = []
+    /// Salvajes que han caído. Quedárselos o no es decisión de la colección,
+    /// no del combate: el motor solo dice quién cayó.
+    public var defeated: [WildEncounter] = []
     public var encounter: WildEncounter?
     /// Tokens que quedaron sin gastar porque una captura abre gimnasio: el
     /// rival siguiente lo pone el gimnasio, no el motor.
@@ -76,15 +78,8 @@ public struct BattleEngine {
             remainingTokens -= spent
             current.currentHP = 0
 
-            result.captures.append(
-                CapturedPokemon(
-                    speciesID: current.speciesID,
-                    isShiny: current.isShiny,
-                    capturedAt: now,
-                    capturedAtTotalTokens: totalTokensAfter
-                )
-            )
-            if openGymAfterCapture(result.captures.count) {
+            result.defeated.append(current)
+            if openGymAfterCapture(result.defeated.count) {
                 result.stoppedForGym = true
                 result.remainingTokens = remainingTokens
                 result.encounter = nil

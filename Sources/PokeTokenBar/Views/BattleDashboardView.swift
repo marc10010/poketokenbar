@@ -28,6 +28,14 @@ struct BattleDashboardView: View {
             }
 
 
+            if let selected = store.selectedBoxGroupID,
+               let group = store.boxGroups.first(where: { $0.id == selected }) {
+                SectionCard(title: "Ficha") {
+                    PokemonDetailView(group: group)
+                }
+                Divider()
+            }
+
             DisclosureGroup(isExpanded: $showBox) {
                 PCBoxView()
             } label: {
@@ -55,13 +63,20 @@ private struct ActiveCompanionCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             if let companion = store.state.activeCompanion, let form = store.activeForm {
-                SpriteView(speciesID: form.id, shiny: companion.isShiny, size: 84)
+                Button {
+                    store.selectedBoxGroupID = store.activeGroupID
+                    store.inspectingRival = false
+                } label: {
+                    SpriteView(speciesID: form.id, shiny: companion.displaysShiny, size: 84)
+                }
+                .buttonStyle(.plain)
+                .help("Ver su ficha")
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 5) {
                         Text(form.localizedName)
                             .font(.title3.weight(.semibold))
                         if companion.isShiny {
-                            Text("✦").foregroundStyle(.yellow).help("Variocolor")
+                            Text("✦").foregroundStyle(.yellow).help("Shiny")
                         }
                         Text("#\(String(format: "%03d", form.id))")
                             .font(.caption2.monospaced())
@@ -123,14 +138,23 @@ private struct EncounterCard: View {
 
     var body: some View {
         SectionCard(title: "Combate") {
-            if let encounter = store.state.encounter, let rival = store.rivalSpecies {
+            if let encounter = store.state.encounter, let rival = store.rivalSpecies,
+               store.inspectingRival {
+                RivalDetailView(encounter: encounter, species: rival)
+            } else if let encounter = store.state.encounter, let rival = store.rivalSpecies {
                 HStack(alignment: .center, spacing: 10) {
-                    SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 62, flipped: true)
+                    Button {
+                        store.inspectingRival = true
+                    } label: {
+                        SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 62, flipped: true)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Ver su ficha")
                     VStack(alignment: .leading, spacing: 5) {
                         HStack(spacing: 5) {
                             Text(rival.localizedName).font(.body.weight(.semibold))
                             if encounter.isShiny {
-                                Text("✦").foregroundStyle(.yellow).help("Variocolor")
+                                Text("✦").foregroundStyle(.yellow).help("Shiny")
                             }
                             RarityBadge(rarity: encounter.rarity)
                         }

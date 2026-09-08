@@ -155,6 +155,12 @@ enum TypeStyle {
     static func label(_ type: String) -> String { names[type] ?? type.capitalized }
 }
 
+enum Layout {
+    /// Ancho reservado para la barra de scroll flotante de macOS, que se dibuja
+    /// encima del contenido y si no tapa lo alineado a la derecha.
+    static let scrollGutter: CGFloat = 10
+}
+
 struct SectionCard<Content: View>: View {
     let title: String
     @ViewBuilder var content: Content

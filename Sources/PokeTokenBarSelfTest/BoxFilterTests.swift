@@ -12,7 +12,7 @@ enum BoxFilterTests: TestSuite {
         ("busca por número de pokédex", testSearchByDexNumber),
         ("encuentra por la forma evolucionada", testSearchFindsEvolvedName),
         ("filtra por tipo", testFilterByType),
-        ("filtra variocolor, evolucionados y repetidos", testFlagFilters),
+        ("filtra shiny, evolucionados y repetidos", testFlagFilters),
         ("filtra por generación", testFilterByGeneration),
         ("los cuatro órdenes colocan bien", testSortModes),
         ("filtrar nunca inventa ni duplica huecos", testFilterIsASubset),
@@ -37,7 +37,7 @@ enum BoxFilterTests: TestSuite {
         )
     }
 
-    /// Squirtle, dos Rattata, un Gastly variocolor, un Cubone evolucionado a
+    /// Squirtle, dos Rattata, un Gastly shiny, un Cubone evolucionado a
     /// Marowak y un Chikorita de Gen 2.
     private static var sample: [BoxGroup] {
         BoxGroup.group(

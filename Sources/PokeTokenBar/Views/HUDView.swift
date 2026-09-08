@@ -63,6 +63,29 @@ struct HUDView: View {
     static func showsMetrics(forHeight height: CGFloat) -> Bool { height >= metricsThreshold }
     static func showsBox(forHeight height: CGFloat) -> Bool { height >= boxThreshold }
 
+    /// La caja dentro del HUD: ficha si hay una abierta, rejilla si no.
+    @ViewBuilder
+    private var boxSection: some View {
+        if store.inspectingRival, let encounter = store.state.encounter, let rival = store.rivalSpecies {
+            ScrollView {
+                RivalDetailView(encounter: encounter, species: rival)
+                    .padding(.trailing, Layout.scrollGutter)
+            }
+        } else if store.state.box.isEmpty {
+            Text("Caja vacía todavía.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        } else if let selected = store.selectedBoxGroupID,
+                  let group = store.boxGroups.first(where: { $0.id == selected }) {
+            ScrollView {
+                PokemonDetailView(group: group)
+                    .padding(.trailing, Layout.scrollGutter)
+            }
+        } else {
+            BoxGridView(cellSize: 46, compactToolbar: true)
+        }
+    }
+
     @ViewBuilder
     private var battle: some View {
         if let encounter = store.state.encounter,
@@ -78,7 +101,8 @@ struct HUDView: View {
                         rival: rival,
                         companion: companion,
                         form: form,
-                        expanded: showsMetrics || showsBox
+                        expanded: showsMetrics || showsBox,
+                        panelHeight: geometry.size.height
                     )
                     if showsMetrics {
                         Divider()
@@ -86,13 +110,7 @@ struct HUDView: View {
                     }
                     if showsBox {
                         Divider()
-                        if store.state.box.isEmpty {
-                            Text("Caja vacía todavía.")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                        } else {
-                            BoxGridView(cellSize: 46, compactToolbar: true)
-                        }
+                        boxSection
                     }
                 }
                 .padding(.horizontal, 9)
@@ -141,20 +159,42 @@ struct HUDView: View {
         }
     }
 
+    /// Abre una ficha y, si el panel está plegado, lo despliega: si no, el clic
+    /// dejaría estado abierto que no se ve en ninguna parte.
+    private func openDetail(rival: Bool, panelHeight: CGFloat) {
+        store.inspectingRival = rival
+        store.selectedBoxGroupID = rival ? nil : store.activeGroupID
+        guard !Self.showsBox(forHeight: panelHeight) else { return }
+        store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
+    }
+
     private func battleHeader(
         encounter: WildEncounter,
         rival: Pokemon,
         companion: CapturedPokemon,
         form: Pokemon,
-        expanded: Bool
+        expanded: Bool,
+        panelHeight: CGFloat
     ) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
-                SpriteView(speciesID: form.id, shiny: companion.isShiny, size: 42)
+                Button {
+                    openDetail(rival: false, panelHeight: panelHeight)
+                } label: {
+                    SpriteView(speciesID: form.id, shiny: companion.displaysShiny, size: 42)
+                }
+                .buttonStyle(.plain)
+                .help("Ver la ficha de \(form.localizedName)")
                 Text("vs")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.secondary)
-                SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 42, flipped: true)
+                Button {
+                    openDetail(rival: true, panelHeight: panelHeight)
+                } label: {
+                    SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 42, flipped: true)
+                }
+                .buttonStyle(.plain)
+                .help("Ver la ficha de \(rival.localizedName)")
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 3) {
                         Text(rival.localizedName)
@@ -208,7 +248,7 @@ struct HUDView: View {
                 }
                 if Self.showsBox(forHeight: geometry.size.height) {
                     Divider()
-                    BoxGridView(cellSize: 46, compactToolbar: true)
+                    boxSection
                 }
             }
             .padding(.horizontal, 9)

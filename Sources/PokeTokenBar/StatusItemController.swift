@@ -30,7 +30,7 @@ final class StatusItemController {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 360, height: 520)
+        popover.contentSize = NSSize(width: 370, height: 620)
         popover.contentViewController = NSHostingController(
             rootView: RootView()
                 .environmentObject(store)
@@ -129,7 +129,7 @@ final class StatusItemController {
         }
 
         let playerForm = store.activeForm
-        let playerShiny = store.state.activeCompanion?.isShiny ?? false
+        let playerShiny = store.state.activeCompanion?.displaysShiny ?? false
         let encounter = store.state.encounter
 
         let playerImage = playerForm.flatMap { sprites.image(speciesID: $0.id, shiny: playerShiny) }
