@@ -7,27 +7,43 @@ struct BoxGridView: View {
     @EnvironmentObject private var store: GameStore
 
     var cellSize: CGFloat = 52
-    var showsHeader = true
+    var showsToolbar = true
+    var compactToolbar = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if showsHeader {
-                Text("\(store.speciesCaught) de 251 especies · \(Fmt.tokens(store.state.box.count)) capturas")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+            if showsToolbar {
+                BoxToolbar(compact: compactToolbar)
             }
-            ScrollView {
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: cellSize + 8), spacing: 6)],
-                    spacing: 6
-                ) {
-                    ForEach(store.boxGroups) { group in
-                        cell(group)
+            if store.filteredBoxGroups.isEmpty {
+                emptyState
+            } else {
+                ScrollView {
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: cellSize + 8), spacing: 6)],
+                        spacing: 6
+                    ) {
+                        ForEach(store.filteredBoxGroups) { group in
+                            cell(group)
+                        }
                     }
+                    .padding(.vertical, 4)
                 }
-                .padding(.vertical, 4)
             }
         }
+    }
+
+    private var emptyState: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Nada coincide con la búsqueda.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+            Button("Limpiar filtros") { store.boxFilter.reset() }
+                .buttonStyle(.link)
+                .font(.system(size: 10))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 10)
     }
 
     private func cell(_ group: BoxGroup) -> some View {

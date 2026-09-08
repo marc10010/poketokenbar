@@ -91,7 +91,7 @@ struct HUDView: View {
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
                         } else {
-                            BoxGridView(cellSize: 46)
+                            BoxGridView(cellSize: 46, compactToolbar: true)
                         }
                     }
                 }
@@ -208,7 +208,7 @@ struct HUDView: View {
                 }
                 if Self.showsBox(forHeight: geometry.size.height) {
                     Divider()
-                    BoxGridView(cellSize: 46)
+                    BoxGridView(cellSize: 46, compactToolbar: true)
                 }
             }
             .padding(.horizontal, 9)

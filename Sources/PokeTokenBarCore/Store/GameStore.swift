@@ -10,6 +10,9 @@ public final class GameStore: ObservableObject {
     @Published public private(set) var lastCapture: CapturedPokemon?
     /// Última medalla ganada, para lo mismo.
     @Published public private(set) var lastMedal: Gym?
+    /// Búsqueda y filtros de la caja PC. No se persiste: es estado de consulta,
+    /// y arrancar con un filtro puesto de la sesión anterior desconcierta.
+    @Published public var boxFilter = BoxFilter()
 
     public let pokedex: Pokedex
     public let typeChart: TypeChart
@@ -170,6 +173,16 @@ public final class GameStore: ObservableObject {
         let groups = BoxGroup.group(state.box, pokedex: pokedex, evolution: evolution)
         groupCache = (key, groups)
         return groups
+    }
+
+    /// Caja tras aplicar búsqueda y filtros.
+    public var filteredBoxGroups: [BoxGroup] {
+        boxFilter.apply(to: boxGroups)
+    }
+
+    /// Tipos presentes en la caja, para no ofrecer filtros que no dan nada.
+    public var typesInBox: [String] {
+        Array(Set(boxGroups.flatMap(\.species.types))).sorted()
     }
 
     /// Formas distintas conseguidas, ignorando la variante de color: es la
