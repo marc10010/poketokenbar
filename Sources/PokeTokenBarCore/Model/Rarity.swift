@@ -26,7 +26,18 @@ public enum Rarity: String, Codable, CaseIterable, Sendable {
         }
     }
 
+    /// Rango de entrenador que abre el tier: las medallas son el requisito,
+    /// no el tiempo.
+    public var requiredRank: TrainerRank {
+        switch self {
+        case .common, .uncommon: return .novato
+        case .rare: return .entrenador
+        case .legendary: return .ace
+        }
+    }
+
     /// Tokens acumulados que el jugador necesita para desbloquear el tier.
+    /// Vigente hasta que los gimnasios se conecten (ver `requiredRank`).
     public var unlockThreshold: Int {
         switch self {
         case .common, .uncommon: return 0
