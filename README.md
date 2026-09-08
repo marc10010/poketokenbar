@@ -366,6 +366,10 @@ El daño se calcula contra los **tipos reales del Pokémon estrella**, no contra
 el tema del gimnasio: a Onix (roca/tierra) el agua le entra ×4.
 
 Al derrotarlo: medalla, **sin captura**, y vuelve a haber salvaje al instante.
+La celebración se come el HUD durante 12 segundos con borde dorado, dice cuántas
+medallas llevas y, si el rango ha subido, **qué tier acaba de desbloquear** —una
+medalla que solo suma a un contador no se siente como un hito. Se cierra con
+*Seguir* o se retira sola.
 Si el cruce no basta, el HUD dice con qué Pokémon de tu caja sí entra y lo
 equipa en un clic; los tokens se gastan igual (cuentan para el ledger y para la
 evolución del compañero), simplemente no mueven la barra.

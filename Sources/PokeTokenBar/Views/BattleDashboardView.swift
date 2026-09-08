@@ -9,6 +9,11 @@ struct BattleDashboardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            if let celebration = store.lastMedal {
+                MedalCelebrationView(celebration: celebration)
+                Divider()
+            }
+
             ActiveCompanionCard()
             Divider()
             if let active = store.activeGym {

@@ -74,6 +74,8 @@ public enum GameRules {
     public static let stageTwoThreshold = 1_000_001
     /// Cuántos IDs de evento guardamos para idempotencia entre reinicios.
     public static let processedEventWindow = 20_000
+    /// Cuánto dura la celebración de una medalla antes de volver al combate.
+    public static let medalCelebrationSeconds: TimeInterval = 12
     /// Disparador de gimnasio: basta con cumplir una de las dos.
     public static let gymTokenInterval = 300_000
     public static let gymCaptureInterval = 10
