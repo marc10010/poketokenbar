@@ -188,13 +188,12 @@ gimnasios.
 
 ## 9. Migración v2 → v3
 
-Los contadores arrancan a cero y `defeated` vacío. El efecto en una partida en
-curso es que **se pierde acceso a raros y legendarios** hasta ganar 2 y 8
+Los contadores arrancan a cero y `defeated` vacío. Sin convalidación (D3), una
+partida en curso **pierde el acceso a raros y legendarios** hasta ganar 2 y 8
 medallas.
 
-Con ~485k tokens acumulados, el primer gimnasio se abre en el evento siguiente
-al arranque, así que la primera medalla llega en horas, no en días. Ver D3 para
-la alternativa de convalidar rango por tokens ya gastados.
+El primer gimnasio se abre en la primera captura tras actualizar, porque el
+disparador se evalúa ahí y basta con cualquiera de las dos condiciones.
 
 ## 10. Plan de tests
 
@@ -221,10 +220,10 @@ Lo que hay que fijar con tests antes de dar esto por bueno:
 
 ## 11. Decisiones abiertas
 
-**D1 — ¿Un Pokémon o equipo?** La regla dice "su Pokémon", en singular.
-Propuesta: **uno**, con una sola barra de HP; el equipo completo se lista como
-adorno. Un equipo de 3 con barras secuenciales es más fiel pero triplica estado
-y UI.
+**D1 — ¿Un Pokémon o equipo? RESUELTA: uno.** Una sola barra de HP; el equipo
+completo se lista como adorno. El equipo de 3 con barras secuenciales queda para
+más adelante: la aritmética de absorción no cambia, solo el estado, así que no
+es una puerta que se cierre.
 
 **D2 — ¿Se puede perder? RESUELTA: no se pierde, se bloquea.** Ver §6. El líder
 absorbe daño y con un cruce de tipos insuficiente el progreso es cero, así que
@@ -239,17 +238,22 @@ la medalla se gana eligiendo bien y no esperando. Descartadas y por qué:
   que ya está tomada al empezar. Queda anotada como alternativa si el bloqueo
   resulta demasiado blando.
 
-**D3 — ¿Convalidar la partida actual?** Propuesta: **no** convalidar, porque
-regalar rango vacía la mecánica el primer día. La rebaja razonable es que el
-primer gimnasio se abra de inmediato, que es lo que pasa con 485k tokens.
+**D3 — ¿Convalidar la partida actual? RESUELTA: no, se empieza de 0.** Se
+descarta también el suelo de rango que se propuso después. Consecuencia
+aceptada: una partida en curso **pierde el acceso a raros** hasta ganar 2
+medallas (~590k tokens eligiendo bien el compañero). Los contadores del
+disparador arrancan a cero, así que el primer gimnasio se abre en la primera
+captura tras actualizar.
 
 **D4 — ¿Los tokens del gimnasio cuentan para el siguiente disparador?**
 Propuesta: **no**. Cuentan para el ledger y para la evolución del compañero,
 pero el contador de 300k se reinicia al cerrar el gimnasio.
 
-**D5 — ¿El gate de tokens desaparece del todo?** Propuesta: **sí**, lo sustituye
-el rango. La alternativa (rango **y** tokens) hace el desbloqueo más lento y
-difícil de explicar.
+**D5 — ¿El gate de tokens desaparece del todo? RESUELTA: sí, lo sustituyen las
+medallas.** `Rarity.unlockThreshold` deja de usarse. Descartada la variante
+"rango **o** tokens": con ella un jugador paciente consigue legendarios sin
+pisar un gimnasio y los gimnasios dejan de ser unblockers, que es justo su
+razón de existir.
 
 **D6 — ¿El rango afecta a algo más que al tier?** Propuesta: no en el MVP. La
 palanca de dificultad pasa a ser la absorción de cada líder (§6), no el HP.
