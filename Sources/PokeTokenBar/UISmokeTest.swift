@@ -352,6 +352,71 @@ enum UISmokeTest {
             print("  ✗ no se pudo abrir gimnasio")
             ok = false
         }
+        // La caja con volumen: es donde se notan los tramos, la lista y que la
+        // ficha ya no sustituye a la rejilla.
+        for species in [1, 4, 10, 16, 25, 41, 43, 63, 74, 129, 133, 147, 152, 158, 161, 172, 179, 187, 194, 220] {
+            store.debugCapture(speciesID: species)
+        }
+        store.selectedTab = "caja"
+        let boxTab = { () -> CGFloat in
+            controller.view.layoutSubtreeIfNeeded()
+            return controller.view.fittingSize.height
+        }()
+        // Antes la rejilla vivía en un cajón de 190 pt dentro de una pestaña de
+        // 620: el techo era del cajón, no de la pantalla.
+        print("  pestaña Caja con \(store.boxGroups.count) huecos: \(Int(boxTab)) pt")
+        ok = boxTab >= 600 && ok
+
+        for sort in BoxFilter.Sort.allCases {
+            store.boxFilter.sort = sort
+            let sections = store.boxSections
+            let covered = sections.reduce(0) { $0 + $1.groups.count }
+            print("    \(sort.label): \(sections.count) tramo(s), \(covered) huecos · \(sections.map(\.title).joined(separator: " | "))")
+            ok = covered == store.filteredBoxGroups.count && !sections.isEmpty && ok
+        }
+        store.boxFilter.sort = .dex
+
+        func boxHeight() -> CGFloat {
+            let view = NSHostingView(rootView: PCBoxView()
+                .environmentObject(store)
+                .environmentObject(sprites)
+                .frame(width: 360))
+            view.layoutSubtreeIfNeeded()
+            return view.fittingSize.height
+        }
+
+        // La ficha fijada tiene que **sumar** altura. Con veinte huecos la
+        // rejilla mide bastante más que la ficha compacta, así que si la ficha
+        // sustituyera a la rejilla la medida bajaría en vez de subir.
+        let withoutCard = boxHeight()
+        store.selectedBoxGroupID = store.boxGroups.first?.id
+        let withCard = boxHeight()
+        print("  caja: sin ficha \(Int(withoutCard)) pt · con ficha fijada \(Int(withCard)) pt")
+        ok = withCard > withoutCard && ok
+        store.selectedBoxGroupID = nil
+
+        // Lista: los números de cada hueco caben, así que una fila por hueco
+        // ocupa más que la rejilla.
+        store.updateSettings { $0.boxDensity = .lista }
+        let asList = boxHeight()
+        store.updateSettings { $0.boxDensity = .rejilla }
+        print("  densidad: rejilla \(Int(withoutCard)) pt · lista \(Int(asList)) pt")
+        ok = asList > withoutCard && ok
+
+        // Las flechas recorren la caja entera sin salirse de lo filtrado.
+        store.boxFilter.generation = 2
+        let visible = Set(store.filteredBoxGroups.map(\.id))
+        store.selectedBoxGroupID = nil
+        var swept: Set<String> = []
+        for _ in 0..<(visible.count + 4) {
+            if let moved = store.moveBoxSelection(.right, columns: 4) { swept.insert(moved) }
+        }
+        print("  flechas: \(swept.count)/\(visible.count) huecos visibles alcanzados")
+        ok = swept == visible && ok
+        store.boxFilter.reset()
+        store.selectedBoxGroupID = nil
+        store.selectedTab = "combate"
+
         // Con búsqueda que no casa: hay que renderizar el estado vacío, no romper.
         store.boxFilter.query = "no-existe-nada-asi"
         ok = layout("caja filtrada sin resultados") && ok

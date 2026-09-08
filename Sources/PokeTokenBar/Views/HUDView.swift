@@ -93,7 +93,9 @@ struct HUDView: View {
         } else if let selected = store.selectedBoxGroupID,
                   let group = store.boxGroups.first(where: { $0.id == selected }) {
             ScrollView {
-                PokemonDetailView(group: group)
+                // Compacta: en un panel de 200 pt la ficha entera no cabe, y
+                // aquí sí sustituye a la rejilla porque no hay sitio para las dos.
+                PokemonDetailView(group: group, compact: true)
                     .padding(.trailing, Layout.scrollGutter)
             }
         } else {

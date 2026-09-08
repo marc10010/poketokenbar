@@ -6,17 +6,31 @@ import SwiftUI
 struct PokemonDetailView: View {
     @EnvironmentObject private var store: GameStore
     let group: BoxGroup
+    /// En la caja la ficha va fijada encima de la rejilla, que sigue ahí: ahí
+    /// el sprite es más pequeño y los números se piden.
+    var compact = false
+    @State private var showsStats = false
 
     private var isActive: Bool { store.activeGroupID == group.id }
     private var captured: CapturedPokemon { group.representative }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: compact ? 5 : 8) {
             header
             Divider()
             progress
-            Divider()
-            stats
+            if compact {
+                DisclosureGroup(isExpanded: $showsStats) {
+                    stats.padding(.top, 3)
+                } label: {
+                    Text("Sus números")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Divider()
+                stats
+            }
             actions
         }
         .padding(.vertical, 4)
@@ -24,7 +38,7 @@ struct PokemonDetailView: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
-            AnimatedSpriteView(speciesID: group.displayForm.id, shiny: group.displaysShiny, size: 132)
+            AnimatedSpriteView(speciesID: group.displayForm.id, shiny: group.displaysShiny, size: compact ? 72 : 132)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 5) {
                     Text(group.displayForm.localizedName)

@@ -39,6 +39,7 @@ struct BoxToolbar: View {
                 .padding(.vertical, 3)
                 .background(Color.secondary.opacity(0.1), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
 
+                if !compact { densityToggle }
                 filterMenu
             }
 
@@ -60,7 +61,32 @@ struct BoxToolbar: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+
+            // Los gestos cambiaron de sitio, así que se dicen: el clic abre la
+            // ficha y equipar pide doble clic.
+            if !compact {
+                Text("Clic para la ficha · doble clic para enviarlo a luchar · flechas para moverte")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
         }
+    }
+
+    /// Rejilla o lista. En lista caben los números de cada hueco, que es el
+    /// dato que la caja tiene y la vista de combate no.
+    private var densityToggle: some View {
+        Picker("", selection: Binding(
+            get: { store.state.settings.boxDensity },
+            set: { density in store.updateSettings { $0.boxDensity = density } }
+        )) {
+            Image(systemName: "square.grid.2x2").tag(BoxDensity.rejilla)
+            Image(systemName: "list.bullet").tag(BoxDensity.lista)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(width: 62)
+        .help("Rejilla o lista con los números")
     }
 
     private var countLabel: String {
@@ -75,7 +101,7 @@ struct BoxToolbar: View {
 
     private var filterMenu: some View {
         Menu {
-            Picker("Ordenar por", selection: Binding(
+            Picker("Ordenar y agrupar por", selection: Binding(
                 get: { store.boxFilter.sort },
                 set: { store.boxFilter.sort = $0 }
             )) {

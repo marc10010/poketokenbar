@@ -136,8 +136,12 @@ enum BoxFilterTests: TestSuite {
         filter.sort = .recent
         expectEqual(ids(filter).first, 152, "el último capturado primero")
 
-        filter.sort = .count
-        expectEqual(ids(filter).first, 19, "el ×2 primero")
+        // El orden por victorias necesita el contador de fuera: es el único
+        // número de un hueco que crece desde que no hay líneas repetidas.
+        filter.sort = .wins
+        let wins = [92: 12, 104: 3]
+        let byWins = filter.apply(to: sample) { wins[$0] ?? 0 }.map(\.species.id)
+        expectEqual(Array(byWins.prefix(2)), [92, 104], "primero el más veces vencido")
 
         filter.sort = .rarity
         let rarities = filter.apply(to: sample).map(\.species.rarity.sortIndex)
