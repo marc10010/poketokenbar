@@ -47,12 +47,15 @@ enum GymBattleTests: TestSuite {
         expectNil(store.activeGym, "todavía no")
 
         // Un evento que no remata al salvaje no abre nada, aunque el contador
-        // esté pasado de sobra.
-        store.ingest(event("roza", tokens: 9_999))
+        // esté pasado de sobra. Los tokens se calculan con la tasa real: con
+        // el bonus de colección, 1 token ya no es 1 HP.
+        let rate = store.wildDamagePerToken
+        let casi = Int(Double(10_000 - 1) / rate)
+        store.ingest(event("roza", tokens: casi))
         expectNil(store.activeGym, "el gimnasio no interrumpe un combate")
-        expectEqual(store.state.encounter?.currentHP, 1)
+        expectTrue((store.state.encounter?.currentHP ?? 0) > 0, "el salvaje sigue vivo")
 
-        store.ingest(event("remata", tokens: 1))
+        store.ingest(event("remata", tokens: 10))
         let active = try unwrap(store.activeGym)
         expectEqual(active.gym.id, "johto-violet", "el primero del orden")
         expectNil(store.state.encounter, "no hay salvaje mientras hay líder")
@@ -64,15 +67,19 @@ enum GymBattleTests: TestSuite {
         // dejan 0,75 HP por token.
         let store = primed(wildHP: 10_000)
         store.updateSettings { $0.typeEffectivenessEnabled = true }
+        // Lo que gasta el salvaje depende de la tasa (cruce + colección), así
+        // que el sobrante se calcula, no se supone.
+        let rate = store.wildDamagePerToken
+        let paraElSalvaje = Int((10_000.0 / rate).rounded(.up))
         store.ingest(event("mata-y-sigue", tokens: 110_000))
 
         let active = try unwrap(store.activeGym)
-        let spent = 110_000 - 10_000
-        expectEqual(active.battle.tokensSpent, spent, "los 100k que sobran van al líder")
+        let spent = 110_000 - paraElSalvaje
+        expectEqual(active.battle.tokensSpent, spent, "el resto va al líder")
         expectEqual(
             active.battle.maxHP - active.battle.currentHP,
             Int((Double(spent) * 0.75).rounded()),
-            "a 0,75 HP por token"
+            "a 0,75 HP por token: al líder no le llega el bonus de colección"
         )
     }
 

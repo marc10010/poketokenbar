@@ -1,118 +1,7 @@
 import PokeTokenBarCore
 import SwiftUI
 
-struct BattleDashboardView: View {
-    @EnvironmentObject private var store: GameStore
-    @State private var showBox = false
-    @State private var showMedals = true
-    @State private var showZones = false
-    @State private var showMilestones = false
-    @State private var showLeagues = false
-    @State private var showMetrics = true
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if let celebration = store.lastMedal {
-                MedalCelebrationView(celebration: celebration)
-                Divider()
-            }
-
-            ActiveCompanionCard()
-            Divider()
-            if let active = store.activeLeague {
-                SectionCard(title: active.league.name) {
-                    LeagueCardView(league: active.league, member: active.member, run: active.run)
-                }
-            } else if let active = store.activeMilestone {
-                SectionCard(title: "Hito legendario") {
-                    MilestoneCardView(milestone: active.milestone, battle: active.battle)
-                }
-            } else if let active = store.activeGym {
-                SectionCard(title: "Gimnasio") {
-                    GymCardView(gym: active.gym, battle: active.battle)
-                }
-            } else {
-                EncounterCard()
-            }
-            Divider()
-
-            DisclosureGroup(isExpanded: $showMedals) {
-                if let selected = store.selectedGymID, let gym = store.gymCatalog[selected] {
-                    GymDetailView(gym: gym)
-                } else {
-                    MedalsView()
-                }
-            } label: {
-                Label("Medallas · \(store.medals)/16", systemImage: "rosette")
-                    .font(.caption.weight(.semibold))
-            }
-
-
-            if let selected = store.selectedBoxGroupID,
-               let group = store.boxGroups.first(where: { $0.id == selected }) {
-                SectionCard(title: "Ficha") {
-                    PokemonDetailView(group: group)
-                }
-                Divider()
-            }
-
-            DisclosureGroup(isExpanded: $showBox) {
-                PCBoxView()
-            } label: {
-                HStack(spacing: 6) {
-                    Label("Caja PC · \(store.speciesCaught)/251", systemImage: "archivebox")
-                        .font(.caption.weight(.semibold))
-                    Button("Ver Pokédex") {
-                        store.showingPokedex = true
-                        store.selectedDexSpeciesID = nil
-                    }
-                    .buttonStyle(.link)
-                    .font(.caption)
-                }
-            }
-
-            DisclosureGroup(isExpanded: $showLeagues) {
-                LeaguesView()
-            } label: {
-                Label(
-                    "Ligas · \(store.state.leagues.won.count)/\(store.leagueCatalog.all.count)",
-                    systemImage: "crown"
-                )
-                .font(.caption.weight(.semibold))
-            }
-
-            DisclosureGroup(isExpanded: $showMilestones) {
-                MilestonesView()
-            } label: {
-                Label(
-                    "Legendarios · \(store.state.milestones.defeated.count)/\(store.milestoneCatalog.all.count)",
-                    systemImage: "sparkles"
-                )
-                .font(.caption.weight(.semibold))
-            }
-
-            DisclosureGroup(isExpanded: $showZones) {
-                ZonesView()
-            } label: {
-                Label("Zonas · \(store.unlockedZones.count)/\(store.zoneCatalog.all.count)", systemImage: "map")
-                    .font(.caption.weight(.semibold))
-            }
-
-            DisclosureGroup(isExpanded: $showMetrics) {
-                MetricsView()
-            } label: {
-                Label("Consumo", systemImage: "chart.bar")
-                    .font(.caption.weight(.semibold))
-            }
-
-            Divider()
-            FooterView()
-        }
-        .padding(14)
-    }
-}
-
-private struct ActiveCompanionCard: View {
+struct ActiveCompanionCard: View {
     @EnvironmentObject private var store: GameStore
 
     var body: some View {
@@ -148,7 +37,7 @@ private struct ActiveCompanionCard: View {
     }
 }
 
-private struct EvolutionProgress: View {
+struct EvolutionProgress: View {
     @EnvironmentObject private var store: GameStore
 
     var body: some View {
@@ -188,7 +77,7 @@ private struct EvolutionProgress: View {
     }
 }
 
-private struct EncounterCard: View {
+struct EncounterCard: View {
     @EnvironmentObject private var store: GameStore
 
     var body: some View {
@@ -213,7 +102,18 @@ private struct EncounterCard: View {
                             }
                             RarityBadge(rarity: encounter.rarity)
                         }
-                        MatchupBadge(matchup: store.currentMatchup)
+                        HStack(spacing: 5) {
+                            MatchupBadge(matchup: store.currentMatchup)
+                            if store.collectionBonus > 0.01 {
+                                Text("+\(Fmt.rate(store.collectionBonus)) colección")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 1)
+                                    .background(Color.blue.opacity(0.16), in: Capsule())
+                                    .foregroundStyle(.blue)
+                                    .help("Cada especie de tu Pokédex suma daño contra salvajes")
+                            }
+                        }
                         HPBar(fraction: encounter.hpFraction, height: 12)
                         HStack {
                             Text("\(Fmt.tokens(encounter.currentHP)) / \(Fmt.tokens(encounter.maxHP)) HP")
@@ -238,14 +138,15 @@ private struct EncounterCard: View {
     }
 }
 
-private struct MetricsView: View {
+struct MetricsView: View {
     @EnvironmentObject private var store: GameStore
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
-            metric("Daño por token", store.currentMatchup.isNeutral ? "×1" : "\(store.currentMatchup.badge) \(store.currentMatchup.label)")
+            metric("Daño por token", "\(Fmt.rate(store.wildDamagePerToken)) al salvaje")
+            metric("Bonus de colección", "+\(Fmt.rate(store.collectionBonus)) por \(store.pokedexCaptured)/251")
             metric("Eventos registrados", Fmt.tokens(store.state.ledger.eventCount))
             metric("Rango", "\(store.rank.label) · \(store.medals)/16 medallas")
             metric("Especies conseguidas", "\(store.speciesCaught) / 251")

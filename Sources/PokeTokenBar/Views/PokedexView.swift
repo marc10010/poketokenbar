@@ -24,24 +24,21 @@ struct PokedexView: View {
                 grid
             }
         }
-        .padding(14)
     }
 
     private var header: some View {
         HStack(spacing: 8) {
-            Button {
-                if store.selectedDexSpeciesID != nil {
+            if store.selectedDexSpeciesID != nil {
+                Button {
                     store.selectedDexSpeciesID = nil
-                } else {
-                    store.showingPokedex = false
+                } label: {
+                    Label("Volver a la rejilla", systemImage: "chevron.left")
+                        .font(.caption)
                 }
-            } label: {
-                Label("Volver", systemImage: "chevron.left")
-                    .font(.caption)
+                .buttonStyle(.link)
             }
-            .buttonStyle(.link)
             Spacer()
-            Text("\(store.pokedexCaptured)/251 en la caja · \(store.pokedexSeen) vistos")
+            Text("\(store.pokedexCaptured)/251 · \(store.pokedexSeen) vistos · +\(Fmt.rate(store.collectionBonus)) de daño")
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
         }

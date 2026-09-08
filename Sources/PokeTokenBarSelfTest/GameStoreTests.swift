@@ -24,6 +24,7 @@ enum GameStoreTests: TestSuite {
         ("la evolución se queda al cambiar de compañero", testEvolutionSticksAfterSwitchingCompanion),
         ("la migración acredita al equipado", testMigrationCreditsTheEquippedCompanion),
         ("el multiplicador de tipos escala el daño real", testTypeMultiplierScalesDamage),
+        ("la colección suma daño solo a los salvajes", testCollectionBonus),
     ]
 
     private static func temporaryStateURL() -> URL {
@@ -86,10 +87,14 @@ enum GameStoreTests: TestSuite {
         // Sin multiplicador de tipos para que 1 token siga siendo 1 HP exacto.
         store.updateSettings { $0.typeEffectivenessEnabled = false }
         let rivalHP = try! unwrap(store.state.encounter).maxHP
-        store.ingest(event("kill", input: rivalHP, output: 0))
+        // Justo los tokens que hacen falta a la tasa real: si se pasan, el
+        // sobrante daña ya al rival siguiente y este test dejaría de medir lo
+        // que quiere medir.
+        let needed = Int((Double(rivalHP) / store.wildDamagePerToken).rounded(.up))
+        store.ingest(event("kill", input: needed, output: 0))
         expectEqual(store.state.box.count, 2, "inicial + capturado")
         expectNotNil(store.lastCapture)
-        expectEqual(store.state.encounter?.currentHP, store.state.encounter?.maxHP)
+        expectEqual(store.state.encounter?.currentHP, store.state.encounter?.maxHP, "el rival nuevo, intacto")
     }
 
     static func testTokensAccumulateBeforeChoosingAStarter() {
@@ -287,22 +292,40 @@ enum GameStoreTests: TestSuite {
         store.debugSetEncounter(fire)
         expectEqual(store.currentMatchup.multiplier, 2, accuracy: 0.001)
 
+        // El daño real es (cruce + bonus de colección) por token, así que la
+        // cifra esperada se calcula con la regla y no a mano: con una especie
+        // en la caja el bonus ya es 1/251.
+        func expectedHP(from hp: Int, tokens: Int, matchup: Double) -> Int {
+            hp - Int((Double(tokens) * (matchup + store.collectionBonus)).rounded())
+        }
+
         store.ingest(event("x2", input: 1_000, output: 0))
         expectEqual(store.totalTokens, 1_000, "el ledger cuenta tokens, no daño")
-        expectEqual(store.state.encounter?.currentHP, 38_000, "1.000 tokens x2 = 2.000 HP")
+        expectEqual(
+            store.state.encounter?.currentHP,
+            expectedHP(from: 40_000, tokens: 1_000, matchup: 2),
+            "1.000 tokens a x2 más el bonus de colección"
+        )
 
         // Contra planta el agua es poco eficaz: x0,5.
         let grass = WildEncounter(speciesID: 1, isShiny: false, rarity: .common, maxHP: 40_000)
         store.debugSetEncounter(grass)
         expectEqual(store.currentMatchup.multiplier, 0.5, accuracy: 0.001)
         store.ingest(event("half", input: 1_000, output: 0))
-        expectEqual(store.state.encounter?.currentHP, 39_500, "1.000 tokens x0,5 = 500 HP")
+        expectEqual(
+            store.state.encounter?.currentHP,
+            expectedHP(from: 40_000, tokens: 1_000, matchup: 0.5)
+        )
 
-        // Con el interruptor apagado vuelve a ser 1 a 1.
+        // Con el interruptor apagado el cruce es 1, pero el bonus sigue.
         store.updateSettings { $0.typeEffectivenessEnabled = false }
         expectEqual(store.currentMatchup.multiplier, 1, accuracy: 0.001)
+        let antes = try unwrap(store.state.encounter).currentHP
         store.ingest(event("plain", input: 500, output: 0))
-        expectEqual(store.state.encounter?.currentHP, 39_000)
+        expectEqual(
+            store.state.encounter?.currentHP,
+            expectedHP(from: antes, tokens: 500, matchup: 1)
+        )
     }
 
     /// El deslizador está acotado, pero un state.json editado a mano no: el
@@ -320,5 +343,51 @@ enum GameStoreTests: TestSuite {
             let store = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 1))
             expectEqual(store.state.settings.spriteScale, expected, accuracy: 0.0001, "escrito \(written)")
         }
+    }
+
+    /// La caja deja de ser decoración: cada especie de la Pokédex suma daño
+    /// contra salvajes. Y **solo** contra salvajes: si contara contra jefes,
+    /// una Pokédex avanzada anularía su absorción y dejarían de ser un problema
+    /// de cobertura de tipos.
+    static func testCollectionBonus() throws {
+        let store = makeStore(seed: 71)
+        store.chooseStarter(speciesID: 7)
+        store.updateSettings { $0.typeEffectivenessEnabled = false }
+
+        // Con un Squirtle capturado hay dos huecos de dex (él y su forma
+        // mostrada coinciden en etapa base, así que uno).
+        let conUno = store.collectionBonus
+        expectTrue(conUno > 0, "una especie ya suma algo")
+        expectTrue(conUno < 0.05, "y muy poco: \(conUno)")
+
+        // Rellenamos la caja a mano hasta media Pokédex.
+        for id in 2...130 { store.debugCapture(speciesID: id) }
+        let media = store.collectionBonus
+        expectEqual(media, Double(store.pokedexCaptured) / 251.0, accuracy: 0.0001)
+        expectTrue(media > 0.4, "con media dex el bonus se nota: \(media)")
+
+        // Acotado: ni con más entradas que especies pasa de +1,0.
+        for id in 131...251 { store.debugCapture(speciesID: id) }
+        expectTrue(store.collectionBonus <= GameRules.collectionBonusCap)
+
+        // Contra un salvaje, el daño incluye el bonus...
+        store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 500_000))
+        expectEqual(store.wildDamagePerToken, 1 + store.collectionBonus, accuracy: 0.0001)
+        let antes = try unwrap(store.state.encounter).currentHP
+        store.ingest(event("salvaje", input: 1_000, output: 0))
+        expectEqual(
+            store.state.encounter?.currentHP,
+            antes - Int((1_000.0 * (1 + store.collectionBonus)).rounded()),
+            "el bonus entra en el daño al salvaje"
+        )
+
+        // ...y contra un jefe, no.
+        let brock = try unwrap(store.gymCatalog["kanto-pewter"])
+        expectEqual(
+            store.gymDamagePerToken(for: brock),
+            GymCombat().damagePerToken(matchup: 1, absorption: brock.absorption, stage: store.stage),
+            accuracy: 0.0001,
+            "al líder no le llega el bonus de colección"
+        )
     }
 }

@@ -78,6 +78,9 @@ public enum GameRules {
     public static let stageTwoThreshold = 1_000_001
     /// Cuántos IDs de evento guardamos para idempotencia entre reinicios.
     public static let processedEventWindow = 20_000
+    /// Techo del bonus por Pokédex completada. Con las 251, +1,0 al
+    /// multiplicador contra salvajes.
+    public static let collectionBonusCap = 1.0
     /// Límites del multiplicador de sprites: por debajo no se distingue nada y
     /// por encima el popover se va de la pantalla.
     public static let minimumSpriteScale = 0.75

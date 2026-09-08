@@ -152,7 +152,8 @@ struct HUDView: View {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
             metric("Medallas", "\(store.medals)/16 · \(store.rank.label)")
-            metric("Daño por token", store.currentMatchup.isNeutral ? "×1" : "\(store.currentMatchup.badge) · \(store.currentMatchup.label)")
+            metric("Daño por token", "\(Fmt.rate(store.wildDamagePerToken)) · \(store.currentMatchup.label)")
+            metric("Bonus de colección", "+\(Fmt.rate(store.collectionBonus)) · \(store.pokedexCaptured)/251")
             metric("Especies", "\(store.speciesCaught) / 251")
             metric("Capturas", Fmt.tokens(store.state.box.count))
             if let next = store.activeNextForm, let remaining = store.stage.tokensToNext(from: store.activeTokensEarned) {
@@ -358,6 +359,8 @@ struct HUDView: View {
                 }
             }
             Button("Caja PC completa (\(store.speciesCaught)/251)…") {
+                store.selectedTab = "caja"
+                store.selectedBoxGroupID = nil
                 NotificationCenter.default.post(name: .poketokenbarShowPopover, object: nil)
             }
             Divider()
