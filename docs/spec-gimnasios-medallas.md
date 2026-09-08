@@ -75,7 +75,8 @@ así que no hace falta ningún recurso gráfico nuevo.
   "signatureSpeciesID": 95,        // Onix
   "medal": "Medalla Roca",
   "order": 1,
-  "hp": [500000, 620000]           // se sortea dentro del rango
+  "hp": [500000, 620000],          // se sortea dentro del rango
+  "absorption": 0.5                // umbral de daño: ver §6
 }
 ```
 
@@ -109,16 +110,55 @@ al capturar un salvaje:
   hasta que lo acabes, por mucho que los contadores estén pasados. Es el precio
   de no interrumpir, y a cambio nunca pierdes progreso.
 
-## 6. El combate
+## 6. El combate: no se pierde, se bloquea
 
-- El daño se calcula como ahora: `tokens × multiplicador de tipos`, con el tipo
-  del líder conocido. Contra Brock (roca) tu Squirtle pega ×2 y tu Pidgey ×0,5.
-- **Se puede cambiar de compañero durante el combate.** Es la decisión del
-  jugador y lo único que hace del gimnasio un puzzle en vez de una barra larga.
-- Al llegar a 0 HP: medalla, **sin captura**, contadores a cero, se restaura el
-  encuentro salvaje pausado.
-- El compañero equipado gana los tokens del gimnasio igual que siempre, así que
-  un gimnasio también hace evolucionar.
+Los tokens vienen del trabajo del jugador, no de jugar. Cualquier derrota que
+dependa del tiempo (un presupuesto que se agota, un líder que se cura con el
+reloj) castiga por trabajar y hace perder progreso mientras duermes. Así que la
+condición de fallo no es perder: es **no avanzar**.
+
+**Cada líder absorbe daño.** Solo le hace mella lo que pase de su umbral:
+
+```
+daño efectivo por token = max(0, multiplicador de tipos − absorción)
+```
+
+| Tu cruce contra Brock (absorción 0,5) | Daño por token |
+|---|---|
+| ×0,25 (inmune o muy poco eficaz) | **0** — no le haces nada |
+| ×0,5 (poco eficaz) | 0 — tampoco |
+| ×1 (neutro) | 0,5 |
+| ×2 (eficaz) | **1,5** |
+| ×4 (doblemente eficaz) | 3,5 |
+
+Consecuencias, que son el punto entero del diseño:
+
+- **La medalla es un logro, no un peaje.** Con el compañero equivocado no
+  ganas *nunca*, por muchos tokens que le tires. Con el adecuado, cae. Lo que
+  decide es la elección, no el tiempo.
+- **No se pierde nada.** El peor caso es una barra que no baja, y se arregla en
+  un clic: cambiar de compañero. El HUD dice exactamente eso, con el nombre de
+  un tipo que sí sirva.
+- **Es independiente del reloj.** Nada se cura por la noche ni caduca; dejar el
+  Mac cerrado un fin de semana no cuesta progreso.
+- **Se escala subiendo la absorción**, no el HP. Los primeros gimnasios piden
+  ×1; los últimos, 0,75 y 1,5 de absorción, que obligan a ×2 y ×4 — es decir, a
+  tener **roster**. La dificultad pasa a ser cobertura de tipos, no paciencia.
+
+Reglas que se mantienen del combate normal:
+
+- **Se puede cambiar de compañero durante el combate**, y es la jugada
+  principal.
+- El compañero equipado gana los tokens del gimnasio, así que también evoluciona.
+- Al llegar a 0 HP: medalla, **sin captura**, contadores a cero y el rival
+  siguiente vuelve a ser salvaje.
+
+**Sub-decisión D8 — ¿la etapa evolutiva suma?** Hoy evolucionar es solo estética.
+Propuesta: en gimnasio, cada etapa suma `+0,25` al multiplicador antes de
+restar la absorción, así criar a un Pokémon tiene por fin un efecto mecánico y
+un Wartortle sirve donde un Squirtle se queda corto. Aplicarlo también a los
+salvajes cambiaría la economía de todo el juego, así que en el MVP sería solo en
+gimnasios.
 
 ## 7. Medallas y rango
 
@@ -170,8 +210,13 @@ Lo que hay que fijar con tests antes de dar esto por bueno:
   sobra del HP del líder;
 - el rango sale de las medallas y el gate de spawn sale del rango: con 0
   medallas y 5M tokens **no** aparecen legendarios;
-- si se adopta D2: agotar el presupuesto cierra el gimnasio sin medalla y sin
-  perder nada más;
+- con absorción 0,5 y cruce ×0,5, el HP del líder **no baja nada** aunque el
+  evento sea de un millón de tokens;
+- con cruce ×2 sí baja, y a la tasa exacta `(2 − 0,5)` por token;
+- cambiar de compañero a mitad del combate cambia la tasa desde ese momento, sin
+  tocar el daño ya hecho;
+- los tokens que no hacen daño **sí** cuentan para el ledger y para la
+  evolución del compañero: se gastaron de verdad;
 - el sobrante de tokens del evento que abre el gimnasio entra al líder.
 
 ## 11. Decisiones abiertas
@@ -181,13 +226,18 @@ Propuesta: **uno**, con una sola barra de HP; el equipo completo se lista como
 adorno. Un equipo de 3 con barras secuenciales es más fiel pero triplica estado
 y UI.
 
-**D2 — ¿Se puede perder?** Hoy no existe la derrota: los tokens siempre pegan,
-así que un gimnasio sería solo una barra más larga y la elección de tipo solo
-cambiaría *cuánto tarda*. Propuesta: **presupuesto de tokens** de 1,5× el HP del
-líder; si se agota, el líder se va sin medalla y hay que esperar al siguiente
-disparador. Riesgo a aceptar: los tokens llegan de tu trabajo real, no de jugar,
-así que "perder" puede sentirse como un castigo por trabajar. Alternativa
-conservadora para el MVP: **sin derrota**, y D2 se pospone.
+**D2 — ¿Se puede perder? RESUELTA: no se pierde, se bloquea.** Ver §6. El líder
+absorbe daño y con un cruce de tipos insuficiente el progreso es cero, así que
+la medalla se gana eligiendo bien y no esperando. Descartadas y por qué:
+
+- *presupuesto de tokens que se agota*: castiga por trabajar y puede fallar
+  mientras el jugador no mira;
+- *el líder se cura con el reloj*: hace perder progreso por la noche;
+- *KO del compañero con daño entrante*: es la única que da derrota de verdad y
+  usa la tabla de tipos en las dos direcciones, pero mete un recurso nuevo (HP
+  del compañero, curación) y quita un Pokémon de circulación por una decisión
+  que ya está tomada al empezar. Queda anotada como alternativa si el bloqueo
+  resulta demasiado blando.
 
 **D3 — ¿Convalidar la partida actual?** Propuesta: **no** convalidar, porque
 regalar rango vacía la mecánica el primer día. La rebaja razonable es que el
@@ -201,9 +251,8 @@ pero el contador de 300k se reinicia al cerrar el gimnasio.
 el rango. La alternativa (rango **y** tokens) hace el desbloqueo más lento y
 difícil de explicar.
 
-**D6 — ¿El rango afecta a algo más que al tier?** Propuesta: no en el MVP. Subir
-el HP de los salvajes con el rango es fácil de añadir después y es la palanca
-natural si el juego se vuelve trivial.
+**D6 — ¿El rango afecta a algo más que al tier?** Propuesta: no en el MVP. La
+palanca de dificultad pasa a ser la absorción de cada líder (§6), no el HP.
 
 **D7 — ¿Notificación al abrirse un gimnasio?** Hoy no hay notificaciones a
 propósito, para no pedir permisos. Un gimnasio es el único evento que justifica
@@ -218,8 +267,9 @@ niveles individuales, e intercambio.
 ## 13. Fases
 
 1. **Datos y reglas**: `gyms.json`, `GymCatalog`, rango y gate de spawn por
-   rango, con tests. Sin UI: se puede verificar entero con el arnés.
-2. **Combate**: disparador, pausa/restauración del salvaje, daño sin captura,
-   medalla.
+   rango, y la fórmula de absorción, con tests. Sin UI: se puede verificar
+   entero con el arnés.
+2. **Combate**: disparador en la captura, daño con absorción, medalla sin
+   captura.
 3. **UI**: tarjeta en el HUD, medallas y rango en el popover, barra de menú.
 4. Opcionales según D2/D6/D7.
