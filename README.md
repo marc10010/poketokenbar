@@ -309,14 +309,36 @@ que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-## 10. Reiniciar partida
+## 10. Pokédex completa
+
+*Ver Pokédex* (en la sección de la caja) abre los **251 huecos**, no solo lo que
+tienes. Tres estados, y el del medio existe porque las líneas repetidas ya no se
+capturan:
+
+| Estado | Cómo se ve |
+|---|---|
+| En la caja | a color |
+| Visto | en gris: le has ganado en libertad pero no se quedó |
+| Sin ver | silueta y solo su número |
+
+Un hueco cuenta como capturado si es **la especie con la que capturaste** o **la
+forma en la que se ve ahora**: un Squirtle que ya es Wartortle llena los dos, y
+Blastoise sigue vacío hasta que evolucione. Marcar la línea entera contaría
+formas que no has visto nunca.
+
+La ficha de algo que no tienes dice lo que sirve para decidir si buscarlo: tipos,
+rareza, **con qué rango aparece**, su línea evolutiva, cuántas veces le has
+ganado, y por qué todavía no lo tienes (le faltan medallas, o es una forma
+evolucionada que no aparece en libertad).
+
+## 11. Reiniciar partida
 
 *Reiniciar partida…* en el pie del popover borra caja, medallas, estadísticas e
 histórico de tokens. Se conservan dos cosas a propósito: los **ajustes**, que
 son preferencias y no progreso, y los **ids de eventos ya procesados**, porque
 si se borraran el consumo ya contabilizado podría volver a entrar como daño.
 
-## 11. Gimnasios y medallas
+## 12. Gimnasios y medallas
 
 `Resources/gyms.json` es el único dato **curado a mano** del proyecto: PokeAPI
 no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
@@ -354,7 +376,7 @@ siguiente— cuánto falta para que se abra.
 
 Diseño completo y decisiones: `docs/spec-gimnasios-medallas.md`.
 
-## 12. Regenerar el icono
+## 13. Regenerar el icono
 
 `assets/AppIcon.icns` está commiteado, pero se genera:
 
@@ -365,13 +387,13 @@ Diseño completo y decisiones: `docs/spec-gimnasios-medallas.md`.
 Dibuja una barra de HP pixelada con AppKit y la empaqueta con `iconutil`. No
 usa ningún recurso con dueño: es geometría, así que el repo puede llevarlo.
 
-## 11. Regenerar la Pokédex
+## 14. Regenerar los datos
 
 ```bash
 node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
 ```
 
-## 14. Límites conocidos del MVP
+## 15. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Sin red, la app
