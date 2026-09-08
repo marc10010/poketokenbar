@@ -57,6 +57,24 @@ struct FooterView: View {
                     .help("Opacidad del HUD")
                 }
                 .font(.system(size: 10))
+
+                HStack(spacing: 8) {
+                    Toggle(isOn: Binding(
+                        get: { store.state.settings.hudLocked },
+                        set: { newValue in store.updateSettings { $0.hudLocked = newValue } }
+                    )) {
+                        Text("Bloqueado (no se puede mover ni recibe clics)").font(.system(size: 10))
+                    }
+                    .toggleStyle(.checkbox)
+
+                    if store.state.settings.hudFreeOrigin != nil {
+                        Button("Volver a la esquina") {
+                            store.updateSettings { $0.hudFreeOrigin = nil }
+                        }
+                        .buttonStyle(.link)
+                        .font(.system(size: 10))
+                    }
+                }
             }
 
             HStack {

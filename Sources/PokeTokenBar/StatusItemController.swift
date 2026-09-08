@@ -45,6 +45,31 @@ final class StatusItemController {
             .store(in: &cancellables)
 
         render()
+        logGeometry(after: 0.2)
+        logGeometry(after: 2.5)
+    }
+
+    /// El ítem puede existir y no verse (barra llena, pantalla con notch, otro
+    /// display activo). Volcamos su geometría real para poder diagnosticarlo.
+    private func logGeometry(after delay: TimeInterval) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self else { return }
+            let button = self.statusItem.button
+            let frame = button?.window?.frame ?? .zero
+            let screens = NSScreen.screens
+                .map { "\(Int($0.frame.width))x\(Int($0.frame.height))@\(Int($0.frame.minX))" }
+                .joined(separator: ", ")
+            let parts = [
+                "statusItem visible=\(self.statusItem.isVisible)",
+                "length=\(Int(self.statusItem.length))",
+                "buttonWindow=\(Int(frame.minX)),\(Int(frame.minY)) \(Int(frame.width))x\(Int(frame.height))",
+                "title=\"\(button?.title ?? "-")\"",
+                "hasImage=\(button?.image != nil)",
+                "screens=[\(screens)]",
+                "pid=\(ProcessInfo.processInfo.processIdentifier)",
+            ]
+            Diagnostics.append(parts.joined(separator: " "))
+        }
     }
 
     @objc private func togglePopover() {
@@ -78,8 +103,13 @@ final class StatusItemController {
         guard let button = statusItem.button else { return }
 
         guard store.state.hasStarter else {
-            button.image = nil
-            button.title = "Elige inicial"
+            // Un título largo es lo primero que macOS oculta cuando la barra
+            // está llena (peor aún en pantallas con notch): icono y nada más.
+            button.image = NSImage(
+                systemSymbolName: "circle.circle",
+                accessibilityDescription: "PokeTokenBar: elige tu inicial"
+            )
+            button.title = ""
             return
         }
 

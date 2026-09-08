@@ -172,5 +172,7 @@ enum GameStoreTests: TestSuite {
         expectEqual(store.state.settings.hudEnabled, true)
         expectEqual(store.state.settings.hudCorner, HUDCorner.topRight)
         expectEqual(store.state.settings.hudOpacity, 0.9, accuracy: 0.0001)
+        expectEqual(store.state.settings.hudLocked, false)
+        expectNil(store.state.settings.hudFreeOrigin)
     }
 }

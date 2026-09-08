@@ -61,14 +61,43 @@ enum UISmokeTest {
         ok = hudSize.width > 0 && hudSize.height > 0 && ok
 
         var hudController: HUDController? = HUDController(store: store, sprites: sprites)
-        let panel = NSApp.windows.compactMap { $0 as? NSPanel }.first
-        if let panel, let screen = NSScreen.main ?? NSScreen.screens.first {
+
+        // Desbloqueado (por defecto): recibe clics y hay un panel por pantalla.
+        var panels = NSApp.windows.compactMap { $0 as? NSPanel }
+        let screens = NSScreen.screens
+        print("  anclado: \(panels.count) panel(es) para \(screens.count) pantalla(s)")
+        ok = panels.count == screens.count && ok
+        for (panel, screen) in zip(panels, screens) {
             let inside = screen.visibleFrame.contains(panel.frame)
-            print("  panel del HUD: \(Int(panel.frame.origin.x)),\(Int(panel.frame.origin.y)) dentro=\(inside) clickThrough=\(panel.ignoresMouseEvents) opaco=\(panel.isOpaque)")
-            ok = inside && panel.ignoresMouseEvents && !panel.isOpaque && ok
-        } else {
-            print("  ✗ el HUD no creó panel")
-            ok = false
+            print("    \(Int(panel.frame.origin.x)),\(Int(panel.frame.origin.y)) dentro=\(inside) movible=\(panel.isMovableByWindowBackground) opaco=\(panel.isOpaque)")
+            ok = inside && panel.isMovableByWindowBackground && !panel.isOpaque && ok
+        }
+
+        // Bloqueado: click-through.
+        store.updateSettings { $0.hudLocked = true }
+        panels = NSApp.windows.compactMap { $0 as? NSPanel }
+        let allClickThrough = panels.allSatisfy(\.ignoresMouseEvents)
+        print("  bloqueado: clickThrough=\(allClickThrough)")
+        ok = allClickThrough && ok
+
+        // Arrastrado a mano: un solo panel, y dentro de la pantalla que lo aloja.
+        let target = (NSScreen.main ?? screens[0]).visibleFrame
+        store.updateSettings { $0.hudFreeOrigin = HUDOrigin(x: target.midX, y: target.midY) }
+        panels = NSApp.windows.compactMap { $0 as? NSPanel }.filter { $0.isVisible }
+        let hosted = panels.first.map { panel in screens.contains { $0.visibleFrame.contains(panel.frame) } } ?? false
+        print("  posición libre: \(panels.count) panel(es) alojado=\(hosted)")
+        ok = panels.count == 1 && hosted && ok
+
+        // Fuera de toda pantalla: vuelve al anclaje por esquina en vez de perderse.
+        store.updateSettings { $0.hudFreeOrigin = HUDOrigin(x: -99_000, y: -99_000) }
+        panels = NSApp.windows.compactMap { $0 as? NSPanel }.filter { $0.isVisible }
+        let recovered = panels.count == screens.count
+        print("  origen imposible: \(panels.count) panel(es) recuperado=\(recovered)")
+        ok = recovered && ok
+
+        store.updateSettings {
+            $0.hudFreeOrigin = nil
+            $0.hudLocked = false
         }
         hudController = nil
 

@@ -122,8 +122,23 @@ esquina: fondo transparente, sin bordes, sin sombra y **click-through**
 (`ignoresMouseEvents`), así que nunca roba foco ni tapa nada con lo que quieras
 interactuar. Vive en todos los escritorios y sobre apps a pantalla completa.
 
-Se controla desde el popover: activar/desactivar, esquina (4 opciones) y
-opacidad. Se oculta solo mientras no haya compañero elegido.
+Colocación:
+- **Anclado a una esquina** (por defecto): se dibuja una ventana *por pantalla*,
+  porque con varios monitores anclarlo solo a la principal lo deja donde no
+  estás mirando.
+- **Arrastrado a mano**: al moverlo se guarda la posición y pasa a haber una
+  sola ventana. Si desconectas ese monitor, vuelve al anclaje por esquina en
+  vez de quedarse en el limbo.
+
+Estados de ratón:
+- desbloqueado (por defecto): se arrastra y su **menú contextual** (clic
+  derecho) permite cambiar de compañero, recolocarlo, bloquearlo, ocultarlo o
+  salir — sin depender del ítem de la barra de menú;
+- bloqueado: click-through, se ve pero no recibe clics.
+
+Mientras no haya compañero elegido el HUD muestra el selector de inicial y
+siempre acepta clics: es la entrada al juego cuando la barra de menú está tan
+llena que macOS oculta el ítem (frecuente en pantallas con notch).
 
 ## 5. Puesta en marcha
 
@@ -222,7 +237,18 @@ el combate. Hay un check en el popover para incluirlos.
 | `POKETOKENBAR_CLAUDE_PROJECTS` | raíz de transcripts a vigilar |
 | `POKETOKENBAR_INGEST_PORT` | puerto del servidor de ingest |
 
-## 8. Tests
+## 8. Diagnóstico
+
+Una app de barra de menú no tiene ventana donde mostrar un error y su stderr se
+pierde al lanzarla con `open`, así que registra su geometría en
+`~/Library/Application Support/PokeTokenBar/diagnostics.log`: si "no se ve
+nada", ahí aparece si el ítem existe, en qué pantalla cayó y cuánto mide.
+
+```bash
+tail -5 ~/Library/Application\ Support/PokeTokenBar/diagnostics.log
+```
+
+## 9. Tests
 
 ```bash
 swift run PokeTokenBarSelfTest     # 44 tests, ~13k comprobaciones
@@ -240,21 +266,19 @@ cuarentena de estado corrupto y el parseo de transcripts y del payload HTTP.
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-## 9. Regenerar la Pokédex
+## 10. Regenerar la Pokédex
 
 ```bash
 node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
 ```
 
-## 10. Límites conocidos del MVP
+## 11. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Sin red, la app
   funciona y muestra el número de Pokédex como placeholder.
 - No hay notificaciones del sistema en las capturas (evita pedir permisos): la
   barra muestra "¡X capturado!" durante 6 segundos.
-- El HUD no se arrastra: al ser click-through no recibe eventos, así que la
-  posición se elige por esquina desde el popover.
 - La caja PC no permite liberar ni renombrar todavía (`nickname` ya está en el
   modelo).
 - Sin tipos ni efectividad en combate: el daño es plano, 1 token = 1 HP.

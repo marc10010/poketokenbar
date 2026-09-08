@@ -100,6 +100,18 @@ public enum HUDCorner: String, Codable, CaseIterable, Sendable {
     }
 }
 
+/// Posición libre del HUD en coordenadas globales de pantalla, cuando el
+/// usuario lo ha arrastrado fuera de su esquina.
+public struct HUDOrigin: Codable, Hashable, Sendable {
+    public var x: Double
+    public var y: Double
+
+    public init(x: Double, y: Double) {
+        self.x = x
+        self.y = y
+    }
+}
+
 public struct GameSettings: Codable, Hashable, Sendable {
     public var countCacheTokens: Bool = false
     public var watchClaudeCodeTranscripts: Bool = true
@@ -108,6 +120,10 @@ public struct GameSettings: Codable, Hashable, Sendable {
     public var hudEnabled: Bool = true
     public var hudCorner: HUDCorner = .topRight
     public var hudOpacity: Double = 0.9
+    /// Bloqueado = click-through: se ve pero no recibe clics ni se puede mover.
+    public var hudLocked: Bool = false
+    /// `nil` = anclado a `hudCorner` y replicado en todas las pantallas.
+    public var hudFreeOrigin: HUDOrigin?
 
     public init() {}
 
@@ -122,6 +138,8 @@ public struct GameSettings: Codable, Hashable, Sendable {
         hudEnabled = try container.decodeIfPresent(Bool.self, forKey: .hudEnabled) ?? true
         hudCorner = try container.decodeIfPresent(HUDCorner.self, forKey: .hudCorner) ?? .topRight
         hudOpacity = try container.decodeIfPresent(Double.self, forKey: .hudOpacity) ?? 0.9
+        hudLocked = try container.decodeIfPresent(Bool.self, forKey: .hudLocked) ?? false
+        hudFreeOrigin = try container.decodeIfPresent(HUDOrigin.self, forKey: .hudFreeOrigin)
     }
 }
 

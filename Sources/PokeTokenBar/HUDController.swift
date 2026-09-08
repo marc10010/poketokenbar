@@ -3,54 +3,106 @@ import Combine
 import PokeTokenBarCore
 import SwiftUI
 
-/// Ventana flotante sin bordes anclada a una esquina. Es click-through
-/// (`ignoresMouseEvents`) a propósito: se ve siempre, no roba foco y no tapa
-/// nada con lo que puedas querer interactuar.
+/// HUD flotante. Dos modos de colocación:
+/// - anclado a una esquina: **una ventana por pantalla**, porque con varios
+///   monitores anclarlo solo a la principal lo deja donde no estás mirando;
+/// - arrastrado a mano: una sola ventana en la posición guardada.
+///
+/// Bloqueado es click-through (se ve, no estorba). Desbloqueado acepta clics:
+/// se arrastra y su menú contextual permite cambiar de compañero sin depender
+/// del ítem de la barra de menú, que en barras llenas puede quedar oculto.
 @MainActor
 final class HUDController {
-    private static let size = NSSize(width: 208, height: 76)
+    private static let battleSize = NSSize(width: 208, height: 76)
+    private static let pickerSize = NSSize(width: 268, height: 92)
     private static let margin: CGFloat = 12
 
     private let store: GameStore
     private let sprites: SpriteStore
-    private var panel: NSPanel?
+    private var panels: [NSPanel] = []
     private var cancellables: Set<AnyCancellable> = []
+    /// Evita el bucle mover→guardar→mover al reposicionar por código.
+    private var isRepositioning = false
 
     init(store: GameStore, sprites: SpriteStore) {
         self.store = store
         self.sprites = sprites
 
+        // `@Published` emite en `willSet`: dentro del sink `store.state` sigue
+        // siendo el valor viejo, así que hay que usar el que llega.
         store.$state
-            .map { ($0.settings.hudEnabled, $0.settings.hudCorner, $0.settings.hudOpacity, $0.hasStarter) }
-            .removeDuplicates { $0 == $1 }
-            .sink { [weak self] _ in self?.sync() }
+            .removeDuplicates { $0.settings == $1.settings && $0.hasStarter == $1.hasStarter }
+            .sink { [weak self] state in self?.sync(state) }
             .store(in: &cancellables)
 
         NotificationCenter.default
             .publisher(for: NSApplication.didChangeScreenParametersNotification)
-            .sink { [weak self] _ in self?.reposition() }
+            .sink { [weak self] _ in self?.sync() }
+            .store(in: &cancellables)
+
+        NotificationCenter.default
+            .publisher(for: NSWindow.didMoveNotification)
+            .compactMap { $0.object as? NSPanel }
+            .sink { [weak self] panel in self?.panelDidMove(panel) }
             .store(in: &cancellables)
 
         sync()
     }
 
-    private func sync() {
-        let settings = store.state.settings
-        guard settings.hudEnabled, store.state.hasStarter else {
-            panel?.orderOut(nil)
-            panel = nil
+    /// El selector de inicial siempre necesita clics: es la entrada al juego.
+    private func interactive(_ state: GameState) -> Bool { !state.hasStarter }
+
+    private func acceptsMouse(_ state: GameState) -> Bool {
+        interactive(state) || !state.settings.hudLocked
+    }
+
+    func sync(_ incoming: GameState? = nil) {
+        let state = incoming ?? store.state
+        guard state.settings.hudEnabled else {
+            teardown()
             return
         }
-        let panel = panel ?? makePanel()
-        self.panel = panel
-        panel.alphaValue = settings.hudOpacity
-        reposition()
-        panel.orderFrontRegardless()
+
+        let interactive = interactive(state)
+        let acceptsMouse = acceptsMouse(state)
+        let frames = targetFrames(state)
+        if panels.count != frames.count {
+            teardown()
+            panels = frames.map { _ in makePanel() }
+        }
+
+        isRepositioning = true
+        for (panel, frame) in zip(panels, frames) {
+            panel.ignoresMouseEvents = !acceptsMouse
+            panel.isMovableByWindowBackground = acceptsMouse && !interactive
+            panel.alphaValue = interactive ? 1 : state.settings.hudOpacity
+            if panel.frame != frame { panel.setFrame(frame, display: true) }
+            panel.orderFrontRegardless()
+        }
+        isRepositioning = false
+
+        Diagnostics.append(
+            "hud: \(panels.count) panel(es) · interactivo=\(interactive) · movible=\(acceptsMouse && !interactive) · "
+                + "libre=\(state.settings.hudFreeOrigin != nil) · "
+                + panels.map { "\(Int($0.frame.minX)),\(Int($0.frame.minY))" }.joined(separator: " | ")
+        )
+    }
+
+    private func teardown() {
+        for panel in panels { panel.orderOut(nil) }
+        panels.removeAll()
+    }
+
+    /// Guarda la posición tras arrastrar, para que sobreviva a reinicios.
+    private func panelDidMove(_ panel: NSPanel) {
+        guard !isRepositioning, panels.contains(panel) else { return }
+        let origin = panel.frame.origin
+        store.updateSettings { $0.hudFreeOrigin = HUDOrigin(x: origin.x, y: origin.y) }
     }
 
     private func makePanel() -> NSPanel {
         let panel = NSPanel(
-            contentRect: NSRect(origin: .zero, size: Self.size),
+            contentRect: NSRect(origin: .zero, size: Self.pickerSize),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -58,11 +110,10 @@ final class HUDController {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = false
-        panel.ignoresMouseEvents = true
-        panel.level = .floating
-        panel.isMovableByWindowBackground = false
+        panel.isFloatingPanel = true
+        panel.becomesKeyOnlyIfNeeded = true
         panel.hidesOnDeactivate = false
-        // Visible en todos los escritorios y encima de apps a pantalla completa.
+        panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         panel.contentView = NSHostingView(
             rootView: HUDView()
@@ -72,16 +123,38 @@ final class HUDController {
         return panel
     }
 
-    /// Ancla en la esquina usando `visibleFrame`, que ya descuenta barra de
-    /// menú y Dock.
-    private func reposition() {
-        guard let panel, let screen = NSScreen.main ?? NSScreen.screens.first else { return }
+    private func size(_ state: GameState) -> NSSize {
+        interactive(state) ? Self.pickerSize : Self.battleSize
+    }
+
+    /// Una posición si está arrastrado a mano; una por pantalla si está anclado.
+    private func targetFrames(_ state: GameState) -> [NSRect] {
+        if let free = state.settings.hudFreeOrigin, let frame = clamped(free, state) {
+            return [frame]
+        }
+        return NSScreen.screens.map { cornerFrame(on: $0, state) }
+    }
+
+    /// Mantiene la ventana dentro de alguna pantalla: si desconectas el
+    /// monitor donde la dejaste, no se queda en el limbo.
+    private func clamped(_ origin: HUDOrigin, _ state: GameState) -> NSRect? {
+        let candidate = NSRect(origin: NSPoint(x: origin.x, y: origin.y), size: size(state))
+        let host = NSScreen.screens.first { $0.frame.intersects(candidate) }
+        guard let host else { return nil }
+        let area = host.visibleFrame
+        let x = min(max(candidate.minX, area.minX), area.maxX - candidate.width)
+        let y = min(max(candidate.minY, area.minY), area.maxY - candidate.height)
+        return NSRect(x: x, y: y, width: candidate.width, height: candidate.height)
+    }
+
+    /// `visibleFrame` ya descuenta barra de menú y Dock de esa pantalla.
+    private func cornerFrame(on screen: NSScreen, _ state: GameState) -> NSRect {
         let area = screen.visibleFrame
-        let size = Self.size
+        let size = size(state)
         let margin = Self.margin
 
         let origin: NSPoint
-        switch store.state.settings.hudCorner {
+        switch state.settings.hudCorner {
         case .topLeft:
             origin = NSPoint(x: area.minX + margin, y: area.maxY - size.height - margin)
         case .topRight:
@@ -91,6 +164,6 @@ final class HUDController {
         case .bottomRight:
             origin = NSPoint(x: area.maxX - size.width - margin, y: area.minY + margin)
         }
-        panel.setFrame(NSRect(origin: origin, size: size), display: true)
+        return NSRect(origin: origin, size: size)
     }
 }
