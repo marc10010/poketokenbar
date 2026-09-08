@@ -74,6 +74,11 @@ enum UISmokeTest {
         print("  HUD flotante: \(Int(hudSize.width))x\(Int(hudSize.height))")
         ok = hudSize.width > 0 && hudSize.height > 0 && ok
 
+        // Con búsqueda que no casa: hay que renderizar el estado vacío, no romper.
+        store.boxFilter.query = "no-existe-nada-asi"
+        ok = layout("caja filtrada sin resultados") && ok
+        store.boxFilter.reset()
+
         var hudController: HUDController? = HUDController(store: store, sprites: sprites)
 
         // Desbloqueado (por defecto): recibe clics y hay un panel por pantalla.

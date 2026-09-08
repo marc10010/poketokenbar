@@ -44,6 +44,16 @@ public enum Rarity: String, Codable, CaseIterable, Sendable {
         }
     }
 
+    /// Orden para listar: primero lo difícil de conseguir.
+    public var sortIndex: Int {
+        switch self {
+        case .legendary: return 0
+        case .rare: return 1
+        case .uncommon: return 2
+        case .common: return 3
+        }
+    }
+
     public var badge: String {
         switch self {
         case .common: return "●"

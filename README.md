@@ -334,7 +334,9 @@ node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
 - No hay notificaciones del sistema en las capturas (evita pedir permisos): la
   barra muestra "¡X capturado!" durante 6 segundos.
 - La caja PC apila por especie + variante + etapa alcanzada, con contador `×N`,
-  así que la rejilla tiene techo (251 × 2 × 3) por muchas capturas que acumules; el menú
+  así que la rejilla tiene techo (251 × 2 × 3), y se puede buscar y filtrar
+  (nombre en español o inglés, nº de Pokédex, tipo, generación, variocolor,
+  evolucionados, repetidos; y cuatro órdenes) por muchas capturas que acumules; el menú
   del HUD lista solo los 8 grupos más recientes y enlaza a la caja completa.
   Los registros individuales sí se guardan todos (~178 bytes cada uno), pero no
   se muestran de uno en uno.
