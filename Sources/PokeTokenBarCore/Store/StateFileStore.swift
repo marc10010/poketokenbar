@@ -62,6 +62,9 @@ public struct StateFileStore {
                 return promoted
             }
         }
+        // v2 → v3: los gimnasios arrancan de cero. Decidido explícitamente no
+        // convalidar rango por tokens ya gastados: una partida en curso pierde
+        // el acceso a raros y legendarios hasta ganar 2 y 8 medallas.
         state.schemaVersion = GameState.currentSchemaVersion
         return state
     }

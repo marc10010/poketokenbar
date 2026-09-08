@@ -7,6 +7,10 @@ public struct BattleResult: Equatable, Sendable {
     public var tokensSpent: Int = 0
     public var captures: [CapturedPokemon] = []
     public var encounter: WildEncounter?
+    /// Tokens que quedaron sin gastar porque una captura abre gimnasio: el
+    /// rival siguiente lo pone el gimnasio, no el motor.
+    public var remainingTokens: Int = 0
+    public var stoppedForGym = false
 }
 
 /// Aplica daño al rival y encadena capturas. El daño sobrante de una captura
@@ -21,8 +25,8 @@ public struct BattleEngine {
         self.spawner = spawner ?? SpawnService(pokedex: pokedex)
     }
 
-    public func freshEncounter<R: RandomProvider>(totalTokens: Int, using rng: inout R, now: Date = Date()) -> WildEncounter {
-        spawner.spawn(totalTokens: totalTokens, using: &rng, now: now)
+    public func freshEncounter<R: RandomProvider>(rank: TrainerRank, using rng: inout R, now: Date = Date()) -> WildEncounter {
+        spawner.spawn(rank: rank, using: &rng, now: now)
     }
 
     /// - Parameters:
@@ -32,16 +36,22 @@ public struct BattleEngine {
     ///   - multiplier: se pide por rival, no una vez: si una captura hace
     ///     aparecer otro de tipo distinto, los tokens que sobran se escalan con
     ///     el multiplicador nuevo.
+    ///   - openGymAfterCapture: se consulta tras cada captura con el número de
+    ///     capturas hechas en esta llamada. Si dice sí, el motor para y devuelve
+    ///     los tokens que sobran en vez de sortear otro salvaje: ese hueco lo
+    ///     ocupa el líder de gimnasio.
     public func apply<R: RandomProvider>(
         damage: Int,
         to encounter: WildEncounter?,
         totalTokensAfter: Int,
+        rank: TrainerRank = .campeon,
         multiplier: (WildEncounter) -> Double = { _ in 1 },
+        openGymAfterCapture: (Int) -> Bool = { _ in false },
         using rng: inout R,
         now: Date = Date()
     ) -> BattleResult {
         var result = BattleResult()
-        var current = encounter ?? freshEncounter(totalTokens: totalTokensAfter, using: &rng, now: now)
+        var current = encounter ?? freshEncounter(rank: rank, using: &rng, now: now)
         var remainingTokens = max(0, damage)
 
         while remainingTokens > 0 {
@@ -74,7 +84,13 @@ public struct BattleEngine {
                     capturedAtTotalTokens: totalTokensAfter
                 )
             )
-            current = freshEncounter(totalTokens: totalTokensAfter, using: &rng, now: now)
+            if openGymAfterCapture(result.captures.count) {
+                result.stoppedForGym = true
+                result.remainingTokens = remainingTokens
+                result.encounter = nil
+                return result
+            }
+            current = freshEncounter(rank: rank, using: &rng, now: now)
         }
 
         result.encounter = current

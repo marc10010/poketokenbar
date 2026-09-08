@@ -74,6 +74,27 @@ enum UISmokeTest {
         print("  HUD flotante: \(Int(hudSize.width))x\(Int(hudSize.height))")
         ok = hudSize.width > 0 && hudSize.height > 0 && ok
 
+        // Gimnasio abierto: el HUD y el popover cambian de tarjeta.
+        store.debugDefeatGyms(upTo: 15)
+        if let gym = store.debugOpenNextGym() {
+            ok = layout("gimnasio (\(gym.leader))") && ok
+            // El panel del HUD tiene tamaño fijo y su raíz es un GeometryReader,
+            // que no tiene tamaño intrínseco: hay que medirlo con el marco real.
+            let panelSize = NSSize(width: 268, height: 460)
+            let gymHUD = NSHostingView(
+                rootView: HUDView()
+                    .environmentObject(store)
+                    .environmentObject(sprites)
+                    .frame(width: panelSize.width, height: panelSize.height)
+            )
+            gymHUD.layoutSubtreeIfNeeded()
+            let size = gymHUD.fittingSize
+            print("  HUD de gimnasio: \(Int(size.width))x\(Int(size.height)) bloqueado=\(store.isBlocked(against: gym))")
+            ok = size == panelSize && ok
+        } else {
+            print("  ✗ no se pudo abrir gimnasio")
+            ok = false
+        }
         // Con búsqueda que no casa: hay que renderizar el estado vacío, no romper.
         store.boxFilter.query = "no-existe-nada-asi"
         ok = layout("caja filtrada sin resultados") && ok

@@ -309,22 +309,24 @@ que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-## 10. Gimnasios (fase 1: reglas, aún sin combate)
+## 10. Gimnasios y medallas
 
 `Resources/gyms.json` es el único dato **curado a mano** del proyecto: PokeAPI
 no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
 luego los de Kanto, como en Gen 2), cada una con su Pokémon estrella — que es
 también su sprite, así que no hace falta ningún recurso gráfico nuevo.
 
-Lo que ya está implementado y probado, sin tocar el juego todavía:
+**El disparador**: al capturar un salvaje, si llevas 300.000 tokens o 10
+capturas desde el último gimnasio, el hueco del rival siguiente lo ocupa el
+líder. No interrumpe: hay que terminar el Pokémon en curso. Los contadores se
+reinician **al cerrar** el gimnasio, no al abrirlo, para que los 500k-1M tokens
+del propio combate no encadenen el siguiente.
 
-- `GymCatalog`: catálogo y "cuál es el siguiente sin derrotar";
-- `TrainerRank`: rango a partir de medallas (2 → Entrenador, 5 → Veterano,
-  8 → As, 16 → Campeón) y `Rarity.requiredRank`, que es el gate de aparición
-  que sustituirá al de tokens;
-- `GymCombat`: la aritmética del bloqueo.
+**Las medallas son el único gate de aparición**: 2 medallas abren los raros y 8
+los legendarios. Acumular tokens ya no desbloquea nada (`Rarity.requiredRank`
+sustituyó a los umbrales por tokens).
 
-**El líder absorbe daño**: `daño por token = max(0, multiplicador + bonus de
+**El líder absorbe daño** (no se pierde, se bloquea): `daño por token = max(0, multiplicador + bonus de
 etapa − absorción)`. Con un cruce insuficiente el progreso es **cero**, así que
 la medalla se gana eligiendo compañero y no esperando; y como nada depende del
 reloj, cerrar el Mac no cuesta progreso. La dificultad de los gimnasios tardíos
@@ -334,7 +336,12 @@ cruce neutro, los últimos exigen ×2 o ×4, es decir, tener roster.
 El daño se calcula contra los **tipos reales del Pokémon estrella**, no contra
 el tema del gimnasio: a Onix (roca/tierra) el agua le entra ×4.
 
-Diseño completo y decisiones abiertas: `docs/spec-gimnasios-medallas.md`.
+Al derrotarlo: medalla, **sin captura**, y vuelve a haber salvaje al instante.
+Si el cruce no basta, el HUD dice con qué Pokémon de tu caja sí entra y lo
+equipa en un clic; los tokens se gastan igual (cuentan para el ledger y para la
+evolución del compañero), simplemente no mueven la barra.
+
+Diseño completo y decisiones: `docs/spec-gimnasios-medallas.md`.
 
 ## 11. Regenerar el icono
 

@@ -193,7 +193,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
 /// Estado persistido completo. Cualquier cambio de forma requiere subir
 /// `schemaVersion` y añadir migración en `GameStore`.
 public struct GameState: Codable, Sendable {
-    public static let currentSchemaVersion = 2
+    public static let currentSchemaVersion = 3
 
     public var schemaVersion: Int = GameState.currentSchemaVersion
     public var ledger = TokenLedger()
@@ -201,6 +201,7 @@ public struct GameState: Codable, Sendable {
     public var activeCompanionID: UUID?
     public var encounter: WildEncounter?
     public var settings = GameSettings()
+    public var gyms = GymProgress()
     /// IDs de eventos ya aplicados, en orden de llegada (ventana acotada).
     public var processedEventIDs: [String] = []
     public var lastCaptureSpeciesID: Int?
@@ -218,6 +219,7 @@ public struct GameState: Codable, Sendable {
         activeCompanionID = try container.decodeIfPresent(UUID.self, forKey: .activeCompanionID)
         encounter = try container.decodeIfPresent(WildEncounter.self, forKey: .encounter)
         settings = try container.decodeIfPresent(GameSettings.self, forKey: .settings) ?? GameSettings()
+        gyms = try container.decodeIfPresent(GymProgress.self, forKey: .gyms) ?? GymProgress()
         processedEventIDs = try container.decodeIfPresent([String].self, forKey: .processedEventIDs) ?? []
         lastCaptureSpeciesID = try container.decodeIfPresent(Int.self, forKey: .lastCaptureSpeciesID)
     }

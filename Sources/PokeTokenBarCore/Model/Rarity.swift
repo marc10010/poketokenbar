@@ -36,16 +36,6 @@ public enum Rarity: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Tokens acumulados que el jugador necesita para desbloquear el tier.
-    /// Vigente hasta que los gimnasios se conecten (ver `requiredRank`).
-    public var unlockThreshold: Int {
-        switch self {
-        case .common, .uncommon: return 0
-        case .rare: return 200_000
-        case .legendary: return 2_000_000
-        }
-    }
-
     public var label: String {
         switch self {
         case .common: return "Común"
@@ -84,6 +74,9 @@ public enum GameRules {
     public static let stageTwoThreshold = 1_000_001
     /// Cuántos IDs de evento guardamos para idempotencia entre reinicios.
     public static let processedEventWindow = 20_000
+    /// Disparador de gimnasio: basta con cumplir una de las dos.
+    public static let gymTokenInterval = 300_000
+    public static let gymCaptureInterval = 10
     /// Suelo del multiplicador de tipos: una inmunidad (Normal contra Fantasma)
     /// dejaría el combate atascado y los tokens sin efecto, así que pega igual
     /// pero flojísimo.
