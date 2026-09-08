@@ -14,6 +14,13 @@ public struct SpawnService {
         Rarity.allCases.filter { totalTokens >= $0.unlockThreshold }
     }
 
+    /// Tiers disponibles por rango de entrenador. Sustituye al gate por tokens
+    /// cuando los gimnasios estén conectados: acumular tokens ya no desbloquea
+    /// nada por sí solo.
+    public func availableTiers(rank: TrainerRank) -> [Rarity] {
+        Rarity.allCases.filter { rank >= $0.requiredRank }
+    }
+
     /// Elige tier respetando los ratios del spec. Si un tier está bloqueado,
     /// su peso se redistribuye entre los disponibles en vez de reintentar.
     public func rollTier<R: RandomProvider>(totalTokens: Int, using rng: inout R) -> Rarity {

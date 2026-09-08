@@ -309,7 +309,34 @@ que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-## 10. Regenerar el icono
+## 10. Gimnasios (fase 1: reglas, aún sin combate)
+
+`Resources/gyms.json` es el único dato **curado a mano** del proyecto: PokeAPI
+no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
+luego los de Kanto, como en Gen 2), cada una con su Pokémon estrella — que es
+también su sprite, así que no hace falta ningún recurso gráfico nuevo.
+
+Lo que ya está implementado y probado, sin tocar el juego todavía:
+
+- `GymCatalog`: catálogo y "cuál es el siguiente sin derrotar";
+- `TrainerRank`: rango a partir de medallas (2 → Entrenador, 5 → Veterano,
+  8 → As, 16 → Campeón) y `Rarity.requiredRank`, que es el gate de aparición
+  que sustituirá al de tokens;
+- `GymCombat`: la aritmética del bloqueo.
+
+**El líder absorbe daño**: `daño por token = max(0, multiplicador + bonus de
+etapa − absorción)`. Con un cruce insuficiente el progreso es **cero**, así que
+la medalla se gana eligiendo compañero y no esperando; y como nada depende del
+reloj, cerrar el Mac no cuesta progreso. La dificultad de los gimnasios tardíos
+sube por absorción (0,25 → 1,5), no por HP: los nueve primeros se pueden con
+cruce neutro, los últimos exigen ×2 o ×4, es decir, tener roster.
+
+El daño se calcula contra los **tipos reales del Pokémon estrella**, no contra
+el tema del gimnasio: a Onix (roca/tierra) el agua le entra ×4.
+
+Diseño completo y decisiones abiertas: `docs/spec-gimnasios-medallas.md`.
+
+## 11. Regenerar el icono
 
 `assets/AppIcon.icns` está commiteado, pero se genera:
 
@@ -326,7 +353,7 @@ usa ningún recurso con dueño: es geometría, así que el repo puede llevarlo.
 node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
 ```
 
-## 12. Límites conocidos del MVP
+## 13. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Sin red, la app
