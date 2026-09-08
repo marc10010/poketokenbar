@@ -14,6 +14,7 @@ struct SelfTestRunner {
             PokedexEntryTests.self,
             CollectionTests.self,
             TypeChartTests.self,
+            ZoneTests.self,
             GymTests.self,
             GymBattleTests.self,
             GameStoreTests.self,
