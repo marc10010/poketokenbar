@@ -113,14 +113,20 @@ enum UISmokeTest {
         store.updateSettings {
             $0.hudFreeOrigin = nil
             $0.hudLocked = false
-            $0.hudSize = HUDSize(width: 320, height: 340)
+            $0.hudSize = HUDSize(width: 320, height: 380)
         }
         panels = NSApp.windows.compactMap { $0 as? NSPanel }.filter { $0.isVisible }
         let expanded = panels.first?.frame.size ?? .zero
         let resizable = panels.allSatisfy { $0.styleMask.contains(.resizable) }
         let showsBox = HUDView.showsBox(forHeight: expanded.height)
-        print("  desplegado: \(Int(expanded.width))x\(Int(expanded.height)) redimensionable=\(resizable) cajaPC=\(showsBox)")
-        ok = expanded == NSSize(width: 320, height: 340) && resizable && showsBox && ok
+        let showsMetrics = HUDView.showsMetrics(forHeight: expanded.height)
+        print("  desplegado: \(Int(expanded.width))x\(Int(expanded.height)) redimensionable=\(resizable) métricas=\(showsMetrics) cajaPC=\(showsBox)")
+        ok = expanded == NSSize(width: 320, height: 380) && resizable && showsMetrics && showsBox && ok
+
+        // Compacto: ni métricas ni caja, que si no tapa media pantalla.
+        let compactHidesExtras = !HUDView.showsMetrics(forHeight: 76) && !HUDView.showsBox(forHeight: 76)
+        print("  compacto oculta métricas y caja=\(compactHidesExtras)")
+        ok = compactHidesExtras && ok
         expectCompact(&ok, store: store, panelsProvider: { NSApp.windows.compactMap { $0 as? NSPanel }.filter { $0.isVisible } })
 
         store.updateSettings {

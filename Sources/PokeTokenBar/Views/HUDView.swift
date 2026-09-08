@@ -54,9 +54,11 @@ struct HUDView: View {
         .padding(4)
     }
 
-    /// Altura a partir de la cual el HUD deja sitio para la caja PC.
-    static let boxThreshold: CGFloat = 168
+    /// Alturas a las que el HUD va revelando contenido al crecer.
+    static let metricsThreshold: CGFloat = 118
+    static let boxThreshold: CGFloat = 200
 
+    static func showsMetrics(forHeight height: CGFloat) -> Bool { height >= metricsThreshold }
     static func showsBox(forHeight height: CGFloat) -> Bool { height >= boxThreshold }
 
     @ViewBuilder
@@ -66,9 +68,20 @@ struct HUDView: View {
            let companion = store.state.activeCompanion,
            let form = store.activeForm {
             GeometryReader { geometry in
+                let showsMetrics = Self.showsMetrics(forHeight: geometry.size.height)
                 let showsBox = Self.showsBox(forHeight: geometry.size.height)
                 VStack(alignment: .leading, spacing: 5) {
-                    battleHeader(encounter: encounter, rival: rival, companion: companion, form: form, expanded: showsBox)
+                    battleHeader(
+                        encounter: encounter,
+                        rival: rival,
+                        companion: companion,
+                        form: form,
+                        expanded: showsMetrics || showsBox
+                    )
+                    if showsMetrics {
+                        Divider()
+                        metricsStrip
+                    }
                     if showsBox {
                         Divider()
                         if store.state.box.isEmpty {
@@ -94,6 +107,33 @@ struct HUDView: View {
                 .contextMenu { hudMenu }
             }
             .padding(4)
+        }
+    }
+
+    /// Métricas de consumo en el HUD desplegado, en el mismo orden que el
+    /// popover para que no haya dos verdades distintas.
+    private var metricsStrip: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            metric("Tokens totales", Fmt.tokens(store.totalTokens))
+            metric("Este mes", Fmt.tokens(store.monthTokens))
+            metric("Especies", "\(store.speciesCaught) / 251")
+            metric("Capturas", Fmt.tokens(store.state.box.count))
+            if let next = store.activeNextForm, let remaining = store.stage.tokensToNext(from: store.totalTokens) {
+                metric("\(next.localizedName) en", Fmt.tokens(remaining))
+            } else {
+                metric("Evolución", store.stage.label)
+            }
+        }
+    }
+
+    private func metric(_ label: String, _ value: String) -> some View {
+        HStack(spacing: 6) {
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 4)
+            Text(value)
+                .font(.system(size: 9, design: .monospaced))
         }
     }
 
@@ -139,7 +179,7 @@ struct HUDView: View {
     private func resizeButton(expanded: Bool) -> some View {
         Button {
             store.updateSettings { settings in
-                settings.hudSize = expanded ? nil : HUDSize(width: 320, height: 340)
+                settings.hudSize = expanded ? nil : HUDSize(width: 320, height: 380)
             }
         } label: {
             Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")

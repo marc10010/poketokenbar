@@ -132,9 +132,11 @@ Colocación:
 
 Tamaño:
 - compacto (208×76): solo el combate;
-- arrastrando cualquier borde crece, y al pasar de 168 px de alto aparece
-  dentro la **caja PC** (rejilla adaptativa: más ancho = más columnas). El botón
-  de la esquina despliega/pliega a 320×340 sin buscar el borde, que en una
+- arrastrando cualquier borde crece y va revelando contenido por altura:
+  a partir de 118 px las **métricas de consumo** (tokens totales, este mes,
+  especies, capturas y lo que falta para la siguiente evolución) y a partir de
+  200 px la **caja PC** (rejilla adaptativa: más ancho = más columnas). El botón
+  de la esquina despliega/pliega a 320×380 sin buscar el borde, que en una
   ventana sin marco no se ve. Acotado a 520×620 y persistido.
 
 Estados de ratón:
