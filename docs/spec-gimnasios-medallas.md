@@ -1,0 +1,215 @@
+# Spec: gimnasios, medallas y rango de entrenador
+
+Estado: **borrador para decidir**, sin implementar. Nada de esto existe hoy en
+el código.
+
+## 1. Por qué
+
+El juego actual no tiene objetivo: capturas indefinidamente y nada culmina. Los
+tiers raro y legendario se desbloquean solos con el tiempo (>200k y >2M tokens),
+así que la progresión es pura acumulación pasiva.
+
+Los gimnasios meten tres cosas que faltan: un **hito** cada cierto tiempo, una
+**recompensa que no es otro Pokémon en la caja** (medalla) y, sobre todo, una
+razón para que la efectividad de tipos deje de ser decorativa: contra un líder
+sabes su tipo **de antemano** y eliges compañero, mientras que en los salvajes
+te toca por sorteo.
+
+## 2. Reglas pedidas
+
+Tal cual, para no perderlas de vista:
+
+1. Cada **300.000 tokens acumulados** o tras vencer **10 Pokémon salvajes**, el
+   siguiente encuentro se **pausa** y aparece un Líder de Gimnasio (Gen 1 o 2).
+2. Los líderes tienen **500.000 – 1.000.000 HP**.
+3. Al derrotarlo **no se captura** a su Pokémon: se otorga una **medalla**.
+4. Tener X medallas es **requisito obligatorio** para subir de **Rango de
+   Entrenador**, y el rango es lo que desbloquea la aparición de raros y
+   legendarios en los encuentros salvajes.
+
+## 3. Cómo encaja con lo que ya hay
+
+| Pieza existente | Qué cambia |
+|---|---|
+| `SpawnService` gatea tiers por `unlockThreshold` en tokens | El gate pasa a ser el **rango**; los umbrales de tokens desaparecen o se combinan (ver decisión D5) |
+| `BattleEngine.apply` reparte daño y captura al llegar a 0 HP | Necesita un modo "sin captura" y un tope de gasto (ver D2) |
+| `WildEncounter` es el único tipo de rival | Aparece un segundo tipo de combate; el encuentro salvaje en curso se **guarda**, no se descarta |
+| Multiplicador de tipos por rival | Es la mecánica central del gimnasio: el tipo del líder se conoce antes de entrar |
+| `state.box` guarda capturas | Las medallas van aparte: no son Pokémon |
+
+## 4. Modelo de datos
+
+`schemaVersion: 3`.
+
+```jsonc
+{
+  "gyms": {
+    "defeated": ["kanto-pewter", "kanto-cerulean"],   // ids de gimnasio, en orden
+    "tokensSinceLastGym": 128400,
+    "capturesSinceLastGym": 4,
+    "current": {                                       // null si no hay gimnasio activo
+      "gymID": "kanto-vermilion",
+      "maxHP": 720000,
+      "currentHP": 315000,
+      "tokensSpent": 405000,
+      "tokenBudget": 1080000,                          // ver D2
+      "startedAt": "..."
+    }
+  },
+  "pausedEncounter": { "speciesID": 147, "currentHP": 240000, "...": "..." }
+}
+```
+
+Catálogo de gimnasios: `Resources/gyms.json`, **escrito a mano** (PokeAPI no
+tiene líderes). Un líder se representa con el **sprite de su Pokémon estrella**,
+así que no hace falta ningún recurso gráfico nuevo.
+
+```jsonc
+{
+  "id": "kanto-pewter",
+  "leader": "Brock",
+  "city": "Ciudad Plateada",
+  "region": "kanto",
+  "type": "rock",
+  "signatureSpeciesID": 95,        // Onix
+  "medal": "Medalla Roca",
+  "order": 1,
+  "hp": [500000, 620000]           // se sortea dentro del rango
+}
+```
+
+16 entradas (8 Kanto + 8 Johto). El orden fija en qué gimnasio te toca: el
+siguiente sin derrotar.
+
+## 5. El disparador
+
+```
+si (tokensSinceLastGym >= 300_000) o (capturesSinceLastGym >= 10)
+   y queda algún gimnasio sin derrotar
+   y no hay gimnasio activo
+entonces el próximo evento de tokens abre gimnasio
+```
+
+- Los dos contadores se ponen a cero **cuando el gimnasio termina**, no cuando
+  empieza. Si se reiniciaran al empezar, los 500k–1M tokens del propio combate
+  volverían a llenar el contador de 300k y encadenarías gimnasios sin descanso
+  (ver D4).
+- El encuentro salvaje en curso se guarda en `pausedEncounter` con su HP tal
+  como estaba y se restaura al acabar. No se descarta: perder un legendario a
+  medio bajar por un gimnasio sería inaceptable.
+- El daño que sobra del evento que abre el gimnasio entra ya al líder, igual que
+  el arrastre entre rivales que ya existe.
+
+## 6. El combate
+
+- El daño se calcula como ahora: `tokens × multiplicador de tipos`, con el tipo
+  del líder conocido. Contra Brock (roca) tu Squirtle pega ×2 y tu Pidgey ×0,5.
+- **Se puede cambiar de compañero durante el combate.** Es la decisión del
+  jugador y lo único que hace del gimnasio un puzzle en vez de una barra larga.
+- Al llegar a 0 HP: medalla, **sin captura**, contadores a cero, se restaura el
+  encuentro salvaje pausado.
+- El compañero equipado gana los tokens del gimnasio igual que siempre, así que
+  un gimnasio también hace evolucionar.
+
+## 7. Medallas y rango
+
+| Rango | Medallas | Desbloquea |
+|---|---|---|
+| Novato | 0 | común, poco común |
+| Entrenador | 2 | **raro** |
+| Veterano | 5 | HP de salvajes ×1,25 (opcional, ver D6) |
+| As | 8 | **legendario** |
+| Campeón | 16 | — (fin del contenido) |
+
+Sustituye a `Rarity.unlockThreshold`, que hoy es puro token. Consecuencia
+buscada: acumular tokens ya no basta para ver un Mewtwo; hay que ganar
+gimnasios.
+
+## 8. UI
+
+- **Barra de menú**: durante un gimnasio, el título cambia a la medalla en
+  juego y el HP del líder. Fuera de combate, un contador de medallas discreto.
+- **HUD**: tarjeta de gimnasio con el nombre del líder, su tipo, el
+  multiplicador de tu compañero contra él (que es la información que dispara la
+  acción) y el presupuesto restante si se adopta D2.
+- **Popover**: sección de medallas (16 huecos, las conseguidas en color), rango
+  actual y qué desbloquea el siguiente.
+- Aviso al abrirse un gimnasio: es el único momento del juego que merece
+  interrumpir, y hoy no hay notificaciones (ver D7).
+
+## 9. Migración v2 → v3
+
+Los contadores arrancan a cero y `defeated` vacío. El efecto en una partida en
+curso es que **se pierde acceso a raros y legendarios** hasta ganar 2 y 8
+medallas.
+
+Con ~485k tokens acumulados, el primer gimnasio se abre en el evento siguiente
+al arranque, así que la primera medalla llega en horas, no en días. Ver D3 para
+la alternativa de convalidar rango por tokens ya gastados.
+
+## 10. Plan de tests
+
+Lo que hay que fijar con tests antes de dar esto por bueno:
+
+- el disparador salta por tokens **y** por capturas, y solo una vez;
+- los contadores se reinician al **terminar**, y un gimnasio de 1M tokens no
+  encadena el siguiente;
+- el encuentro salvaje se restaura con **el mismo HP** que tenía;
+- derrotar a un líder **no** añade nada a la caja;
+- la medalla se otorga **una sola vez** aunque un único evento gigante pase de
+  sobra del HP del líder;
+- el rango sale de las medallas y el gate de spawn sale del rango: con 0
+  medallas y 5M tokens **no** aparecen legendarios;
+- si se adopta D2: agotar el presupuesto cierra el gimnasio sin medalla y sin
+  perder nada más;
+- el sobrante de tokens del evento que abre el gimnasio entra al líder.
+
+## 11. Decisiones abiertas
+
+**D1 — ¿Un Pokémon o equipo?** La regla dice "su Pokémon", en singular.
+Propuesta: **uno**, con una sola barra de HP; el equipo completo se lista como
+adorno. Un equipo de 3 con barras secuenciales es más fiel pero triplica estado
+y UI.
+
+**D2 — ¿Se puede perder?** Hoy no existe la derrota: los tokens siempre pegan,
+así que un gimnasio sería solo una barra más larga y la elección de tipo solo
+cambiaría *cuánto tarda*. Propuesta: **presupuesto de tokens** de 1,5× el HP del
+líder; si se agota, el líder se va sin medalla y hay que esperar al siguiente
+disparador. Riesgo a aceptar: los tokens llegan de tu trabajo real, no de jugar,
+así que "perder" puede sentirse como un castigo por trabajar. Alternativa
+conservadora para el MVP: **sin derrota**, y D2 se pospone.
+
+**D3 — ¿Convalidar la partida actual?** Propuesta: **no** convalidar, porque
+regalar rango vacía la mecánica el primer día. La rebaja razonable es que el
+primer gimnasio se abra de inmediato, que es lo que pasa con 485k tokens.
+
+**D4 — ¿Los tokens del gimnasio cuentan para el siguiente disparador?**
+Propuesta: **no**. Cuentan para el ledger y para la evolución del compañero,
+pero el contador de 300k se reinicia al cerrar el gimnasio.
+
+**D5 — ¿El gate de tokens desaparece del todo?** Propuesta: **sí**, lo sustituye
+el rango. La alternativa (rango **y** tokens) hace el desbloqueo más lento y
+difícil de explicar.
+
+**D6 — ¿El rango afecta a algo más que al tier?** Propuesta: no en el MVP. Subir
+el HP de los salvajes con el rango es fácil de añadir después y es la palanca
+natural si el juego se vuelve trivial.
+
+**D7 — ¿Notificación al abrirse un gimnasio?** Hoy no hay notificaciones a
+propósito, para no pedir permisos. Un gimnasio es el único evento que justifica
+pedirlos. Propuesta: en el MVP, el HUD y la barra cambian de aspecto; la
+notificación del sistema queda para después.
+
+## 12. Fuera de alcance
+
+Alto Mando y Campeón, revanchas contra líderes ya derrotados, objetos, MT,
+niveles individuales, e intercambio.
+
+## 13. Fases
+
+1. **Datos y reglas**: `gyms.json`, `GymCatalog`, rango y gate de spawn por
+   rango, con tests. Sin UI: se puede verificar entero con el arnés.
+2. **Combate**: disparador, pausa/restauración del salvaje, daño sin captura,
+   medalla.
+3. **UI**: tarjeta en el HUD, medallas y rango en el popover, barra de menú.
+4. Opcionales según D2/D6/D7.
