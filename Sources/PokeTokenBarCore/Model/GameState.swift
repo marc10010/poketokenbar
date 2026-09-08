@@ -11,6 +11,10 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
     public let capturedAtTotalTokens: Int
     /// Fija la rama evolutiva cuando la cadena bifurca (Eevee, Gloom, Tyrogue).
     public let evolutionSeed: UInt64
+    /// Tokens ganados **mientras estaba equipado**. Es lo que le hace
+    /// evolucionar, y solo crece: una evolución conseguida no se pierde al
+    /// cambiar de compañero.
+    public var tokensEarned: Int
     public var nickname: String?
 
     public init(
@@ -20,6 +24,7 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         capturedAt: Date = Date(),
         capturedAtTotalTokens: Int,
         evolutionSeed: UInt64 = UInt64.random(in: 0..<UInt64.max),
+        tokensEarned: Int = 0,
         nickname: String? = nil
     ) {
         self.id = id
@@ -28,7 +33,22 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         self.capturedAt = capturedAt
         self.capturedAtTotalTokens = capturedAtTotalTokens
         self.evolutionSeed = evolutionSeed
+        self.tokensEarned = tokensEarned
         self.nickname = nickname
+    }
+
+    /// Decodificación tolerante: los ficheros de la versión anterior no traen
+    /// `tokensEarned` (la migración de `StateFileStore` los rellena).
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        speciesID = try container.decode(Int.self, forKey: .speciesID)
+        isShiny = try container.decode(Bool.self, forKey: .isShiny)
+        capturedAt = try container.decode(Date.self, forKey: .capturedAt)
+        capturedAtTotalTokens = try container.decode(Int.self, forKey: .capturedAtTotalTokens)
+        evolutionSeed = try container.decode(UInt64.self, forKey: .evolutionSeed)
+        tokensEarned = try container.decodeIfPresent(Int.self, forKey: .tokensEarned) ?? 0
+        nickname = try container.decodeIfPresent(String.self, forKey: .nickname)
     }
 }
 
@@ -60,6 +80,16 @@ public struct TokenLedger: Codable, Hashable, Sendable {
     public var monthly: [String: Int] = [:]
     public var lastEventAt: Date?
     public var eventCount: Int = 0
+
+    public init() {}
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        total = try container.decodeIfPresent(Int.self, forKey: .total) ?? 0
+        monthly = try container.decodeIfPresent([String: Int].self, forKey: .monthly) ?? [:]
+        lastEventAt = try container.decodeIfPresent(Date.self, forKey: .lastEventAt)
+        eventCount = try container.decodeIfPresent(Int.self, forKey: .eventCount) ?? 0
+    }
 
     public static func monthKey(for date: Date) -> String {
         var calendar = Calendar(identifier: .gregorian)
@@ -160,7 +190,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
 /// Estado persistido completo. Cualquier cambio de forma requiere subir
 /// `schemaVersion` y añadir migración en `GameStore`.
 public struct GameState: Codable, Sendable {
-    public static let currentSchemaVersion = 1
+    public static let currentSchemaVersion = 2
 
     public var schemaVersion: Int = GameState.currentSchemaVersion
     public var ledger = TokenLedger()
@@ -173,6 +203,21 @@ public struct GameState: Codable, Sendable {
     public var lastCaptureSpeciesID: Int?
 
     public init() {}
+
+    /// Decodificación tolerante por el mismo motivo que en `GameSettings`: si
+    /// un fichero antiguo no trae una clave, se usa el valor por defecto en vez
+    /// de tirar el estado entero a cuarentena.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
+        ledger = try container.decodeIfPresent(TokenLedger.self, forKey: .ledger) ?? TokenLedger()
+        box = try container.decodeIfPresent([CapturedPokemon].self, forKey: .box) ?? []
+        activeCompanionID = try container.decodeIfPresent(UUID.self, forKey: .activeCompanionID)
+        encounter = try container.decodeIfPresent(WildEncounter.self, forKey: .encounter)
+        settings = try container.decodeIfPresent(GameSettings.self, forKey: .settings) ?? GameSettings()
+        processedEventIDs = try container.decodeIfPresent([String].self, forKey: .processedEventIDs) ?? []
+        lastCaptureSpeciesID = try container.decodeIfPresent(Int.self, forKey: .lastCaptureSpeciesID)
+    }
 
     public var activeCompanion: CapturedPokemon? {
         guard let activeCompanionID else { return box.first }

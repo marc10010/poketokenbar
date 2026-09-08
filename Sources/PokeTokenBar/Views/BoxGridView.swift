@@ -36,8 +36,8 @@ struct BoxGridView: View {
             store.setActiveCompanion(group.representative.id)
         } label: {
             VStack(spacing: 0) {
-                SpriteView(speciesID: group.form.id, shiny: group.isShiny, size: cellSize)
-                Text(group.form.localizedName)
+                SpriteView(speciesID: group.displayForm.id, shiny: group.isShiny, size: cellSize)
+                Text(group.displayForm.localizedName)
                     .font(.system(size: 8))
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -48,6 +48,14 @@ struct BoxGridView: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(isActive ? Color.accentColor.opacity(0.22) : Color.secondary.opacity(0.07))
             )
+            .overlay(alignment: .topLeading) {
+                if group.hasEvolved {
+                    Text(group.stage == .two ? "★★" : "★")
+                        .font(.system(size: 8))
+                        .foregroundStyle(.orange)
+                        .padding(2)
+                }
+            }
             .overlay(alignment: .topTrailing) {
                 if group.isShiny {
                     Text("✦").font(.system(size: 8)).foregroundStyle(.yellow).padding(2)
@@ -65,6 +73,11 @@ struct BoxGridView: View {
             }
         }
         .buttonStyle(.plain)
-        .help("\(group.form.localizedName)\(group.isShiny ? " ✦" : "") · \(group.count) en la caja · #\(String(format: "%03d", group.form.id))")
+        .help(
+            "\(group.displayForm.localizedName)\(group.isShiny ? " ✦" : "") · \(group.count) en la caja · "
+                + "#\(String(format: "%03d", group.species.id)) \(group.species.localizedName)"
+                + (group.hasEvolved ? " · \(group.stage.label)" : "")
+                + (isActive ? " · equipado" : "")
+        )
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import PokeTokenBarCore
 
 /// Arnés de test mínimo. Existe porque la máquina objetivo puede tener solo las
 /// Command Line Tools, donde no hay XCTest ni swift-testing: así
@@ -93,5 +94,14 @@ enum TemporaryFiles {
 
     static func cleanUp() {
         try? FileManager.default.removeItem(at: root)
+    }
+}
+
+extension CapturedPokemon {
+    /// Copia con otro progreso, para probar etapas sin recrear el ejemplar.
+    func earning(_ tokens: Int) -> CapturedPokemon {
+        var copy = self
+        copy.tokensEarned = tokens
+        return copy
     }
 }

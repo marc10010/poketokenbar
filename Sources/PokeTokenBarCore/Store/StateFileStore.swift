@@ -46,11 +46,23 @@ public struct StateFileStore {
         _ = try FileManager.default.replaceItemAt(url, withItemAt: temporary)
     }
 
+    /// v1 → v2: la evolución pasa de derivarse del histórico global a ser
+    /// progreso propio de cada Pokémon (`tokensEarned`). El compañero que venía
+    /// equipado es el que había estado ganando esos tokens, así que se le
+    /// acredita lo acumulado desde su captura; el resto arranca de cero, que es
+    /// lo que refleja la realidad de la partida.
     static func migrate(_ state: GameState) -> GameState {
         var state = state
-        if state.schemaVersion < GameState.currentSchemaVersion {
-            state.schemaVersion = GameState.currentSchemaVersion
+        if state.schemaVersion < 2 {
+            let activeID = state.activeCompanion?.id
+            state.box = state.box.map { captured in
+                guard captured.id == activeID else { return captured }
+                var promoted = captured
+                promoted.tokensEarned = max(0, state.ledger.total - captured.capturedAtTotalTokens)
+                return promoted
+            }
         }
+        state.schemaVersion = GameState.currentSchemaVersion
         return state
     }
 }
