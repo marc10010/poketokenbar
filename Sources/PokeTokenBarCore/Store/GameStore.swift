@@ -17,6 +17,7 @@ public final class GameStore: ObservableObject {
     /// consulta: no se persiste.
     @Published public var selectedBoxGroupID: String?
     @Published public var selectedGymID: String?
+    @Published public var selectedMilestoneID: String?
     /// Pokédex completa abierta, con su propio recorte de búsqueda.
     @Published public var showingPokedex = false
     @Published public var pokedexFilter = PokedexFilter()
@@ -27,6 +28,7 @@ public final class GameStore: ObservableObject {
     public let typeChart: TypeChart
     public let gymCatalog: GymCatalog
     public let zoneCatalog: ZoneCatalog
+    public let milestoneCatalog: MilestoneCatalog
     private let file: StateFileStore
     private let battle: BattleEngine
     private let evolution: EvolutionService
@@ -57,6 +59,7 @@ public final class GameStore: ObservableObject {
         typeChart: TypeChart = .shared,
         gymCatalog: GymCatalog = .shared,
         zoneCatalog: ZoneCatalog = .shared,
+        milestoneCatalog: MilestoneCatalog = .shared,
         file: StateFileStore = StateFileStore(),
         rng: any RandomProvider = SystemRandomProvider()
     ) {
@@ -64,6 +67,7 @@ public final class GameStore: ObservableObject {
         self.typeChart = typeChart
         self.gymCatalog = gymCatalog
         self.zoneCatalog = zoneCatalog
+        self.milestoneCatalog = milestoneCatalog
         self.file = file
         self.rng = rng
         self.battle = BattleEngine(pokedex: pokedex)
@@ -120,6 +124,71 @@ public final class GameStore: ObservableObject {
         zoneCatalog.isAvailable(speciesID, zoneAccess) || zoneCatalog.unassigned.contains(speciesID)
     }
     public var rank: TrainerRank { state.gyms.rank }
+
+    // MARK: - Hitos legendarios
+
+    public var activeMilestone: (milestone: Milestone, battle: ActiveBossBattle)? {
+        guard let battle = state.milestones.current,
+              let milestone = milestoneCatalog[battle.milestoneID]
+        else { return nil }
+        return (milestone, battle)
+    }
+
+    /// Por qué un hito está o no disponible. Se dice, no se deja en gris.
+    public func availability(of milestone: Milestone) -> MilestoneAvailability {
+        if state.milestones.defeatedIDs.contains(milestone.id) { return .defeated }
+        if state.milestones.current != nil || state.gyms.current != nil { return .busy }
+        if let zone = zoneCatalog[milestone.zoneID], !zoneAccess.opens(zone) {
+            return .zoneClosed(zone.name)
+        }
+        if medals < milestone.extraMedals { return .needsMedals(milestone.extraMedals - medals) }
+        if let required = milestone.requiredSpecies, pokedexCaptured < required {
+            return .needsSpecies(required - pokedexCaptured)
+        }
+        return .available
+    }
+
+    /// Cruce del compañero contra el legendario del hito.
+    public func matchup(against milestone: Milestone) -> TypeMatchup {
+        guard state.settings.typeEffectivenessEnabled,
+              let attacker = activeForm,
+              let defender = pokedex[milestone.speciesID]
+        else { return .neutral }
+        return typeChart.matchup(attacker: attacker.types, defender: defender.types)
+    }
+
+    public func damagePerToken(against milestone: Milestone) -> Double {
+        gymCombat.damagePerToken(
+            matchup: matchup(against: milestone).multiplier,
+            absorption: milestone.absorption,
+            stage: stage
+        )
+    }
+
+    public func isBlocked(against milestone: Milestone) -> Bool {
+        damagePerToken(against: milestone) <= 0
+    }
+
+    /// Abre el hito. Solo uno a la vez, y nunca con un gimnasio en curso.
+    @discardableResult
+    public func startMilestone(_ id: String) -> Bool {
+        guard let milestone = milestoneCatalog[id], availability(of: milestone).isAvailable else { return false }
+        let hp = rng.nextInt(in: milestone.hpRange)
+        state.milestones.current = ActiveBossBattle(milestoneID: id, maxHP: hp)
+        state.encounter = nil
+        persist()
+        return true
+    }
+
+    /// Se puede abandonar: el progreso del legendario se pierde, pero el
+    /// jugador recupera sus salvajes. Un hito que te secuestra la partida
+    /// hasta ganarlo sería una trampa, no un reto.
+    public func abandonMilestone() {
+        guard state.milestones.current != nil else { return }
+        state.milestones.current = nil
+        ensureEncounter()
+        persist()
+    }
 
     /// Gimnasio abierto ahora mismo, si lo hay.
     public var activeGym: (gym: Gym, battle: ActiveGymBattle)? {
@@ -303,6 +372,7 @@ public final class GameStore: ObservableObject {
     /// el consumo que ya se contabilizó podría volver a entrar como daño.
     public func resetGame() {
         selectedGymID = nil
+        selectedMilestoneID = nil
         selectedDexSpeciesID = nil
         showingPokedex = false
         pokedexFilter.reset()
@@ -331,8 +401,8 @@ public final class GameStore: ObservableObject {
     @discardableResult
     public func ensureEncounter() -> WildEncounter? {
         guard state.hasStarter else { return nil }
-        // Con gimnasio abierto no hay salvaje: el líder ocupa ese hueco.
-        guard state.gyms.current == nil else { return nil }
+        // Con un jefe abierto no hay salvaje: ocupa ese hueco.
+        guard state.gyms.current == nil, state.milestones.current == nil else { return nil }
         if state.encounter == nil || state.encounter?.isFainted == true {
             state.encounter = battle.freshEncounter(rank: rank, access: zoneAccess, using: &rng)
         }
@@ -360,6 +430,14 @@ public final class GameStore: ObservableObject {
         // Con gimnasio abierto, el evento entero va contra el líder. Si cae,
         // los tokens que sobran siguen contra un salvaje nuevo.
         var tokens = damage
+        if state.milestones.current != nil {
+            tokens = resolveMilestoneBattle(tokens: tokens, now: event.timestamp)
+            guard tokens > 0 else {
+                creditActiveCompanion(tokens: damage)
+                persist()
+                return nil
+            }
+        }
         if state.gyms.current != nil {
             tokens = resolveGymBattle(tokens: tokens, now: event.timestamp)
             guard tokens > 0 else {
@@ -376,7 +454,7 @@ public final class GameStore: ObservableObject {
         let chart = typeChart
         let pokedex = pokedex
         let progress = state.gyms
-        let hasPendingGym = nextGym != nil
+        let hasPendingGym = nextGym != nil && state.milestones.current == nil
 
         let result = battle.apply(
             damage: tokens,
@@ -481,6 +559,66 @@ public final class GameStore: ObservableObject {
               let index = state.box.firstIndex(where: { $0.id == companionID })
         else { return }
         state.box[index].wildDefeats += 1
+    }
+
+    /// Aplica tokens al legendario del hito y devuelve los que sobren si cae.
+    /// Al vencerlo **sí se captura**: es la excepción a "un jefe no se queda",
+    /// porque el objetivo del juego es la Pokédex.
+    @discardableResult
+    private func resolveMilestoneBattle(tokens: Int, now: Date) -> Int {
+        guard var battleState = state.milestones.current,
+              let milestone = milestoneCatalog[battleState.milestoneID]
+        else { return tokens }
+
+        let matchup = matchup(against: milestone).multiplier
+        let rate = damagePerToken(against: milestone)
+        guard rate > 0 else {
+            battleState.tokensSpent += tokens
+            state.milestones.current = battleState
+            return 0
+        }
+
+        let needed = gymCombat.tokensNeeded(
+            for: battleState.currentHP,
+            matchup: matchup,
+            absorption: milestone.absorption,
+            stage: stage
+        ) ?? tokens
+
+        guard tokens >= needed else {
+            let hit = gymCombat.damage(
+                tokens: tokens,
+                matchup: matchup,
+                absorption: milestone.absorption,
+                stage: stage
+            )
+            battleState.currentHP -= min(battleState.currentHP, hit)
+            battleState.tokensSpent += tokens
+            state.milestones.current = battleState
+            return 0
+        }
+
+        state.milestones.current = nil
+        state.milestones.award(battleState.milestoneID)
+        captureLegendary(speciesID: milestone.speciesID, at: now)
+        ensureEncounter()
+        return tokens - needed
+    }
+
+    /// Mete el legendario en la caja. No pasa por la regla de líneas repetidas
+    /// porque un hito solo se gana una vez y su línea no tiene nada más.
+    private func captureLegendary(speciesID: Int, at date: Date) {
+        let captured = CapturedPokemon(
+            speciesID: speciesID,
+            isShiny: false,
+            capturedAt: date,
+            capturedAtTotalTokens: state.ledger.total
+        )
+        state.box.append(captured)
+        state.lastCaptureSpeciesID = speciesID
+        lastCapture = captured
+        groupCache = nil
+        dexCache = nil
     }
 
     /// Abre el siguiente gimnasio: sortea su HP y deja el combate en curso.

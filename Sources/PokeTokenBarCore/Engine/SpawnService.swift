@@ -14,7 +14,7 @@ public struct SpawnService {
     /// Tiers disponibles según el rango. Acumular tokens no desbloquea nada:
     /// hacen falta medallas.
     public func availableTiers(rank: TrainerRank) -> [Rarity] {
-        Rarity.allCases.filter { rank >= $0.requiredRank }
+        Rarity.allCases.filter { $0.spawnsInTheWild && rank >= $0.requiredRank }
     }
 
     /// Elige tier respetando los ratios del spec. Si un tier está bloqueado,
@@ -48,7 +48,7 @@ public struct SpawnService {
         var available = tierPool.filter { zones.isAvailable($0.id, access) }
 
         for id in zones.unassigned {
-            guard let species = pokedex[id], species.isBaseForm else { continue }
+            guard let species = pokedex[id], species.isBaseForm, !species.isLegendary else { continue }
             guard fallbackTier(for: species) == rarity else { continue }
             if !available.contains(where: { $0.id == id }) { available.append(species) }
         }

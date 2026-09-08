@@ -214,7 +214,10 @@ enum GymBattleTests: TestSuite {
 
         store.debugDefeatGyms(upTo: 8)
         expectEqual(store.rank, TrainerRank.ace)
-        expectTrue(SpawnService().availableTiers(rank: store.rank).contains(.legendary))
+        expectFalse(
+            SpawnService().availableTiers(rank: store.rank).contains(.legendary),
+            "los legendarios pasaron a ser hitos: el rango As ya no los saca en libertad"
+        )
     }
 
     static func testGymTokensStillCount() throws {

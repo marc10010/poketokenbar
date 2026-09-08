@@ -225,6 +225,27 @@ enum UISmokeTest {
         store.selectedDexSpeciesID = nil
         store.showingPokedex = false
 
+        // Hitos: la lista, y un legendario abierto de verdad.
+        store.debugDefeatGyms(upTo: 8)
+        ok = layout("lista de hitos") && ok
+        if store.startMilestone("torre-quemada-suicune"), let boss = store.activeMilestone {
+            print("  hito abierto: \(boss.milestone.place) · \(Fmt.tokens(boss.battle.maxHP)) HP · bloqueado=\(store.isBlocked(against: boss.milestone))")
+            ok = layout("hito legendario") && ok
+            let hudBoss = NSHostingView(
+                rootView: HUDView()
+                    .environmentObject(store)
+                    .environmentObject(sprites)
+                    .frame(width: 268, height: 220)
+            )
+            hudBoss.layoutSubtreeIfNeeded()
+            ok = hudBoss.fittingSize == NSSize(width: 268, height: 220) && ok
+            store.abandonMilestone()
+            ok = (store.activeMilestone == nil) && ok
+        } else {
+            print("  ✗ no se pudo abrir el hito")
+            ok = false
+        }
+
         // La Pokédex completa y la ficha de algo que no tienes.
         store.showingPokedex = true
         ok = layout("pokédex (\(store.pokedexCaptured)/251)") && ok

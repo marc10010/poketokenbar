@@ -95,7 +95,9 @@ enum GymTests: TestSuite {
         expectEqual(spawner.availableTiers(rank: .novato), [.common, .uncommon])
         expectEqual(spawner.availableTiers(rank: .entrenador), [.common, .uncommon, .rare])
         expectEqual(spawner.availableTiers(rank: .veterano), [.common, .uncommon, .rare])
-        expectEqual(spawner.availableTiers(rank: .ace), Rarity.allCases)
+        // El tier legendario no está: los legendarios son hitos, no sorteo.
+        expectEqual(spawner.availableTiers(rank: .ace), [.common, .uncommon, .rare])
+        expectFalse(Rarity.legendary.spawnsInTheWild)
 
         // Lo que cambia respecto a hoy: los tokens ya no abren nada por su cuenta.
         expectEqual(

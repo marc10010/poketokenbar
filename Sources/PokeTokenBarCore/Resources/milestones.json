@@ -1,0 +1,160 @@
+{
+ "schemaVersion": 1,
+ "source": "curado a mano; los sitios son zonas del catálogo de zonas",
+ "milestones": [
+  {
+   "id": "torre-quemada-raikou",
+   "place": "Torre Quemada",
+   "zoneID": "torre-quemada",
+   "speciesID": 243,
+   "region": "johto",
+   "extraMedals": 0,
+   "requiredSpecies": null,
+   "hp": [
+    1500000,
+    1750000
+   ],
+   "absorption": 1.0
+  },
+  {
+   "id": "torre-quemada-entei",
+   "place": "Torre Quemada",
+   "zoneID": "torre-quemada",
+   "speciesID": 244,
+   "region": "johto",
+   "extraMedals": 0,
+   "requiredSpecies": null,
+   "hp": [
+    1720000,
+    1970000
+   ],
+   "absorption": 1.0
+  },
+  {
+   "id": "torre-quemada-suicune",
+   "place": "Torre Quemada",
+   "zoneID": "torre-quemada",
+   "speciesID": 245,
+   "region": "johto",
+   "extraMedals": 0,
+   "requiredSpecies": null,
+   "hp": [
+    1940000,
+    2190000
+   ],
+   "absorption": 1.0
+  },
+  {
+   "id": "torre-campana-hooh",
+   "place": "Torre Campana",
+   "zoneID": "torre-campana",
+   "speciesID": 250,
+   "region": "johto",
+   "extraMedals": 10,
+   "requiredSpecies": null,
+   "hp": [
+    2160000,
+    2410000
+   ],
+   "absorption": 1.25
+  },
+  {
+   "id": "islas-remolino-lugia",
+   "place": "Islas Remolino",
+   "zoneID": "islas-remolino",
+   "speciesID": 249,
+   "region": "johto",
+   "extraMedals": 10,
+   "requiredSpecies": null,
+   "hp": [
+    2380000,
+    2630000
+   ],
+   "absorption": 1.25
+  },
+  {
+   "id": "central-zapdos",
+   "place": "Central Eléctrica",
+   "zoneID": "central-electrica",
+   "speciesID": 145,
+   "region": "kanto",
+   "extraMedals": 0,
+   "requiredSpecies": null,
+   "hp": [
+    2600000,
+    2850000
+   ],
+   "absorption": 1.25
+  },
+  {
+   "id": "espuma-articuno",
+   "place": "Islas Espuma",
+   "zoneID": "islas-espuma",
+   "speciesID": 144,
+   "region": "kanto",
+   "extraMedals": 0,
+   "requiredSpecies": null,
+   "hp": [
+    2820000,
+    3070000
+   ],
+   "absorption": 1.25
+  },
+  {
+   "id": "victoria-moltres",
+   "place": "Calle Victoria",
+   "zoneID": "calle-victoria",
+   "speciesID": 146,
+   "region": "kanto",
+   "extraMedals": 0,
+   "requiredSpecies": null,
+   "hp": [
+    3040000,
+    3290000
+   ],
+   "absorption": 1.25
+  },
+  {
+   "id": "encinar-celebi",
+   "place": "Bosque Encinar",
+   "zoneID": "bosque-encinar",
+   "speciesID": 251,
+   "region": "johto",
+   "extraMedals": 16,
+   "requiredSpecies": null,
+   "hp": [
+    3260000,
+    3510000
+   ],
+   "absorption": 1.5
+  },
+  {
+   "id": "celeste-mewtwo",
+   "place": "Cueva Celeste",
+   "zoneID": "cueva-celeste",
+   "speciesID": 150,
+   "region": "kanto",
+   "extraMedals": 0,
+   "requiredSpecies": null,
+   "hp": [
+    3480000,
+    3730000
+   ],
+   "absorption": 1.75
+  },
+  {
+   "id": "faraway-mew",
+   "place": "Isla Faraway",
+   "zoneID": "cueva-celeste",
+   "speciesID": 151,
+   "region": "kanto",
+   "extraMedals": 0,
+   "requiredSpecies": 200,
+   "hp": [
+    3700000,
+    3950000
+   ],
+   "absorption": 2.0
+  }
+ ]
+}

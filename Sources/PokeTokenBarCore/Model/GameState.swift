@@ -240,7 +240,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
 /// Estado persistido completo. Cualquier cambio de forma requiere subir
 /// `schemaVersion` y añadir migración en `GameStore`.
 public struct GameState: Codable, Sendable {
-    public static let currentSchemaVersion = 4
+    public static let currentSchemaVersion = 5
 
     public var schemaVersion: Int = GameState.currentSchemaVersion
     public var ledger = TokenLedger()
@@ -249,6 +249,7 @@ public struct GameState: Codable, Sendable {
     public var encounter: WildEncounter?
     public var settings = GameSettings()
     public var gyms = GymProgress()
+    public var milestones = MilestoneProgress()
     /// Veces que se ha vencido a cada línea evolutiva en libertad, con captura
     /// o sin ella. Clave: id de la forma base.
     public var familyDefeats: [Int: Int] = [:]
@@ -270,6 +271,7 @@ public struct GameState: Codable, Sendable {
         encounter = try container.decodeIfPresent(WildEncounter.self, forKey: .encounter)
         settings = try container.decodeIfPresent(GameSettings.self, forKey: .settings) ?? GameSettings()
         gyms = try container.decodeIfPresent(GymProgress.self, forKey: .gyms) ?? GymProgress()
+        milestones = try container.decodeIfPresent(MilestoneProgress.self, forKey: .milestones) ?? MilestoneProgress()
         familyDefeats = try container.decodeIfPresent([Int: Int].self, forKey: .familyDefeats) ?? [:]
         processedEventIDs = try container.decodeIfPresent([String].self, forKey: .processedEventIDs) ?? []
         lastCaptureSpeciesID = try container.decodeIfPresent(Int.self, forKey: .lastCaptureSpeciesID)
