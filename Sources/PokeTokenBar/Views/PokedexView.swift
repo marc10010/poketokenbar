@@ -7,7 +7,11 @@ import SwiftUI
 struct PokedexView: View {
     @EnvironmentObject private var store: GameStore
 
-    private let columns = [GridItem(.adaptive(minimum: 54), spacing: 6)]
+    @EnvironmentObject private var sprites: SpriteStore
+
+    private var columns: [GridItem] {
+        [GridItem(.adaptive(minimum: 54 * sprites.scale), spacing: 6)]
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

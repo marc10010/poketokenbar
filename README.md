@@ -408,8 +408,11 @@ tiene líderes de gimnasio.
   GIF animados de Gen 5**, con dos ajustes en el pie del popover: el filtro de
   escalado (pixel nítido / intermedio / suavizado — entre el pixel duro y el
   suavizado hay grados y cuál gusta es cuestión de ojo) y un multiplicador de
-  tamaño de ×0,75 a ×2, acotado también al cargar por si alguien edita el
-  `state.json` a mano. (~80 KB cada uno, frente a ~2 KB del PNG), así que la
+  tamaño de ×0,75 a ×2 que vale para **todos** los sprites: fichas, HUD y
+  rejillas, que reflowean solas. El panel plegado del HUD crece con él, o los
+  sprites grandes no cabrían en sus 268×104. Queda fuera la barra de menú, cuya
+  altura es la que es. El multiplicador se acota también al cargar, por si
+  alguien edita el `state.json` a mano. (~80 KB cada uno, frente a ~2 KB del PNG), así que la
   caché crece con el uso; las rejillas siguen con el estático porque animar 251
   celdas a la vez no compensa. Si una especie no tuviera animado, cae al
   estático sola. Sin red, la app

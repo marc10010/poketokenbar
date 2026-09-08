@@ -244,6 +244,16 @@ enum UISmokeTest {
 
         var hudController: HUDController? = HUDController(store: store, sprites: sprites)
 
+        // El panel plegado tiene que crecer con el multiplicador: si no, los
+        // sprites grandes no caben en 268x104.
+        store.updateSettings { $0.spriteScale = 1; $0.hudSize = nil }
+        let compactAtOne = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        store.updateSettings { $0.spriteScale = 2 }
+        let compactAtTwo = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        print("  HUD plegado: ×1 → \(Int(compactAtOne.width))x\(Int(compactAtOne.height)) · ×2 → \(Int(compactAtTwo.width))x\(Int(compactAtTwo.height))")
+        ok = compactAtTwo.width > compactAtOne.width && compactAtTwo.height > compactAtOne.height && ok
+        store.updateSettings { $0.spriteScale = 1 }
+
         // Desbloqueado (por defecto): recibe clics y hay un panel por pantalla.
         var panels = NSApp.windows.compactMap { $0 as? NSPanel }
         let screens = NSScreen.screens
@@ -301,6 +311,7 @@ enum UISmokeTest {
             $0.hudSize = nil
             $0.hudLocked = false
         }
+        hudController?.shutdown()
         hudController = nil
 
         print(ok ? "  ✓ el árbol de vistas renderiza" : "  ✗ algo no cuadra")

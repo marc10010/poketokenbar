@@ -61,7 +61,7 @@ struct FooterView: View {
                     step: 0.25
                 )
                 .frame(width: 110)
-                .help("Tamaño de los sprites en las fichas")
+                .help("Tamaño de todos los sprites: fichas, HUD y rejillas")
             }
 
             Toggle(isOn: Binding(

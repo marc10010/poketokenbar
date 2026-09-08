@@ -13,8 +13,11 @@ import SwiftUI
 /// del ítem de la barra de menú, que en barras llenas puede quedar oculto.
 @MainActor
 final class HUDController {
-    private static let battleSize = NSSize(width: 268, height: 104)
-    private static let pickerSize = NSSize(width: 336, height: 112)
+    private static let baseBattleSize = NSSize(width: 268, height: 104)
+    private static let basePickerSize = NSSize(width: 336, height: 112)
+    /// Lado del sprite de la cabecera: es lo que crece con el ajuste, así que
+    /// es la medida con la que hay que agrandar el panel.
+    private static let headerSpriteSide: CGFloat = 42
     private static let maxSize = NSSize(width: 620, height: 760)
     private static let margin: CGFloat = 12
 
@@ -79,7 +82,9 @@ final class HUDController {
         }
 
         isRepositioning = true
+        let minimum = battleSize(state)
         for (panel, frame) in zip(panels, frames) {
+            panel.contentMinSize = minimum
             panel.ignoresMouseEvents = !acceptsMouse
             panel.isMovableByWindowBackground = acceptsMouse && !interactive
             panel.alphaValue = interactive ? 1 : state.settings.hudOpacity
@@ -93,6 +98,12 @@ final class HUDController {
                 + "libre=\(state.settings.hudFreeOrigin != nil) · "
                 + panels.map { "\(Int($0.frame.minX)),\(Int($0.frame.minY))" }.joined(separator: " | ")
         )
+    }
+
+    /// Cierra los paneles. Soltar el controlador no basta: las ventanas las
+    /// retiene AppKit hasta que se les dice que salgan.
+    func shutdown() {
+        teardown()
     }
 
     private func teardown() {
@@ -111,7 +122,8 @@ final class HUDController {
     private func panelDidResize(_ panel: NSPanel) {
         guard !isRepositioning, panels.contains(panel), store.state.hasStarter else { return }
         let size = panel.frame.size
-        let compact = abs(size.width - Self.battleSize.width) < 2 && abs(size.height - Self.battleSize.height) < 2
+        let minimum = battleSize(store.state)
+        let compact = abs(size.width - minimum.width) < 2 && abs(size.height - minimum.height) < 2
         store.updateSettings {
             $0.hudSize = compact ? nil : HUDSize(width: size.width, height: size.height)
         }
@@ -119,7 +131,7 @@ final class HUDController {
 
     private func makePanel() -> NSPanel {
         let panel = NSPanel(
-            contentRect: NSRect(origin: .zero, size: Self.pickerSize),
+            contentRect: NSRect(origin: .zero, size: Self.basePickerSize),
             // .resizable en una ventana sin marco: los bordes arrastran aunque
             // no se dibuje ningún tirador.
             styleMask: [.borderless, .nonactivatingPanel, .resizable],
@@ -134,7 +146,6 @@ final class HUDController {
         panel.hidesOnDeactivate = false
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
-        panel.contentMinSize = Self.battleSize
         panel.contentMaxSize = Self.maxSize
         panel.contentView = NSHostingView(
             rootView: HUDView()
@@ -144,12 +155,34 @@ final class HUDController {
         return panel
     }
 
-    private func size(_ state: GameState) -> NSSize {
-        guard !interactive(state) else { return Self.pickerSize }
-        guard let stored = state.settings.hudSize else { return Self.battleSize }
+    /// Cuánto crece el panel por el multiplicador de sprites.
+    private func extraForSprites(_ state: GameState) -> CGFloat {
+        Self.headerSpriteSide * CGFloat(max(0, state.settings.spriteScale - 1))
+    }
+
+    private func battleSize(_ state: GameState) -> NSSize {
+        let extra = extraForSprites(state)
         return NSSize(
-            width: min(max(stored.width, Self.battleSize.width), Self.maxSize.width),
-            height: min(max(stored.height, Self.battleSize.height), Self.maxSize.height)
+            width: Self.baseBattleSize.width + extra * 2,
+            height: Self.baseBattleSize.height + extra
+        )
+    }
+
+    private func pickerSize(_ state: GameState) -> NSSize {
+        let extra = extraForSprites(state)
+        return NSSize(
+            width: Self.basePickerSize.width + extra * 6,
+            height: Self.basePickerSize.height + extra
+        )
+    }
+
+    private func size(_ state: GameState) -> NSSize {
+        guard !interactive(state) else { return pickerSize(state) }
+        let minimum = battleSize(state)
+        guard let stored = state.settings.hudSize else { return minimum }
+        return NSSize(
+            width: min(max(stored.width, minimum.width), Self.maxSize.width),
+            height: min(max(stored.height, minimum.height), Self.maxSize.height)
         )
     }
 
