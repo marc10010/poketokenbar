@@ -20,8 +20,9 @@ public final class GameStore: ObservableObject {
     @Published public var selectedBoxGroupID: String?
     @Published public var selectedGymID: String?
     @Published public var selectedMilestoneID: String?
-    /// Pokédex completa abierta, con su propio recorte de búsqueda.
-    @Published public var showingPokedex = false
+    /// Pestaña abierta del popover. Es un String a propósito: el store no
+    /// tiene por qué conocer los tipos de la UI.
+    @Published public var selectedTab: String = "combate"
     @Published public var pokedexFilter = PokedexFilter()
     @Published public var selectedDexSpeciesID: Int?
     @Published public var inspectingRival = false
@@ -349,6 +350,17 @@ public final class GameStore: ObservableObject {
         return best
     }
 
+    /// La escalera de progreso, derivada de los catálogos.
+    public var ladder: [LadderStep] {
+        ProgressLadder(
+            zones: zoneCatalog,
+            gyms: gymCatalog,
+            milestones: milestoneCatalog,
+            leagues: leagueCatalog,
+            pokedex: pokedex
+        ).steps(medals: medals, wonLeagues: state.leagues.wonIDs)
+    }
+
     /// Bonus por colección: lo que suma tener Pokédex al daño contra salvajes.
     ///
     /// Existe porque hasta ahora la caja era decoración —solo contaba el
@@ -483,7 +495,7 @@ public final class GameStore: ObservableObject {
         selectedGymID = nil
         selectedMilestoneID = nil
         selectedDexSpeciesID = nil
-        showingPokedex = false
+        selectedTab = "combate"
         pokedexFilter.reset()
         let settings = state.settings
         let processed = state.processedEventIDs

@@ -221,16 +221,24 @@ enum UISmokeTest {
             ok = false
         }
 
+        // Todas las pestañas renderizan: es lo que sustituye a los seis
+        // acordeones apilados.
+        for tab in AppTab.allCases {
+            store.selectedTab = tab.rawValue
+            ok = layout("pestaña \(tab.label)") && ok
+        }
+        store.selectedTab = "combate"
+
         // Las zonas: la lista y la ficha de algo cuya zona está cerrada.
         print("  zonas abiertas: \(store.unlockedZones.count)/\(store.zoneCatalog.all.count) · \(store.zoneCatalog.availableSpecies(store.zoneAccess).count) especies disponibles")
         ok = layout("lista de zonas") && ok
-        store.showingPokedex = true
+        store.selectedTab = "pokedex"
         // Zapdos (#145) vive en la Central Eléctrica, que pide Kanto abierta.
         store.selectedDexSpeciesID = 145
         ok = layout("ficha con zona cerrada") && ok
         ok = !store.isAvailableInTheWild(145) && ok
         store.selectedDexSpeciesID = nil
-        store.showingPokedex = false
+        store.selectedTab = "combate"
 
         // Hitos: la lista, y un legendario abierto de verdad.
         store.debugDefeatGyms(upTo: 8)
@@ -277,7 +285,7 @@ enum UISmokeTest {
         }
 
         // La Pokédex completa y la ficha de algo que no tienes.
-        store.showingPokedex = true
+        store.selectedTab = "pokedex"
         ok = layout("pokédex (\(store.pokedexCaptured)/251)") && ok
         store.selectedDexSpeciesID = 150
         ok = layout("ficha de un Mewtwo sin ver") && ok
@@ -285,7 +293,7 @@ enum UISmokeTest {
         store.pokedexFilter.onlyMissing = true
         ok = layout("pokédex solo los que faltan") && ok
         store.pokedexFilter.reset()
-        store.showingPokedex = false
+        store.selectedTab = "combate"
 
         // Ficha de un gimnasio, que es lo que abre un clic en su medalla.
         store.selectedGymID = store.gymCatalog.all.first?.id

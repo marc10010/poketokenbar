@@ -359,6 +359,8 @@ struct HUDView: View {
                 }
             }
             Button("Caja PC completa (\(store.speciesCaught)/251)…") {
+                store.selectedTab = "caja"
+                store.selectedBoxGroupID = nil
                 NotificationCenter.default.post(name: .poketokenbarShowPopover, object: nil)
             }
             Divider()
