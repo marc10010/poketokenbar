@@ -30,6 +30,32 @@ public struct GymCatalogFile: Codable, Sendable {
     public let gyms: [Gym]
 }
 
+/// Lo que hay que celebrar al ganar una medalla: cuál es, cuántas llevas y, si
+/// el rango ha subido, qué desbloquea. Sin esto último la medalla es un número
+/// que sube; con esto es un desbloqueo.
+public struct MedalCelebration: Hashable, Sendable {
+    public let gym: Gym
+    public let medals: Int
+    /// Rango nuevo, o `nil` si esta medalla no cambia de rango.
+    public let newRank: TrainerRank?
+    /// Tiers de aparición que abre ese rango nuevo.
+    public let unlocked: [Rarity]
+    public let wonAt: Date
+
+    public init(gym: Gym, medals: Int, newRank: TrainerRank?, unlocked: [Rarity], wonAt: Date = Date()) {
+        self.gym = gym
+        self.medals = medals
+        self.newRank = newRank
+        self.unlocked = unlocked
+        self.wonAt = wonAt
+    }
+
+    /// Frase corta para la barra de menú, donde el ancho es oro.
+    public var headline: String {
+        newRank != nil ? "¡\(gym.medal)! Rango \(newRank!.label)" : "¡\(gym.medal)!"
+    }
+}
+
 /// Rango de entrenador. Las medallas son el único requisito, y el rango es lo
 /// que abre los tiers de aparición: acumular tokens ya no basta.
 public enum TrainerRank: Int, CaseIterable, Comparable, Sendable {

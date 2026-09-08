@@ -50,6 +50,11 @@ final class StatusItemController {
             .sink { [weak self] _ in self?.flashCapture() }
             .store(in: &cancellables)
 
+        store.$lastMedal
+            .compactMap { $0 }
+            .sink { [weak self] _ in self?.scheduleRender() }
+            .store(in: &cancellables)
+
         NotificationCenter.default
             .publisher(for: .poketokenbarShowPopover)
             .sink { [weak self] _ in self?.showPopover() }
@@ -138,6 +143,12 @@ final class StatusItemController {
         let rivalShiny = gym == nil ? (encounter?.isShiny ?? false) : false
         let rivalImage = rivalSpeciesID.flatMap { sprites.image(speciesID: $0, shiny: rivalShiny) }
         button.image = Self.composite(player: playerImage, rival: rivalImage)
+
+        if let celebration = store.lastMedal {
+            button.title = " 🏅 \(celebration.headline)"
+            button.toolTip = tooltip()
+            return
+        }
 
         if let flashUntil = captureFlashUntil, flashUntil > Date(),
            let speciesID = store.state.lastCaptureSpeciesID,

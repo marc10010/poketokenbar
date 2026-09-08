@@ -105,6 +105,13 @@ struct MedalsView: View {
                                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                                     .fill(isNext ? Color.orange.opacity(0.22) : .clear)
                             )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .strokeBorder(
+                                        store.lastMedal?.gym.id == gym.id ? Color.orange : .clear,
+                                        lineWidth: 2
+                                    )
+                            )
                     }
                     .buttonStyle(.plain)
                     .onRightClick { store.selectedGymID = gym.id }

@@ -12,6 +12,8 @@ struct HUDView: View {
         Group {
             if !store.state.hasStarter {
                 starterPicker
+            } else if let celebration = store.lastMedal {
+                medalPanel(celebration)
             } else if let active = store.activeGym {
                 gymPanel(gym: active.gym, battle: active.battle)
             } else {
@@ -237,6 +239,27 @@ struct HUDView: View {
         }
         .buttonStyle(.plain)
         .help(expanded ? "Plegar" : "Desplegar la caja PC")
+    }
+
+    /// Marco propio para la medalla: borde dorado, para que se distinga de un
+    /// vistazo de un combate cualquiera.
+    private func medalPanel(_ celebration: MedalCelebration) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            MedalCelebrationView(celebration: celebration, compact: true)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.regularMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Color.orange, lineWidth: 2)
+                )
+        )
+        .padding(4)
+        .contextMenu { hudMenu }
     }
 
     /// Mismo marco que el combate normal, con la tarjeta de gimnasio dentro.

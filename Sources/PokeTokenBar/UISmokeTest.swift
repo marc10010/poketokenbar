@@ -102,6 +102,31 @@ enum UISmokeTest {
         }
         print("  clic derecho: \(clickCases.count) casos comprobados")
 
+        // Celebración de medalla: gana un gimnasio de verdad y mírala.
+        store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
+        store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
+        store.ingest(UsageEvent(id: "abre-gym", inputTokens: 10, outputTokens: 0))
+        if let battle = store.activeGym?.battle {
+            store.ingest(UsageEvent(id: "gana-gym", inputTokens: battle.maxHP * 4, outputTokens: 0))
+        }
+        if let celebration = store.lastMedal {
+            print("  medalla: \(celebration.headline)")
+            ok = layout("celebración de medalla") && ok
+            let hudCelebration = NSHostingView(
+                rootView: HUDView()
+                    .environmentObject(store)
+                    .environmentObject(sprites)
+                    .frame(width: 268, height: 200)
+            )
+            hudCelebration.layoutSubtreeIfNeeded()
+            ok = hudCelebration.fittingSize == NSSize(width: 268, height: 200) && ok
+            store.dismissMedalCelebration()
+            ok = (store.lastMedal == nil) && ok
+        } else {
+            print("  ✗ no se ganó medalla, la celebración no se puede probar")
+            ok = false
+        }
+
         // La Pokédex completa y la ficha de algo que no tienes.
         store.showingPokedex = true
         ok = layout("pokédex (\(store.pokedexCaptured)/251)") && ok

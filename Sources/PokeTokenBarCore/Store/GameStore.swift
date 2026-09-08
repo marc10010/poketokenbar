@@ -8,8 +8,8 @@ public final class GameStore: ObservableObject {
     @Published public private(set) var state: GameState
     /// Última captura, para que la UI pueda celebrarla.
     @Published public private(set) var lastCapture: CapturedPokemon?
-    /// Última medalla ganada, para lo mismo.
-    @Published public private(set) var lastMedal: Gym?
+    /// Medalla recién ganada, mientras se celebra. Se limpia sola.
+    @Published public private(set) var lastMedal: MedalCelebration?
     /// Búsqueda y filtros de la caja PC. No se persiste: es estado de consulta,
     /// y arrancar con un filtro puesto de la sesión anterior desconcierta.
     @Published public var boxFilter = BoxFilter()
@@ -33,6 +33,7 @@ public final class GameStore: ObservableObject {
     private var rng: any RandomProvider
     private var processedIDs: Set<String>
     private var saveTask: Task<Void, Never>?
+    private var celebrationTask: Task<Void, Never>?
     /// Solo el compañero equipado gana tokens, así que su progreso basta para
     /// invalidar la caché.
     private struct GroupCacheKey: Equatable {
@@ -504,6 +505,7 @@ public final class GameStore: ObservableObject {
         }
 
         // Cae el líder: medalla, sin captura, y contadores a cero.
+        let rankBefore = rank
         battleState.currentHP = 0
         battleState.tokensSpent += needed
         state.gyms.current = nil
@@ -513,11 +515,41 @@ public final class GameStore: ObservableObject {
            let index = state.box.firstIndex(where: { $0.id == companionID }) {
             state.box[index].gymsWon += 1
         }
-        lastMedal = gym
+        celebrate(gym: gym, rankBefore: rankBefore, now: now)
         // Un salvaje nuevo ya: si no, al cerrar el gimnasio sin tokens de
         // sobra el jugador se queda sin rival hasta el evento siguiente.
         ensureEncounter()
         return tokens - needed
+    }
+
+    /// Publica la celebración y la retira sola: una medalla es el hito del
+    /// juego y merece más que un contador, pero no puede quedarse encima del
+    /// combate para siempre.
+    private func celebrate(gym: Gym, rankBefore: TrainerRank, now: Date) {
+        let rankAfter = rank
+        let rankUp = rankAfter > rankBefore ? rankAfter : nil
+        let celebration = MedalCelebration(
+            gym: gym,
+            medals: medals,
+            newRank: rankUp,
+            unlocked: rankUp.map { new in Rarity.allCases.filter { $0.requiredRank == new } } ?? [],
+            wonAt: now
+        )
+        lastMedal = celebration
+
+        celebrationTask?.cancel()
+        celebrationTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(GameRules.medalCelebrationSeconds * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            guard self?.lastMedal == celebration else { return }
+            self?.lastMedal = nil
+        }
+    }
+
+    /// Cierra la celebración antes de tiempo.
+    public func dismissMedalCelebration() {
+        celebrationTask?.cancel()
+        lastMedal = nil
     }
 
     /// Acredita el consumo al compañero equipado: es lo que le hace subir de

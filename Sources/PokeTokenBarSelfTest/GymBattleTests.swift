@@ -15,6 +15,7 @@ enum GymBattleTests: TestSuite {
         ("los contadores se reinician al terminar", testCountersResetOnGymEnd),
         ("las medallas abren los tiers", testMedalsUnlockTiers),
         ("los tokens del gimnasio cuentan para el ledger y la evolución", testGymTokensStillCount),
+        ("la medalla se celebra y dice qué desbloquea", testMedalCelebration),
         ("el ritmo es el que muestra la UI, sin evolucionar a mitad", testRateDoesNotChangeMidEvent),
     ]
 
@@ -89,7 +90,7 @@ enum GymBattleTests: TestSuite {
         expectEqual(store.medals, 1)
         expectEqual(store.rank, TrainerRank.novato, "una medalla todavía no sube de rango")
         expectEqual(store.state.gyms.defeated, ["johto-violet"])
-        expectEqual(store.lastMedal?.medal, "Medalla Céfiro")
+        expectEqual(store.lastMedal?.gym.medal, "Medalla Céfiro")
         expectNotNil(store.state.encounter, "vuelve a haber salvaje")
         expectTrue(
             store.state.box.count >= boxBefore,
@@ -255,5 +256,36 @@ enum GymBattleTests: TestSuite {
             accuracy: 0.001,
             "a partir de ahora sí pega con el bonus de etapa"
         )
+    }
+
+    /// La celebración es lo que convierte la medalla en un desbloqueo y no en
+    /// un contador que sube: tiene que decir si el rango cambió y qué abre.
+    static func testMedalCelebration() throws {
+        let store = primed(wildHP: 10)
+        store.ingest(event("abre", tokens: 10))
+        var hp = try unwrap(store.activeGym).battle.maxHP
+        store.ingest(event("gana-1", tokens: hp * 2))
+
+        let first = try unwrap(store.lastMedal)
+        expectEqual(first.gym.medal, "Medalla Céfiro")
+        expectEqual(first.medals, 1)
+        expectNil(first.newRank, "una medalla no sube de rango")
+        expectTrue(first.unlocked.isEmpty)
+        expectEqual(first.headline, "¡Medalla Céfiro!")
+
+        // La segunda sí: Entrenador, que es lo que abre los raros.
+        store.dismissMedalCelebration()
+        expectNil(store.lastMedal, "se puede cerrar antes de tiempo")
+        store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
+        store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
+        store.ingest(event("abre-2", tokens: 10))
+        hp = try unwrap(store.activeGym).battle.maxHP
+        store.ingest(event("gana-2", tokens: hp * 3))
+
+        let second = try unwrap(store.lastMedal)
+        expectEqual(second.medals, 2)
+        expectEqual(second.newRank, TrainerRank.entrenador)
+        expectEqual(second.unlocked, [Rarity.rare], "el rango nuevo abre justo los raros")
+        expectTrue(second.headline.contains("Entrenador"))
     }
 }
