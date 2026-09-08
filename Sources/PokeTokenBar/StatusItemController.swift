@@ -133,13 +133,19 @@ final class StatusItemController {
         let encounter = store.state.encounter
 
         let playerImage = playerForm.flatMap { sprites.image(speciesID: $0.id, shiny: playerShiny) }
-        let rivalImage = encounter.flatMap { sprites.image(speciesID: $0.speciesID, shiny: $0.isShiny) }
+        let gym = store.activeGym
+        let rivalSpeciesID = gym?.gym.signatureSpeciesID ?? encounter?.speciesID
+        let rivalShiny = gym == nil ? (encounter?.isShiny ?? false) : false
+        let rivalImage = rivalSpeciesID.flatMap { sprites.image(speciesID: $0, shiny: rivalShiny) }
         button.image = Self.composite(player: playerImage, rival: rivalImage)
 
         if let flashUntil = captureFlashUntil, flashUntil > Date(),
            let speciesID = store.state.lastCaptureSpeciesID,
            let species = store.pokedex[speciesID] {
             button.title = " ¡\(species.localizedName) capturado!"
+        } else if let gym {
+            let blocked = store.isBlocked(against: gym.gym)
+            button.title = " \(blocked ? "⚠︎ " : "")\(Fmt.compact(gym.battle.currentHP))/\(Fmt.compact(gym.battle.maxHP))"
         } else if let encounter {
             button.title = " \(Fmt.compact(encounter.currentHP))/\(Fmt.compact(encounter.maxHP))"
         } else {
@@ -151,9 +157,13 @@ final class StatusItemController {
     private func tooltip() -> String {
         var lines: [String] = []
         if let form = store.activeForm { lines.append("Compañero: \(form.localizedName) (\(store.stage.label))") }
-        if let encounter = store.state.encounter, let rival = store.pokedex[encounter.speciesID] {
+        if let active = store.activeGym {
+            lines.append("Gimnasio: \(active.gym.leader) (\(active.gym.medal))")
+            lines.append("\(Fmt.tokens(active.battle.currentHP))/\(Fmt.tokens(active.battle.maxHP)) HP · \(store.isBlocked(against: active.gym) ? "bloqueado: cambia de compañero" : "\(Fmt.rate(store.gymDamagePerToken(for: active.gym))) HP por token")")
+        } else if let encounter = store.state.encounter, let rival = store.pokedex[encounter.speciesID] {
             lines.append("Rival: \(rival.localizedName) [\(encounter.rarity.label)] \(Fmt.tokens(encounter.currentHP))/\(Fmt.tokens(encounter.maxHP)) HP")
         }
+        lines.append("Medallas: \(store.medals)/16 · \(store.rank.label)")
         lines.append("Tokens totales: \(Fmt.tokens(store.totalTokens)) · mes: \(Fmt.tokens(store.monthTokens))")
         return lines.joined(separator: "\n")
     }

@@ -9,22 +9,16 @@ public struct SpawnService {
         self.pokedex = pokedex
     }
 
-    /// Tiers disponibles para un histórico de tokens dado.
-    public func availableTiers(totalTokens: Int) -> [Rarity] {
-        Rarity.allCases.filter { totalTokens >= $0.unlockThreshold }
-    }
-
-    /// Tiers disponibles por rango de entrenador. Sustituye al gate por tokens
-    /// cuando los gimnasios estén conectados: acumular tokens ya no desbloquea
-    /// nada por sí solo.
+    /// Tiers disponibles según el rango. Acumular tokens no desbloquea nada:
+    /// hacen falta medallas.
     public func availableTiers(rank: TrainerRank) -> [Rarity] {
         Rarity.allCases.filter { rank >= $0.requiredRank }
     }
 
     /// Elige tier respetando los ratios del spec. Si un tier está bloqueado,
     /// su peso se redistribuye entre los disponibles en vez de reintentar.
-    public func rollTier<R: RandomProvider>(totalTokens: Int, using rng: inout R) -> Rarity {
-        let tiers = availableTiers(totalTokens: totalTokens)
+    public func rollTier<R: RandomProvider>(rank: TrainerRank, using rng: inout R) -> Rarity {
+        let tiers = availableTiers(rank: rank)
         guard !tiers.isEmpty else { return .common }
         let weightTotal = tiers.reduce(0.0) { $0 + $1.spawnWeight }
         var roll = rng.nextUnit() * weightTotal
@@ -35,8 +29,8 @@ public struct SpawnService {
         return tiers[tiers.count - 1]
     }
 
-    public func spawn<R: RandomProvider>(totalTokens: Int, using rng: inout R, now: Date = Date()) -> WildEncounter {
-        let tier = rollTier(totalTokens: totalTokens, using: &rng)
+    public func spawn<R: RandomProvider>(rank: TrainerRank, using rng: inout R, now: Date = Date()) -> WildEncounter {
+        let tier = rollTier(rank: rank, using: &rng)
         let pool = pokedex.spawnCandidates(rarity: tier)
         let species = pool[rng.nextInt(in: 0...(pool.count - 1))]
         let hp = rng.nextInt(in: tier.hpRange)

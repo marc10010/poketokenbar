@@ -190,7 +190,9 @@ enum GameStoreTests: TestSuite {
         let store = makeStore(seed: 11)
         store.chooseStarter(speciesID: 1)
         store.ingest(event("bulk", input: 2_000_000, output: 0))
-        expectGreaterThan(store.state.box.count, 3, "el evento grande captura varios")
+        // Con gimnasios conectados, un evento así captura un par de salvajes y
+        // el resto de los tokens se van al líder que se abre por el camino.
+        expectGreaterThan(store.state.box.count, 1, "el evento grande captura varios")
         expectTrue(store.speciesCaught <= store.state.box.count)
         expectTrue(store.boxGroups.count <= store.state.box.count)
         expectEqual(store.boxGroups.reduce(0) { $0 + $1.count }, store.state.box.count, "no se pierde ninguna")

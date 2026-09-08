@@ -10,10 +10,12 @@ struct HUDView: View {
 
     var body: some View {
         Group {
-            if store.state.hasStarter {
-                battle
-            } else {
+            if !store.state.hasStarter {
                 starterPicker
+            } else if let active = store.activeGym {
+                gymPanel(gym: active.gym, battle: active.battle)
+            } else {
+                battle
             }
         }
     }
@@ -116,6 +118,7 @@ struct HUDView: View {
         VStack(alignment: .leading, spacing: 2) {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
+            metric("Medallas", "\(store.medals)/16 · \(store.rank.label)")
             metric("Daño por token", store.currentMatchup.isNeutral ? "×1" : "\(store.currentMatchup.badge) · \(store.currentMatchup.label)")
             metric("Especies", "\(store.speciesCaught) / 251")
             metric("Capturas", Fmt.tokens(store.state.box.count))
@@ -192,6 +195,36 @@ struct HUDView: View {
         }
         .buttonStyle(.plain)
         .help(expanded ? "Plegar" : "Desplegar la caja PC")
+    }
+
+    /// Mismo marco que el combate normal, con la tarjeta de gimnasio dentro.
+    private func gymPanel(gym: Gym, battle: ActiveGymBattle) -> some View {
+        GeometryReader { geometry in
+            VStack(alignment: .leading, spacing: 5) {
+                GymCardView(gym: gym, battle: battle, compact: true)
+                if Self.showsMetrics(forHeight: geometry.size.height) {
+                    Divider()
+                    metricsStrip
+                }
+                if Self.showsBox(forHeight: geometry.size.height) {
+                    Divider()
+                    BoxGridView(cellSize: 46)
+                }
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 7)
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(.regularMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(Color.orange.opacity(0.55), lineWidth: 1.5)
+                    )
+            )
+            .contextMenu { hudMenu }
+        }
+        .padding(4)
     }
 
     /// Menú contextual del HUD: cambiar compañero y colocación sin pasar por

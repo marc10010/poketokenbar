@@ -8,12 +8,16 @@ public final class GameStore: ObservableObject {
     @Published public private(set) var state: GameState
     /// Última captura, para que la UI pueda celebrarla.
     @Published public private(set) var lastCapture: CapturedPokemon?
+    /// Última medalla ganada, para lo mismo.
+    @Published public private(set) var lastMedal: Gym?
 
     public let pokedex: Pokedex
     public let typeChart: TypeChart
+    public let gymCatalog: GymCatalog
     private let file: StateFileStore
     private let battle: BattleEngine
     private let evolution: EvolutionService
+    private let gymCombat = GymCombat()
     private var rng: any RandomProvider
     private var processedIDs: Set<String>
     private var saveTask: Task<Void, Never>?
@@ -29,11 +33,13 @@ public final class GameStore: ObservableObject {
     public init(
         pokedex: Pokedex = .shared,
         typeChart: TypeChart = .shared,
+        gymCatalog: GymCatalog = .shared,
         file: StateFileStore = StateFileStore(),
         rng: any RandomProvider = SystemRandomProvider()
     ) {
         self.pokedex = pokedex
         self.typeChart = typeChart
+        self.gymCatalog = gymCatalog
         self.file = file
         self.rng = rng
         self.battle = BattleEngine(pokedex: pokedex)
@@ -66,6 +72,73 @@ public final class GameStore: ObservableObject {
     public var activeNextForm: Pokemon? {
         guard let companion = state.activeCompanion else { return nil }
         return evolution.nextForm(of: companion)
+    }
+
+    // MARK: - Gimnasios
+
+    public var medals: Int { state.gyms.medals }
+    public var rank: TrainerRank { state.gyms.rank }
+
+    /// Gimnasio abierto ahora mismo, si lo hay.
+    public var activeGym: (gym: Gym, battle: ActiveGymBattle)? {
+        guard let battle = state.gyms.current, let gym = gymCatalog[battle.gymID] else { return nil }
+        return (gym, battle)
+    }
+
+    /// Próximo gimnasio por afrontar.
+    public var nextGym: Gym? { gymCatalog.next(defeated: state.gyms.defeatedIDs) }
+
+    public func medalGyms() -> [Gym] { gymCatalog.medals(defeated: state.gyms.defeatedIDs) }
+
+    /// Cruce del compañero contra el Pokémon estrella del líder: son sus tipos
+    /// reales, no el tema del gimnasio.
+    public func matchup(against gym: Gym) -> TypeMatchup {
+        guard state.settings.typeEffectivenessEnabled,
+              let attacker = activeForm,
+              let defender = pokedex[gym.signatureSpeciesID]
+        else { return .neutral }
+        return typeChart.matchup(attacker: attacker.types, defender: defender.types)
+    }
+
+    /// HP que le quita cada token al líder. Cero = bloqueado: hace falta otro
+    /// compañero, no más tokens.
+    public func gymDamagePerToken(for gym: Gym) -> Double {
+        gymCombat.damagePerToken(
+            matchup: matchup(against: gym).multiplier,
+            absorption: gym.absorption,
+            stage: stage
+        )
+    }
+
+    public func isBlocked(against gym: Gym) -> Bool { gymDamagePerToken(for: gym) <= 0 }
+
+    /// Tokens que faltan para tumbar al líder. `nil` si está bloqueado.
+    public func gymTokensNeeded(for gym: Gym, battle: ActiveGymBattle) -> Int? {
+        gymCombat.tokensNeeded(
+            for: battle.currentHP,
+            matchup: matchup(against: gym).multiplier,
+            absorption: gym.absorption,
+            stage: stage
+        )
+    }
+
+    /// Mejor compañero de la caja contra este líder, distinto del equipado. Es
+    /// la información que convierte un bloqueo en una acción de un clic.
+    public func bestCompanion(against gym: Gym) -> (group: BoxGroup, rate: Double)? {
+        guard let defender = pokedex[gym.signatureSpeciesID] else { return nil }
+        let typesEnabled = state.settings.typeEffectivenessEnabled
+        let candidates = boxGroups.filter { $0.id != activeGroupID }
+        let scored = candidates.map { group -> (group: BoxGroup, rate: Double) in
+            let multiplier = typesEnabled
+                ? typeChart.matchup(attacker: group.displayForm.types, defender: defender.types).multiplier
+                : 1
+            return (
+                group,
+                gymCombat.damagePerToken(matchup: multiplier, absorption: gym.absorption, stage: group.stage)
+            )
+        }
+        guard let best = scored.max(by: { $0.rate < $1.rate }), best.rate > 0 else { return nil }
+        return best
     }
 
     /// Cruce de tipos del compañero activo contra el rival actual.
@@ -137,8 +210,10 @@ public final class GameStore: ObservableObject {
     @discardableResult
     public func ensureEncounter() -> WildEncounter? {
         guard state.hasStarter else { return nil }
+        // Con gimnasio abierto no hay salvaje: el líder ocupa ese hueco.
+        guard state.gyms.current == nil else { return nil }
         if state.encounter == nil || state.encounter?.isFainted == true {
-            state.encounter = battle.freshEncounter(totalTokens: totalTokens, using: &rng)
+            state.encounter = battle.freshEncounter(rank: rank, using: &rng)
         }
         return state.encounter
     }
@@ -152,12 +227,25 @@ public final class GameStore: ObservableObject {
 
         let damage = event.damage(countingCache: state.settings.countCacheTokens)
         state.ledger.record(tokens: damage, at: event.timestamp)
-        creditActiveCompanion(tokens: damage)
 
         // Sin inicial elegido acumulamos tokens pero no hay combate todavía.
         guard state.hasStarter else {
             persist()
             return nil
+        }
+
+        state.gyms.tokensSinceLastGym += damage
+
+        // Con gimnasio abierto, el evento entero va contra el líder. Si cae,
+        // los tokens que sobran siguen contra un salvaje nuevo.
+        var tokens = damage
+        if state.gyms.current != nil {
+            tokens = resolveGymBattle(tokens: tokens, now: event.timestamp)
+            guard tokens > 0 else {
+                creditActiveCompanion(tokens: damage)
+                persist()
+                return nil
+            }
         }
 
         // Se resuelve por rival dentro del motor: un evento grande puede
@@ -166,16 +254,23 @@ public final class GameStore: ObservableObject {
         let typesEnabled = state.settings.typeEffectivenessEnabled
         let chart = typeChart
         let pokedex = pokedex
+        let progress = state.gyms
+        let hasPendingGym = nextGym != nil
 
         let result = battle.apply(
-            damage: damage,
+            damage: tokens,
             to: state.encounter,
             totalTokensAfter: state.ledger.total,
+            rank: rank,
             multiplier: { encounter in
                 guard typesEnabled, !attackerTypes.isEmpty,
                       let defender = pokedex[encounter.speciesID]
                 else { return 1 }
                 return chart.matchup(attacker: attackerTypes, defender: defender.types).multiplier
+            },
+            openGymAfterCapture: { captures in
+                // El gimnasio se abre AL TERMINAR un salvaje, nunca a mitad.
+                hasPendingGym && progress.triggerIsMet(extraCaptures: captures)
             },
             using: &rng,
             now: event.timestamp
@@ -183,15 +278,85 @@ public final class GameStore: ObservableObject {
         state.encounter = result.encounter
         if !result.captures.isEmpty {
             state.box.append(contentsOf: result.captures)
+            state.gyms.capturesSinceLastGym += result.captures.count
             state.lastCaptureSpeciesID = result.captures.last?.speciesID
             lastCapture = result.captures.last
         }
+
+        if result.stoppedForGym {
+            openGym(now: event.timestamp)
+            if result.remainingTokens > 0 {
+                _ = resolveGymBattle(tokens: result.remainingTokens, now: event.timestamp)
+            }
+        }
+
+        // Al final y no al principio: si se acreditara antes, el compañero
+        // podría evolucionar a mitad del evento y pegar con la etapa nueva, así
+        // que el ritmo real no coincidiría con el que la UI acaba de mostrar.
+        creditActiveCompanion(tokens: damage)
+
         persist()
         return result
     }
 
     public func ingest(_ events: [UsageEvent]) {
         for event in events { _ = ingest(event) }
+    }
+
+    /// Abre el siguiente gimnasio: sortea su HP y deja el combate en curso.
+    private func openGym(now: Date) {
+        guard state.gyms.current == nil, let gym = nextGym else { return }
+        let hp = rng.nextInt(in: gym.hpRange)
+        state.gyms.current = ActiveGymBattle(gymID: gym.id, maxHP: hp, startedAt: now)
+        state.encounter = nil
+    }
+
+    /// Aplica tokens al líder y devuelve los que sobren si cae. Si el cruce de
+    /// tipos no basta, el HP no se mueve pero los tokens se gastan igual.
+    @discardableResult
+    private func resolveGymBattle(tokens: Int, now: Date) -> Int {
+        guard var battleState = state.gyms.current, let gym = gymCatalog[battleState.gymID] else { return tokens }
+
+        let rate = gymDamagePerToken(for: gym)
+        guard rate > 0 else {
+            battleState.tokensSpent += tokens
+            state.gyms.current = battleState
+            return 0
+        }
+
+        let needed = gymCombat.tokensNeeded(
+            for: battleState.currentHP,
+            matchup: matchup(against: gym).multiplier,
+            absorption: gym.absorption,
+            stage: stage
+        ) ?? tokens
+
+        guard tokens >= needed else {
+            battleState.currentHP -= min(
+                battleState.currentHP,
+                gymCombat.damage(
+                    tokens: tokens,
+                    matchup: matchup(against: gym).multiplier,
+                    absorption: gym.absorption,
+                    stage: stage
+                )
+            )
+            battleState.tokensSpent += tokens
+            state.gyms.current = battleState
+            return 0
+        }
+
+        // Cae el líder: medalla, sin captura, y contadores a cero.
+        battleState.currentHP = 0
+        battleState.tokensSpent += needed
+        state.gyms.current = nil
+        state.gyms.award(gymID: gym.id)
+        state.gyms.resetCounters()
+        lastMedal = gym
+        // Un salvaje nuevo ya: si no, al cerrar el gimnasio sin tokens de
+        // sobra el jugador se queda sin rival hasta el evento siguiente.
+        ensureEncounter()
+        return tokens - needed
     }
 
     /// Acredita el consumo al compañero equipado: es lo que le hace subir de
@@ -219,6 +384,36 @@ public final class GameStore: ObservableObject {
                 NSLog("PokeTokenBar: no se pudo guardar el estado: \(error)")
             }
         }
+    }
+
+    /// Fija los contadores del disparador. Solo para tests.
+    public func debugSetGymCounters(tokens: Int, captures: Int) {
+        state.gyms.tokensSinceLastGym = tokens
+        state.gyms.capturesSinceLastGym = captures
+    }
+
+    /// Marca como derrotados los `count` primeros gimnasios. Solo para tests.
+    public func debugDefeatGyms(upTo count: Int) {
+        for gym in gymCatalog.all.prefix(count) { state.gyms.award(gymID: gym.id) }
+    }
+
+    /// Mete una captura en la caja sin combatir. Solo para tests.
+    public func debugCapture(speciesID: Int, tokensEarned: Int = 0) {
+        state.box.append(
+            CapturedPokemon(
+                speciesID: speciesID,
+                isShiny: false,
+                capturedAtTotalTokens: totalTokens,
+                tokensEarned: tokensEarned
+            )
+        )
+    }
+
+    /// Abre ya el siguiente gimnasio. Solo para tests.
+    @discardableResult
+    public func debugOpenNextGym() -> Gym? {
+        openGym(now: Date())
+        return activeGym?.gym
     }
 
     /// Fija el rival. Solo para tests: en el juego lo sortea `SpawnService`.

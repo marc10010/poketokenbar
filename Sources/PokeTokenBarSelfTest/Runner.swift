@@ -12,6 +12,7 @@ struct SelfTestRunner {
             BoxGroupTests.self,
             TypeChartTests.self,
             GymTests.self,
+            GymBattleTests.self,
             GameStoreTests.self,
             IngestTests.self,
         ]

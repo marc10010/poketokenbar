@@ -27,6 +27,15 @@ enum Fmt {
         }
     }
 
+    /// Ritmos y absorciones: "1,5" en vez de "1.500000".
+    static func rate(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "es_ES")
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+
     static func month(_ key: String) -> String {
         let parts = key.split(separator: "-")
         guard parts.count == 2, let year = Int(parts[0]), let month = Int(parts[1]) else { return key }

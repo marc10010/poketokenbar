@@ -4,14 +4,29 @@ import SwiftUI
 struct BattleDashboardView: View {
     @EnvironmentObject private var store: GameStore
     @State private var showBox = false
+    @State private var showMedals = true
     @State private var showMetrics = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             ActiveCompanionCard()
             Divider()
-            EncounterCard()
+            if let active = store.activeGym {
+                SectionCard(title: "Gimnasio") {
+                    GymCardView(gym: active.gym, battle: active.battle)
+                }
+            } else {
+                EncounterCard()
+            }
             Divider()
+
+            DisclosureGroup(isExpanded: $showMedals) {
+                MedalsView()
+            } label: {
+                Label("Medallas · \(store.medals)/16", systemImage: "rosette")
+                    .font(.caption.weight(.semibold))
+            }
+
 
             DisclosureGroup(isExpanded: $showBox) {
                 PCBoxView()
@@ -153,6 +168,7 @@ private struct MetricsView: View {
             metric("Este mes", Fmt.tokens(store.monthTokens))
             metric("Daño por token", store.currentMatchup.isNeutral ? "×1" : "\(store.currentMatchup.badge) \(store.currentMatchup.label)")
             metric("Eventos registrados", Fmt.tokens(store.state.ledger.eventCount))
+            metric("Rango", "\(store.rank.label) · \(store.medals)/16 medallas")
             metric("Especies conseguidas", "\(store.speciesCaught) / 251")
             metric("Capturas totales", Fmt.tokens(store.state.box.count))
 
