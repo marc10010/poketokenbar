@@ -5,6 +5,7 @@ public enum EvolutionStage: Int, CaseIterable, Sendable {
     case one = 1
     case two = 2
 
+    /// `tokens` son los que ha ganado **ese** Pokémon estando equipado.
     public static func stage(forTotalTokens tokens: Int) -> EvolutionStage {
         if tokens >= GameRules.stageTwoThreshold { return .two }
         if tokens >= GameRules.stageOneThreshold { return .one }
@@ -53,17 +54,22 @@ public struct EvolutionService {
         return path
     }
 
-    public func currentForm(of captured: CapturedPokemon, totalTokens: Int) -> Pokemon {
+    public func stage(of captured: CapturedPokemon) -> EvolutionStage {
+        .stage(forTotalTokens: captured.tokensEarned)
+    }
+
+    public func currentForm(of captured: CapturedPokemon) -> Pokemon {
         let path = chainPath(of: captured)
-        let index = min(EvolutionStage.stage(forTotalTokens: totalTokens).rawValue, path.count - 1)
+        let index = min(stage(of: captured).rawValue, path.count - 1)
         return path[index]
     }
 
     /// Forma inmediatamente posterior a la actual, si la etapa y la cadena la permiten.
-    public func nextForm(of captured: CapturedPokemon, totalTokens: Int) -> Pokemon? {
-        guard let _ = EvolutionStage.stage(forTotalTokens: totalTokens).tokensToNext(from: totalTokens) else { return nil }
+    public func nextForm(of captured: CapturedPokemon) -> Pokemon? {
+        let current = stage(of: captured)
+        guard current.tokensToNext(from: captured.tokensEarned) != nil else { return nil }
         let path = chainPath(of: captured)
-        let next = EvolutionStage.stage(forTotalTokens: totalTokens).rawValue + 1
+        let next = current.rawValue + 1
         return next < path.count ? path[next] : nil
     }
 }

@@ -17,9 +17,11 @@ public final class GameStore: ObservableObject {
     private var rng: any RandomProvider
     private var processedIDs: Set<String>
     private var saveTask: Task<Void, Never>?
+    /// Solo el compañero equipado gana tokens, así que su progreso basta para
+    /// invalidar la caché.
     private struct GroupCacheKey: Equatable {
         let captures: Int
-        let stage: Int
+        let activeEarned: Int
     }
 
     private var groupCache: (key: GroupCacheKey, groups: [BoxGroup])?
@@ -45,16 +47,25 @@ public final class GameStore: ObservableObject {
 
     public var totalTokens: Int { state.ledger.total }
     public var monthTokens: Int { state.ledger.currentMonth }
-    public var stage: EvolutionStage { .stage(forTotalTokens: totalTokens) }
+
+    /// Etapa del compañero equipado, según los tokens que ÉL ha ganado.
+    public var stage: EvolutionStage {
+        guard let companion = state.activeCompanion else { return .base }
+        return evolution.stage(of: companion)
+    }
+
+    /// Tokens ganados por el compañero equipado: es su barra de progreso, no
+    /// el histórico global del jugador.
+    public var activeTokensEarned: Int { state.activeCompanion?.tokensEarned ?? 0 }
 
     public var activeForm: Pokemon? {
         guard let companion = state.activeCompanion else { return nil }
-        return evolution.currentForm(of: companion, totalTokens: totalTokens)
+        return evolution.currentForm(of: companion)
     }
 
     public var activeNextForm: Pokemon? {
         guard let companion = state.activeCompanion else { return nil }
-        return evolution.nextForm(of: companion, totalTokens: totalTokens)
+        return evolution.nextForm(of: companion)
     }
 
     /// Cruce de tipos del compañero activo contra el rival actual.
@@ -72,18 +83,18 @@ public final class GameStore: ObservableObject {
     }
 
     public func form(of captured: CapturedPokemon) -> Pokemon {
-        evolution.currentForm(of: captured, totalTokens: totalTokens)
+        evolution.currentForm(of: captured)
     }
 
     /// Caja PC ordenada por captura más reciente.
     public var box: [CapturedPokemon] { state.box.sorted { $0.capturedAt > $1.capturedAt } }
 
-    /// Caja apilada por forma visible, en orden Pokédex. Memoizada: agrupar
-    /// recorre todas las capturas y la UI la pide en cada render.
+    /// Caja apilada por especie capturada, en orden Pokédex. Memoizada:
+    /// agrupar recorre todas las capturas y la UI la pide en cada render.
     public var boxGroups: [BoxGroup] {
-        let key = GroupCacheKey(captures: state.box.count, stage: stage.rawValue)
+        let key = GroupCacheKey(captures: state.box.count, activeEarned: activeTokensEarned)
         if let cached = groupCache, cached.key == key { return cached.groups }
-        let groups = BoxGroup.group(state.box, totalTokens: totalTokens, evolution: evolution)
+        let groups = BoxGroup.group(state.box, pokedex: pokedex, evolution: evolution)
         groupCache = (key, groups)
         return groups
     }
@@ -91,13 +102,13 @@ public final class GameStore: ObservableObject {
     /// Formas distintas conseguidas, ignorando la variante de color: es la
     /// métrica que tiene techo (251) y la que mide el progreso de verdad.
     public var speciesCaught: Int {
-        Set(boxGroups.map(\.form.id)).count
+        Set(boxGroups.map(\.species.id)).count
     }
 
     /// Grupo que corresponde al compañero activo, para marcarlo en la UI.
     public var activeGroupID: String? {
-        guard let companion = state.activeCompanion, let form = activeForm else { return nil }
-        return "\(form.id)-\(companion.isShiny)"
+        guard let companion = state.activeCompanion else { return nil }
+        return "\(companion.speciesID)-\(evolution.stage(of: companion).rawValue)-\(companion.isShiny)"
     }
 
     // MARK: - Acciones
@@ -141,6 +152,7 @@ public final class GameStore: ObservableObject {
 
         let damage = event.damage(countingCache: state.settings.countCacheTokens)
         state.ledger.record(tokens: damage, at: event.timestamp)
+        creditActiveCompanion(tokens: damage)
 
         // Sin inicial elegido acumulamos tokens pero no hay combate todavía.
         guard state.hasStarter else {
@@ -180,6 +192,16 @@ public final class GameStore: ObservableObject {
 
     public func ingest(_ events: [UsageEvent]) {
         for event in events { _ = ingest(event) }
+    }
+
+    /// Acredita el consumo al compañero equipado: es lo que le hace subir de
+    /// etapa, y por eso una evolución no se pierde al cambiar de compañero.
+    private func creditActiveCompanion(tokens: Int) {
+        guard tokens > 0,
+              let companionID = state.activeCompanion?.id,
+              let index = state.box.firstIndex(where: { $0.id == companionID })
+        else { return }
+        state.box[index].tokensEarned += tokens
     }
 
     // MARK: - Persistencia

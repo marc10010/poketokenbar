@@ -19,6 +19,9 @@ enum GameStoreTests: TestSuite {
         ("corrupt state file is quarantined not crashing", testCorruptStateFileIsQuarantinedNotCrashing),
         ("legacy settings decode with defaults", testLegacySettingsDecodeWithDefaults),
         ("species count ignores duplicates", testSpeciesCountIgnoresDuplicates),
+        ("solo el equipado evoluciona", testOnlyTheActiveCompanionShowsEvolved),
+        ("la evolución se queda al cambiar de compañero", testEvolutionSticksAfterSwitchingCompanion),
+        ("la migración acredita al equipado", testMigrationCreditsTheEquippedCompanion),
         ("el multiplicador de tipos escala el daño real", testTypeMultiplierScalesDamage),
     ]
 
@@ -192,6 +195,83 @@ enum GameStoreTests: TestSuite {
         expectTrue(store.boxGroups.count <= store.state.box.count)
         expectEqual(store.boxGroups.reduce(0) { $0 + $1.count }, store.state.box.count, "no se pierde ninguna")
         expectTrue(store.speciesCaught <= 251)
+    }
+
+    /// Solo el compañero equipado gana tokens, así que solo él evoluciona; el
+    /// resto de la caja sigue como se capturó.
+    static func testOnlyTheActiveCompanionShowsEvolved() throws {
+        let store = makeStore(seed: 5)
+        store.chooseStarter(speciesID: 7)
+        store.ingest(event("evoluciona", input: 400_000, output: 0))
+
+        expectEqual(store.stage, EvolutionStage.one)
+        expectEqual(store.activeTokensEarned, 400_000)
+        expectEqual(store.activeForm?.id, 8, "Squirtle equipado se ve como Wartortle")
+
+        let others = store.boxGroups.filter { $0.id != store.activeGroupID }
+        expectGreaterThan(others.count, 0, "el evento captura rivales")
+        for group in others {
+            expectFalse(group.hasEvolved, "\(group.species.name) no debería salir evolucionado")
+            expectEqual(group.representative.tokensEarned, 0)
+        }
+    }
+
+    /// Lo que pidió el juego: cambias de compañero, subes al nuevo, y en la
+    /// caja siguen saliendo los dos evolucionados.
+    static func testEvolutionSticksAfterSwitchingCompanion() throws {
+        let store = makeStore(seed: 21)
+        store.chooseStarter(speciesID: 7)
+        store.ingest(event("sube-squirtle", input: 250_000, output: 0))
+        expectEqual(store.activeForm?.id, 8, "Wartortle")
+
+        // Equipamos otro capturado y le damos sus propios tokens.
+        let other = try unwrap(store.state.box.first { $0.id != store.state.activeCompanion?.id })
+        store.setActiveCompanion(other.id)
+        expectEqual(store.activeTokensEarned, 0, "el nuevo empieza de cero")
+        store.ingest(event("sube-otro", input: 250_000, output: 0))
+        expectEqual(store.stage, EvolutionStage.one)
+
+        let squirtleGroup = try unwrap(store.boxGroups.first { $0.species.id == 7 })
+        expectEqual(squirtleGroup.displayForm.id, 8, "el Squirtle sigue siendo Wartortle")
+        expectEqual(squirtleGroup.representative.tokensEarned, 250_000, "su progreso no se toca")
+
+        // Puede haber varios grupos de esa especie (uno por etapa): hay que
+        // buscar el del ejemplar que equipamos, no el primero.
+        let otherGroup = try unwrap(store.boxGroups.first { $0.representative.id == other.id })
+        expectTrue(
+            otherGroup.hasEvolved || store.pokedex.require(other.speciesID).evolvesInto.isEmpty,
+            "el nuevo evoluciona salvo que su línea no tenga evolución"
+        )
+    }
+
+    /// Migración v1 → v2: el estado viejo no tenía progreso por Pokémon. El
+    /// compañero equipado es quien había estado ganando esos tokens.
+    static func testMigrationCreditsTheEquippedCompanion() throws {
+        let url = temporaryStateURL()
+        let legacy = """
+        {
+          "schemaVersion": 1,
+          "ledger": { "total": 362861, "monthly": { "2026-09": 362861 }, "eventCount": 40 },
+          "box": [
+            { "id": "AAAAAAAA-0000-0000-0000-000000000001", "speciesID": 7, "isShiny": false,
+              "capturedAt": "2026-09-08T09:00:00Z", "capturedAtTotalTokens": 73608, "evolutionSeed": 11 },
+            { "id": "AAAAAAAA-0000-0000-0000-000000000002", "speciesID": 204, "isShiny": false,
+              "capturedAt": "2026-09-08T11:00:00Z", "capturedAtTotalTokens": 343030, "evolutionSeed": 12 }
+          ],
+          "activeCompanionID": "AAAAAAAA-0000-0000-0000-000000000001",
+          "processedEventIDs": []
+        }
+        """
+        try Data(legacy.utf8).write(to: url)
+        let store = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 1))
+
+        expectEqual(store.state.schemaVersion, GameState.currentSchemaVersion)
+        expectEqual(store.activeTokensEarned, 362_861 - 73_608, "al equipado se le acredita lo ganado desde su captura")
+        expectEqual(store.activeForm?.id, 8, "sigue siendo Wartortle")
+
+        let pineco = try unwrap(store.boxGroups.first { $0.species.id == 204 })
+        expectEqual(pineco.representative.tokensEarned, 0)
+        expectEqual(pineco.displayForm.id, 204, "el Pineco vuelve a ser Pineco, no Forretress")
     }
 
     /// El ledger cuenta tokens reales; el HP baja escalado por tipos. Son dos

@@ -119,7 +119,7 @@ struct HUDView: View {
             metric("Daño por token", store.currentMatchup.isNeutral ? "×1" : "\(store.currentMatchup.badge) · \(store.currentMatchup.label)")
             metric("Especies", "\(store.speciesCaught) / 251")
             metric("Capturas", Fmt.tokens(store.state.box.count))
-            if let next = store.activeNextForm, let remaining = store.stage.tokensToNext(from: store.totalTokens) {
+            if let next = store.activeNextForm, let remaining = store.stage.tokensToNext(from: store.activeTokensEarned) {
                 metric("\(next.localizedName) en", Fmt.tokens(remaining))
             } else {
                 metric("Evolución", store.stage.label)
@@ -208,7 +208,7 @@ struct HUDView: View {
                 Button {
                     store.setActiveCompanion(group.representative.id)
                 } label: {
-                    Text(group.form.localizedName + (group.isShiny ? " ✦" : "")
+                    Text(group.displayForm.localizedName + (group.isShiny ? " ✦" : "")
                         + (group.count > 1 ? " ×\(group.count)" : "")
                         + (store.activeGroupID == group.id ? "  ✓" : ""))
                 }

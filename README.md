@@ -74,7 +74,9 @@ Decisiones que importan:
 }
 ```
 
-Estado persistido en `~/Library/Application Support/PokeTokenBar/state.json`:
+Estado persistido en `~/Library/Application Support/PokeTokenBar/state.json`
+(`schemaVersion: 2`; la migración desde 1 acredita al compañero equipado los
+tokens acumulados desde su captura, que es quien los había estado ganando):
 
 ```jsonc
 {
@@ -82,7 +84,7 @@ Estado persistido en `~/Library/Application Support/PokeTokenBar/state.json`:
   "ledger": { "total": 5500, "monthly": { "2026-09": 5500 }, "eventCount": 2 },
   "box": [{ "id": "<uuid>", "speciesID": 4, "isShiny": false,
             "capturedAt": "...", "capturedAtTotalTokens": 0,
-            "evolutionSeed": 12345 }],
+            "evolutionSeed": 12345, "tokensEarned": 289253 }],
   "activeCompanionID": "<uuid>",
   "encounter": { "speciesID": 50, "rarity": "common", "isShiny": false,
                  "maxHP": 42814, "currentHP": 37314, "spawnedAt": "..." },
@@ -131,9 +133,16 @@ son Hada aunque en Gen 1 y 2 no existiera ese tipo.
 - Los tiers salen de los datos de PokeAPI (legendario/mítico, `capture_rate` y
   mejor BST de la familia), no de una lista a mano. La regla está en
   `tools/generate_pokedex.mjs`.
-- Evolución del compañero por histórico acumulado: base ≤ 200.000 · etapa 1
-  200.001–1.000.000 · etapa 2 > 1.000.000. Las líneas de dos formas se quedan
-  en su última forma.
+- **La evolución es de cada Pokémon, no del jugador.** Cada capturado acumula
+  `tokensEarned`: los tokens gastados **mientras lo llevabas equipado**. Los
+  umbrales son los del spec (base ≤ 200.000 · etapa 1 200.001–1.000.000 ·
+  etapa 2 > 1.000.000) pero aplicados a ese contador propio.
+  - Un Pineco capturado hoy sigue siendo Pineco aunque lleves 300.000 tokens:
+    esos los ganó otro.
+  - El progreso **solo crece**, así que una evolución conseguida no se pierde
+    al cambiar de compañero: puedes tener Wartortle y Marowak evolucionados a
+    la vez en la caja.
+  - Las líneas de dos formas se quedan en su última forma.
 - El daño sobrante de una captura se arrastra al rival siguiente: ningún token
   se pierde, y un evento grande puede encadenar varias capturas.
 
@@ -324,8 +333,8 @@ node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
   funciona y muestra el número de Pokédex como placeholder.
 - No hay notificaciones del sistema en las capturas (evita pedir permisos): la
   barra muestra "¡X capturado!" durante 6 segundos.
-- La caja PC apila por forma visible con contador `×N`, así que la rejilla tiene
-  techo (251 especies × 2 variantes) por muchas capturas que acumules; el menú
+- La caja PC apila por especie + variante + etapa alcanzada, con contador `×N`,
+  así que la rejilla tiene techo (251 × 2 × 3) por muchas capturas que acumules; el menú
   del HUD lista solo los 8 grupos más recientes y enlaza a la caja completa.
   Los registros individuales sí se guardan todos (~178 bytes cada uno), pero no
   se muestran de uno en uno.

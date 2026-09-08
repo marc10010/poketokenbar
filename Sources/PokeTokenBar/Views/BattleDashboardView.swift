@@ -67,7 +67,9 @@ private struct EvolutionProgress: View {
     @EnvironmentObject private var store: GameStore
 
     var body: some View {
-        let remaining = store.stage.tokensToNext(from: store.totalTokens)
+        // El progreso es del compañero equipado, no del histórico global.
+        let earned = store.activeTokensEarned
+        let remaining = store.stage.tokensToNext(from: earned)
         VStack(alignment: .leading, spacing: 3) {
             if let remaining, let next = store.activeNextForm {
                 Text("\(Fmt.tokens(remaining)) tokens para \(next.localizedName)")
@@ -88,7 +90,7 @@ private struct EvolutionProgress: View {
     }
 
     private var stageFraction: Double {
-        let total = store.totalTokens
+        let total = store.activeTokensEarned
         switch store.stage {
         case .base:
             return Double(total) / Double(GameRules.stageOneThreshold)
