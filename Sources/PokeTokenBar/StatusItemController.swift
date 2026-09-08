@@ -5,6 +5,12 @@ import SwiftUI
 
 /// Dueño del `NSStatusItem`: compone "sprite propio vs sprite rival | HP" y
 /// abre el popover con la UI de SwiftUI.
+extension Notification.Name {
+    /// La emite el menú del HUD para abrir el popover de la barra, que es
+    /// donde vive la caja PC completa.
+    static let poketokenbarShowPopover = Notification.Name("poketokenbar.showPopover")
+}
+
 @MainActor
 final class StatusItemController {
     private let store: GameStore
@@ -44,6 +50,11 @@ final class StatusItemController {
             .sink { [weak self] _ in self?.flashCapture() }
             .store(in: &cancellables)
 
+        NotificationCenter.default
+            .publisher(for: .poketokenbarShowPopover)
+            .sink { [weak self] _ in self?.showPopover() }
+            .store(in: &cancellables)
+
         render()
         logGeometry(after: 0.2)
         logGeometry(after: 2.5)
@@ -73,13 +84,17 @@ final class StatusItemController {
     }
 
     @objc private func togglePopover() {
-        guard let button = statusItem.button else { return }
         if popover.isShown {
             popover.performClose(nil)
         } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            showPopover()
         }
+    }
+
+    private func showPopover() {
+        guard let button = statusItem.button else { return }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKey()
     }
 
     private func flashCapture() {

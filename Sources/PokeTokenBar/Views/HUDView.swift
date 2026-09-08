@@ -106,16 +106,23 @@ struct HUDView: View {
     /// el ítem de la barra de menú.
     @ViewBuilder
     private var hudMenu: some View {
-        if store.state.box.count > 1 {
+        // Solo los últimos grupos: el menú no puede crecer con las capturas.
+        let recent = store.boxGroups
+            .sorted { $0.latestCapturedAt > $1.latestCapturedAt }
+            .prefix(8)
+        if store.boxGroups.count > 1 {
             Text("Compañero")
-            ForEach(store.box) { captured in
-                let form = store.form(of: captured)
+            ForEach(Array(recent)) { group in
                 Button {
-                    store.setActiveCompanion(captured.id)
+                    store.setActiveCompanion(group.representative.id)
                 } label: {
-                    Text(form.localizedName + (captured.isShiny ? " ✦" : "")
-                        + (store.state.activeCompanion?.id == captured.id ? "  ✓" : ""))
+                    Text(group.form.localizedName + (group.isShiny ? " ✦" : "")
+                        + (group.count > 1 ? " ×\(group.count)" : "")
+                        + (store.activeGroupID == group.id ? "  ✓" : ""))
                 }
+            }
+            Button("Caja PC completa (\(store.speciesCaught)/251)…") {
+                NotificationCenter.default.post(name: .poketokenbarShowPopover, object: nil)
             }
             Divider()
         }

@@ -16,6 +16,12 @@ public final class GameStore: ObservableObject {
     private var rng: any RandomProvider
     private var processedIDs: Set<String>
     private var saveTask: Task<Void, Never>?
+    private struct GroupCacheKey: Equatable {
+        let captures: Int
+        let stage: Int
+    }
+
+    private var groupCache: (key: GroupCacheKey, groups: [BoxGroup])?
 
     public init(
         pokedex: Pokedex = .shared,
@@ -59,6 +65,28 @@ public final class GameStore: ObservableObject {
 
     /// Caja PC ordenada por captura más reciente.
     public var box: [CapturedPokemon] { state.box.sorted { $0.capturedAt > $1.capturedAt } }
+
+    /// Caja apilada por forma visible, en orden Pokédex. Memoizada: agrupar
+    /// recorre todas las capturas y la UI la pide en cada render.
+    public var boxGroups: [BoxGroup] {
+        let key = GroupCacheKey(captures: state.box.count, stage: stage.rawValue)
+        if let cached = groupCache, cached.key == key { return cached.groups }
+        let groups = BoxGroup.group(state.box, totalTokens: totalTokens, evolution: evolution)
+        groupCache = (key, groups)
+        return groups
+    }
+
+    /// Formas distintas conseguidas, ignorando la variante de color: es la
+    /// métrica que tiene techo (251) y la que mide el progreso de verdad.
+    public var speciesCaught: Int {
+        Set(boxGroups.map(\.form.id)).count
+    }
+
+    /// Grupo que corresponde al compañero activo, para marcarlo en la UI.
+    public var activeGroupID: String? {
+        guard let companion = state.activeCompanion, let form = activeForm else { return nil }
+        return "\(form.id)-\(companion.isShiny)"
+    }
 
     // MARK: - Acciones
 

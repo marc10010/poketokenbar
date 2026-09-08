@@ -16,7 +16,7 @@ struct BattleDashboardView: View {
             DisclosureGroup(isExpanded: $showBox) {
                 PCBoxView()
             } label: {
-                Label("Caja PC · \(store.state.box.count)", systemImage: "archivebox")
+                Label("Caja PC · \(store.speciesCaught)/251", systemImage: "archivebox")
                     .font(.caption.weight(.semibold))
             }
 
@@ -149,7 +149,8 @@ private struct MetricsView: View {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
             metric("Eventos registrados", Fmt.tokens(store.state.ledger.eventCount))
-            metric("Capturados", "\(store.state.box.count) / 251")
+            metric("Especies conseguidas", "\(store.speciesCaught) / 251")
+            metric("Capturas totales", Fmt.tokens(store.state.box.count))
 
             let history = store.state.ledger.monthly.sorted { $0.key > $1.key }.prefix(6)
             if history.count > 1 {

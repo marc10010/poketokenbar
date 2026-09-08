@@ -18,6 +18,7 @@ enum GameStoreTests: TestSuite {
         ("processed event window is bounded", testProcessedEventWindowIsBounded),
         ("corrupt state file is quarantined not crashing", testCorruptStateFileIsQuarantinedNotCrashing),
         ("legacy settings decode with defaults", testLegacySettingsDecodeWithDefaults),
+        ("species count ignores duplicates", testSpeciesCountIgnoresDuplicates),
     ]
 
     private static func temporaryStateURL() -> URL {
@@ -174,5 +175,18 @@ enum GameStoreTests: TestSuite {
         expectEqual(store.state.settings.hudOpacity, 0.9, accuracy: 0.0001)
         expectEqual(store.state.settings.hudLocked, false)
         expectNil(store.state.settings.hudFreeOrigin)
+    }
+
+    /// Capturar en cadena llena la caja de repetidos: el progreso se mide en
+    /// especies (con techo), no en capturas (sin techo).
+    static func testSpeciesCountIgnoresDuplicates() {
+        let store = makeStore(seed: 11)
+        store.chooseStarter(speciesID: 1)
+        store.ingest(event("bulk", input: 2_000_000, output: 0))
+        expectGreaterThan(store.state.box.count, 3, "el evento grande captura varios")
+        expectTrue(store.speciesCaught <= store.state.box.count)
+        expectTrue(store.boxGroups.count <= store.state.box.count)
+        expectEqual(store.boxGroups.reduce(0) { $0 + $1.count }, store.state.box.count, "no se pierde ninguna")
+        expectTrue(store.speciesCaught <= 251)
     }
 }

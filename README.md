@@ -251,7 +251,7 @@ tail -5 ~/Library/Application\ Support/PokeTokenBar/diagnostics.log
 ## 9. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 44 tests, ~13k comprobaciones
+swift run PokeTokenBarSelfTest     # 52 tests, ~13k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 
@@ -260,7 +260,8 @@ XCTest y swift-testing necesitan Xcode completo; así la suite corre con solo la
 Command Line Tools. Cubre gates de tier, ratios de aparición (200k muestras),
 rangos de HP, tasa de shiny, arrastre de daño, capturas en cadena, umbrales y
 ramas de evolución, idempotencia del ingest, persistencia entre reinicios,
-cuarentena de estado corrupto y el parseo de transcripts y del payload HTTP.
+cuarentena de estado corrupto, el apilado de la caja PC (que es lo que impide
+que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
 
 `--ui-smoke-test` monta el árbol de SwiftUI en las tres pantallas (selector de
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
@@ -279,6 +280,11 @@ node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
   funciona y muestra el número de Pokédex como placeholder.
 - No hay notificaciones del sistema en las capturas (evita pedir permisos): la
   barra muestra "¡X capturado!" durante 6 segundos.
+- La caja PC apila por forma visible con contador `×N`, así que la rejilla tiene
+  techo (251 especies × 2 variantes) por muchas capturas que acumules; el menú
+  del HUD lista solo los 8 grupos más recientes y enlaza a la caja completa.
+  Los registros individuales sí se guardan todos (~178 bytes cada uno), pero no
+  se muestran de uno en uno.
 - La caja PC no permite liberar ni renombrar todavía (`nickname` ya está en el
   modelo).
 - Sin tipos ni efectividad en combate: el daño es plano, 1 token = 1 HP.
