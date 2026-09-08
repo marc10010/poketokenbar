@@ -314,7 +314,37 @@ que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-## 10. Hitos legendarios
+## 10. Regiones y ligas
+
+El contenido va por **dos regiones con puerta entre ellas**: los ocho gimnasios
+de Johto, el Alto Mando, y solo entonces los de Kanto.
+
+```
+Johto: 8 gimnasios ─▶ Alto Mando de Johto ─▶ abre la región de Kanto
+Kanto: 8 gimnasios ─▶ Monte Plateado: Red ─▶ Campeón, abre Cueva Celeste
+```
+
+**El noveno gimnasio no aparece hasta ganar el Alto Mando.** Sin esa puerta la
+región sería solo una etiqueta, y el popover dice qué es lo que bloquea en vez
+de dejar el avance en silencio.
+
+Una liga es un **gauntlet**: sus miembros en cadena y sin salvajes en medio.
+Abandonar **reinicia la tirada**, que es lo que significa un gauntlet, pero
+recupera tus salvajes: nunca te secuestra la partida. Todos sus miembros
+absorben 1,5 o más, así que un cruce neutro no pasa de ahí.
+
+| Liga | Miembros | Requisito | Premio |
+|---|---|---|---|
+| Alto Mando de Johto | Will, Koga, Bruno, Karen y Lance | 8 medallas | abre Kanto |
+| Monte Plateado | Red | 16 medallas y la liga anterior | Campeón · abre Cueva Celeste |
+
+Detalle canónico que sale gratis: **Koga aparece dos veces**, líder de gimnasio
+en Kanto (Weezing) y Alto Mando en Johto (Crobat).
+
+`kantoOpen` e `isChampion` **dejan de derivarse de las medallas** y pasan a
+depender de haber ganado la liga, que era lo provisional que quedaba.
+
+## 11. Hitos legendarios
 
 Los 11 legendarios **no aparecen en el sorteo**: tienen sitio y requisito, y se
 retan cuando quieras desde la sección *Legendarios*. Su 2 % de aparición se
@@ -344,7 +374,7 @@ Tres diferencias con un gimnasio:
   muchos tokens que gastes: hace falta ventaja de tipo o una etapa más. Hay un
   test que lo fija para los once.
 
-## 11. Zonas de caza
+## 12. Zonas de caza
 
 Una especie solo puede aparecer si alguna de sus **zonas** está abierta, y las
 zonas se abren con medallas y con la región. Con 4 medallas se abren las rutas
@@ -378,7 +408,7 @@ así que ninguna se vuelve incompletable por un hueco del reparto y un legendari
 no se abarata a raro. Y ningún tier se queda nunca sin candidatas: si el filtro
 vaciara uno, se usa el pool completo antes que dejar el combate sin rival.
 
-## 12. Pokédex completa
+## 13. Pokédex completa
 
 *Ver Pokédex* (en la sección de la caja) abre los **251 huecos**, no solo lo que
 tienes. Tres estados, y el del medio existe porque las líneas repetidas ya no se
@@ -400,14 +430,14 @@ rareza, **con qué rango aparece**, su línea evolutiva, cuántas veces le has
 ganado, y por qué todavía no lo tienes (le faltan medallas, o es una forma
 evolucionada que no aparece en libertad).
 
-## 13. Reiniciar partida
+## 14. Reiniciar partida
 
 *Reiniciar partida…* en el pie del popover borra caja, medallas, estadísticas e
 histórico de tokens. Se conservan dos cosas a propósito: los **ajustes**, que
 son preferencias y no progreso, y los **ids de eventos ya procesados**, porque
 si se borraran el consumo ya contabilizado podría volver a entrar como daño.
 
-## 14. Gimnasios y medallas
+## 15. Gimnasios y medallas
 
 `Resources/gyms.json` es el único dato **curado a mano** del proyecto: PokeAPI
 no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
@@ -449,7 +479,7 @@ siguiente— cuánto falta para que se abra.
 
 Diseño completo y decisiones: `docs/spec-gimnasios-medallas.md`.
 
-## 15. Regenerar el icono
+## 16. Regenerar el icono
 
 `assets/AppIcon.icns` está commiteado, pero se genera:
 
@@ -460,7 +490,7 @@ Diseño completo y decisiones: `docs/spec-gimnasios-medallas.md`.
 Dibuja una barra de HP pixelada con AppKit y la empaqueta con `iconutil`. No
 usa ningún recurso con dueño: es geometría, así que el repo puede llevarlo.
 
-## 16. Regenerar los datos
+## 17. Regenerar los datos
 
 ```bash
 node tools/generate_pokedex.mjs     # ~580 peticiones a PokeAPI, ~30 s
@@ -471,7 +501,7 @@ node tools/generate_zones.mjs       # 251 peticiones de encuentros, ~40 s
 `gyms.json` no se genera: es el único dato curado a mano, porque PokeAPI no
 tiene líderes de gimnasio.
 
-## 17. Límites conocidos del MVP
+## 18. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Las **fichas usan los

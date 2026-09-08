@@ -14,6 +14,15 @@ struct HUDView: View {
                 starterPicker
             } else if let celebration = store.lastMedal {
                 medalPanel(celebration)
+            } else if let active = store.activeLeague {
+                bossPanel(border: .yellow) {
+                    LeagueCardView(
+                        league: active.league,
+                        member: active.member,
+                        run: active.run,
+                        compact: true
+                    )
+                }
             } else if let active = store.activeMilestone {
                 bossPanel(border: .purple) {
                     MilestoneCardView(milestone: active.milestone, battle: active.battle, compact: true)

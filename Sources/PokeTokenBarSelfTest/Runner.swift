@@ -16,6 +16,7 @@ struct SelfTestRunner {
             TypeChartTests.self,
             ZoneTests.self,
             MilestoneTests.self,
+            LeagueTests.self,
             GymTests.self,
             GymBattleTests.self,
             GameStoreTests.self,

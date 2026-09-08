@@ -7,6 +7,7 @@ struct BattleDashboardView: View {
     @State private var showMedals = true
     @State private var showZones = false
     @State private var showMilestones = false
+    @State private var showLeagues = false
     @State private var showMetrics = true
 
     var body: some View {
@@ -18,7 +19,11 @@ struct BattleDashboardView: View {
 
             ActiveCompanionCard()
             Divider()
-            if let active = store.activeMilestone {
+            if let active = store.activeLeague {
+                SectionCard(title: active.league.name) {
+                    LeagueCardView(league: active.league, member: active.member, run: active.run)
+                }
+            } else if let active = store.activeMilestone {
                 SectionCard(title: "Hito legendario") {
                     MilestoneCardView(milestone: active.milestone, battle: active.battle)
                 }
@@ -64,6 +69,16 @@ struct BattleDashboardView: View {
                     .buttonStyle(.link)
                     .font(.caption)
                 }
+            }
+
+            DisclosureGroup(isExpanded: $showLeagues) {
+                LeaguesView()
+            } label: {
+                Label(
+                    "Ligas · \(store.state.leagues.won.count)/\(store.leagueCatalog.all.count)",
+                    systemImage: "crown"
+                )
+                .font(.caption.weight(.semibold))
             }
 
             DisclosureGroup(isExpanded: $showMilestones) {
