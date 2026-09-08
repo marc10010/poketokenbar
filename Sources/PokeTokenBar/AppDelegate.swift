@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import PokeTokenBarCore
 
 @MainActor
@@ -7,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let sprites = SpriteStore()
     private lazy var sources = TokenSourceCoordinator(store: store)
     private var statusItem: StatusItemController?
+    private var scalingObserver: AnyCancellable?
     private var hud: HUDController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -15,6 +17,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = StatusItemController(store: store, sprites: sprites, sources: sources)
         hud = HUDController(store: store, sprites: sprites)
         sources.start()
+        sprites.scaling = store.state.settings.spriteScaling
+        sprites.scale = store.state.settings.spriteScale
+        scalingObserver = store.$state
+            .map { ($0.settings.spriteScaling, $0.settings.spriteScale) }
+            .removeDuplicates { $0 == $1 }
+            .sink { [weak self] scaling, scale in
+                self?.sprites.scaling = scaling
+                self?.sprites.scale = scale
+            }
         prefetchSprites()
     }
 

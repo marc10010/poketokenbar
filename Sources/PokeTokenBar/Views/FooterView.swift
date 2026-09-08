@@ -34,6 +34,36 @@ struct FooterView: View {
             }
             .toggleStyle(.checkbox)
 
+            HStack(spacing: 6) {
+                Text("Sprites").font(.system(size: 10))
+                Picker("", selection: Binding(
+                    get: { store.state.settings.spriteScaling },
+                    set: { newValue in store.updateSettings { $0.spriteScaling = newValue } }
+                )) {
+                    ForEach(SpriteScaling.allCases, id: \.self) { option in
+                        Text(option.label).tag(option)
+                    }
+                }
+                .labelsHidden()
+                .frame(width: 130)
+            }
+
+            HStack(spacing: 6) {
+                Text("Tamaño ×\(Fmt.rate(store.state.settings.spriteScale))")
+                    .font(.system(size: 10))
+                    .frame(width: 78, alignment: .leading)
+                Slider(
+                    value: Binding(
+                        get: { store.state.settings.spriteScale },
+                        set: { newValue in store.updateSettings { $0.spriteScale = newValue } }
+                    ),
+                    in: GameRules.minimumSpriteScale...GameRules.maximumSpriteScale,
+                    step: 0.25
+                )
+                .frame(width: 110)
+                .help("Tamaño de los sprites en las fichas")
+            }
+
             Toggle(isOn: Binding(
                 get: { store.state.settings.hudEnabled },
                 set: { newValue in store.updateSettings { $0.hudEnabled = newValue } }

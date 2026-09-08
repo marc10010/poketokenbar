@@ -121,6 +121,31 @@ enum UISmokeTest {
             print("  sprite animado: sin red o sin caché, no se puede comprobar")
         }
 
+        // Los ajustes de sprite: el multiplicador tiene que llegar al tamaño
+        // real de la ficha, y quedar acotado.
+        store.updateSettings { $0.spriteScale = 2 }
+        sprites.scale = store.state.settings.spriteScale
+        if let group = store.boxGroups.first {
+            store.selectedBoxGroupID = group.id
+            let big = NSHostingView(rootView: PokemonDetailView(group: group)
+                .environmentObject(store)
+                .environmentObject(sprites))
+            big.layoutSubtreeIfNeeded()
+            let bigHeight = big.fittingSize.height
+            store.updateSettings { $0.spriteScale = 0.75 }
+            sprites.scale = store.state.settings.spriteScale
+            let small = NSHostingView(rootView: PokemonDetailView(group: group)
+                .environmentObject(store)
+                .environmentObject(sprites))
+            small.layoutSubtreeIfNeeded()
+            let smallHeight = small.fittingSize.height
+            print("  tamaño de sprite: ×2 → \(Int(bigHeight)) pt de ficha · ×0,75 → \(Int(smallHeight)) pt")
+            ok = bigHeight > smallHeight && ok
+            store.selectedBoxGroupID = nil
+        }
+        store.updateSettings { $0.spriteScale = 1 }
+        sprites.scale = 1
+
         // Celebración de medalla: gana un gimnasio de verdad y mírala.
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))

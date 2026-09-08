@@ -13,7 +13,7 @@ struct SpriteView: View {
         Group {
             if let image = sprites.image(speciesID: speciesID, shiny: shiny) {
                 Image(nsImage: image)
-                    .interpolation(.none)
+                    .interpolation(sprites.scaling.interpolation)
                     .resizable()
                     .scaledToFit()
                     .scaleEffect(x: flipped ? -1 : 1, y: 1)

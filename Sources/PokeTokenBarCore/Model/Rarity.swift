@@ -74,6 +74,10 @@ public enum GameRules {
     public static let stageTwoThreshold = 1_000_001
     /// Cuántos IDs de evento guardamos para idempotencia entre reinicios.
     public static let processedEventWindow = 20_000
+    /// Límites del multiplicador de sprites: por debajo no se distingue nada y
+    /// por encima el popover se va de la pantalla.
+    public static let minimumSpriteScale = 0.75
+    public static let maximumSpriteScale = 2.0
     /// Cuánto dura la celebración de una medalla antes de volver al combate.
     public static let medalCelebrationSeconds: TimeInterval = 12
     /// Disparador de gimnasio: basta con cumplir una de las dos.

@@ -405,7 +405,11 @@ tiene líderes de gimnasio.
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Las **fichas usan los
-  GIF animados de Gen 5** (~80 KB cada uno, frente a ~2 KB del PNG), así que la
+  GIF animados de Gen 5**, con dos ajustes en el pie del popover: el filtro de
+  escalado (pixel nítido / intermedio / suavizado — entre el pixel duro y el
+  suavizado hay grados y cuál gusta es cuestión de ojo) y un multiplicador de
+  tamaño de ×0,75 a ×2, acotado también al cargar por si alguien edita el
+  `state.json` a mano. (~80 KB cada uno, frente a ~2 KB del PNG), así que la
   caché crece con el uso; las rejillas siguen con el estático porque animar 251
   celdas a la vez no compensa. Si una especie no tuviera animado, cae al
   estático sola. Sin red, la app

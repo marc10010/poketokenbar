@@ -16,6 +16,11 @@ public final class SpriteStore: ObservableObject {
     }
 
     @Published private(set) var images: [Key: NSImage] = [:]
+    /// Cómo se escala el pixel art. Lo pone el juego desde sus ajustes; vive
+    /// aquí para que cualquier vista de sprite lo tenga sin acarrear el store.
+    @Published var scaling: SpriteScaling = .medio
+    /// Multiplicador de tamaño para los sprites protagonistas.
+    @Published var scale: Double = 1
 
     private let cacheDirectory: URL
     private let session: URLSession
