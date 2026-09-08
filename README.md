@@ -138,6 +138,11 @@ son Hada aunque en Gen 1 y 2 no existiera ese tipo.
 - Los tiers salen de los datos de PokeAPI (legendario/mítico, `capture_rate` y
   mejor BST de la familia), no de una lista a mano. La regla está en
   `tools/generate_pokedex.mjs`.
+- **La colección da poder.** Cada hueco de la Pokédex suma daño contra
+  salvajes: `especies / 251`, hasta `+1,0`. La caja deja de ser decoración y
+  capturar pasa a ser inversión. **Solo cuenta contra salvajes**: si contara
+  contra jefes, una Pokédex avanzada anularía su absorción y dejarían de ser un
+  problema de cobertura de tipos para ser uno de acumulación.
 - **La evolución es de cada Pokémon, no del jugador.** Cada capturado acumula
   `tokensEarned`: los tokens gastados **mientras lo llevabas equipado**. Los
   umbrales son los del spec (base ≤ 200.000 · etapa 1 200.001–1.000.000 ·

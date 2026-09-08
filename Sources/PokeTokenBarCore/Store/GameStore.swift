@@ -349,6 +349,21 @@ public final class GameStore: ObservableObject {
         return best
     }
 
+    /// Bonus por colección: lo que suma tener Pokédex al daño contra salvajes.
+    ///
+    /// Existe porque hasta ahora la caja era decoración —solo contaba el
+    /// equipado— y capturar solo subía un contador. Con esto capturar es
+    /// inversión.
+    ///
+    /// **Solo cuenta contra salvajes, no contra jefes**: si contara, una
+    /// Pokédex avanzada anularía la absorción de los gimnasios tardíos y los
+    /// jefes dejarían de ser un problema de cobertura de tipos para ser uno de
+    /// acumulación, que es justo lo que se quería evitar.
+    public var collectionBonus: Double {
+        let ratio = Double(pokedexCaptured) / 251.0
+        return min(GameRules.collectionBonusCap, max(0, ratio) * GameRules.collectionBonusCap)
+    }
+
     /// Cruce de tipos del compañero activo contra el rival actual.
     public var currentMatchup: TypeMatchup {
         guard state.settings.typeEffectivenessEnabled,
@@ -356,6 +371,14 @@ public final class GameStore: ObservableObject {
               let defender = rivalSpecies
         else { return .neutral }
         return typeChart.matchup(attacker: attacker.types, defender: defender.types)
+    }
+
+    /// Daño por token contra el salvaje actual, bonus de colección incluido.
+    /// Es lo que de verdad pasa, así que es lo que se muestra.
+    public var wildDamagePerToken: Double {
+        guard state.encounter != nil else { return 0 }
+        let base = state.settings.typeEffectivenessEnabled ? currentMatchup.multiplier : 1
+        return base + collectionBonus
     }
 
     public var rivalSpecies: Pokemon? {
@@ -550,6 +573,7 @@ public final class GameStore: ObservableObject {
         let typesEnabled = state.settings.typeEffectivenessEnabled
         let chart = typeChart
         let pokedex = pokedex
+        let collection = collectionBonus
         let progress = state.gyms
         let hasPendingGym = nextGym != nil
             && state.milestones.current == nil
@@ -564,8 +588,9 @@ public final class GameStore: ObservableObject {
             multiplier: { encounter in
                 guard typesEnabled, !attackerTypes.isEmpty,
                       let defender = pokedex[encounter.speciesID]
-                else { return 1 }
-                return chart.matchup(attacker: attackerTypes, defender: defender.types).multiplier
+                else { return 1 + collection }
+                let matchup = chart.matchup(attacker: attackerTypes, defender: defender.types).multiplier
+                return matchup + collection
             },
             openGymAfterCapture: { captures in
                 // El gimnasio se abre AL TERMINAR un salvaje, nunca a mitad.

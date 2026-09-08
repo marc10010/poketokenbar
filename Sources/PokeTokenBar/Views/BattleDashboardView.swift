@@ -213,7 +213,18 @@ private struct EncounterCard: View {
                             }
                             RarityBadge(rarity: encounter.rarity)
                         }
-                        MatchupBadge(matchup: store.currentMatchup)
+                        HStack(spacing: 5) {
+                            MatchupBadge(matchup: store.currentMatchup)
+                            if store.collectionBonus > 0.01 {
+                                Text("+\(Fmt.rate(store.collectionBonus)) colección")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 1)
+                                    .background(Color.blue.opacity(0.16), in: Capsule())
+                                    .foregroundStyle(.blue)
+                                    .help("Cada especie de tu Pokédex suma daño contra salvajes")
+                            }
+                        }
                         HPBar(fraction: encounter.hpFraction, height: 12)
                         HStack {
                             Text("\(Fmt.tokens(encounter.currentHP)) / \(Fmt.tokens(encounter.maxHP)) HP")
@@ -245,7 +256,8 @@ private struct MetricsView: View {
         VStack(alignment: .leading, spacing: 6) {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
-            metric("Daño por token", store.currentMatchup.isNeutral ? "×1" : "\(store.currentMatchup.badge) \(store.currentMatchup.label)")
+            metric("Daño por token", "\(Fmt.rate(store.wildDamagePerToken)) al salvaje")
+            metric("Bonus de colección", "+\(Fmt.rate(store.collectionBonus)) por \(store.pokedexCaptured)/251")
             metric("Eventos registrados", Fmt.tokens(store.state.ledger.eventCount))
             metric("Rango", "\(store.rank.label) · \(store.medals)/16 medallas")
             metric("Especies conseguidas", "\(store.speciesCaught) / 251")

@@ -41,7 +41,7 @@ struct PokedexView: View {
             }
             .buttonStyle(.link)
             Spacer()
-            Text("\(store.pokedexCaptured)/251 en la caja · \(store.pokedexSeen) vistos")
+            Text("\(store.pokedexCaptured)/251 · \(store.pokedexSeen) vistos · +\(Fmt.rate(store.collectionBonus)) de daño")
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
         }
