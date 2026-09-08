@@ -113,33 +113,69 @@ Johto**, así que aparece dos veces con sprites distintos (Weezing y Crobat).
 **Monte Plateado** (16 medallas): Red, con Pikachu (#25) como estrella. Es el
 final: absorción por encima de todo lo anterior, así que exige ×4 o etapa 2.
 
-## Recompensas
+#### Recompensas
 
 - Liga de Johto → **abre la región de Kanto**. Esto contesta a D2: la primera
   liga no necesita inventarse un premio, su premio es el contenido siguiente.
 - Red → **Cueva Celeste (Mewtwo)** y el título de Campeón.
 
-### B. Zonas de caza (la más valiosa)
+### B. Zonas: desbloquean qué puede aparecer
 
-No son combates: **cambian la distribución del sorteo**. Eliges dónde cazas y
-eso decide qué aparece.
+No son combates y **no sesgan** el sorteo: **abren especies**. Cada Pokémon
+pertenece a una o varias zonas, y una especie solo puede aparecer si alguna de
+sus zonas está desbloqueada. Con 4 medallas se abre la Central Eléctrica y
+entran al sorteo los Pokémon que viven allí.
 
-| Región | Zona | Sesga hacia | Se abre con |
-|---|---|---|---|
-| — | Ruta 1 (por defecto) | sin sesgo, como hoy | siempre |
-| Johto | Bosque Verde | bicho, planta | 1 medalla |
-| Johto | Monte Moon | roca, tierra, veneno | 2 medallas |
-| Johto | Ruinas Alfa | psíquico | 4 medallas |
-| Johto | Zona Safari | poco comunes y raros variados | 6 medallas |
-| Kanto | Central Eléctrica | eléctrico, acero | Kanto abierta + 12 |
-| Kanto | Cueva Celeste | psíquico y raros de Kanto | Red vencido |
+Es más legible que el gate por tier que hay hoy: "la Central Eléctrica está
+cerrada" se entiende; "los raros no aparecen todavía" no dice dónde mirar.
 
-Esto es lo que convierte "me falta un Lucha para Whitney" en una decisión en vez
-de en esperar. El sesgo se aplica **dentro** del tier que ya sortea
-`SpawnService`: la rareza sigue mandando, la zona solo reordena qué especie sale.
+#### El reparto no se inventa: sale de PokeAPI
 
-Coste de diseño a aceptar: con una zona puesta, la Pokédex se completa más
-rápido y más dirigida. Es exactamente el punto.
+`/pokemon/{id}/encounters` da los encuentros reales por versión, y filtrando a
+`red, blue, yellow, gold, silver, crystal` salen las áreas de Gen 1 y 2:
+Pikachu aparece en `viridian-forest-area` y `kanto-power-plant-area`, por
+ejemplo. Hay **163 áreas** distintas en uso para los 251, demasiadas para ser
+zonas jugables, así que el generador las agrupa en unas 12-16 zonas con una
+tabla curada de área → zona. Los datos son de la API; el agrupamiento es
+nuestro y se revisa a mano.
+
+#### El agujero medido, y cómo se tapa
+
+**58 de las 251 especies no tienen ningún encuentro salvaje en Gen 1/2.** Es un
+dato medido, no una estimación. De esas:
+
+- **55 son formas evolucionadas** (Venusaur, Gengar, Dragonite, las evoluciones
+  de Eevee...). No necesitan zona: en este juego se consiguen **evolucionando** a
+  la tuya, que es como funciona ya.
+- **3 eran forma base**: Mew, Azumarill y Blissey. Dos de las tres resultaron ser
+  un bug del generador de la Pokédex —las cadenas cuya raíz es una cría posterior
+  se descartaban enteras— ya corregido aparte.
+- Queda **Mew**, que no tiene encuentro ni precursor. Va como hito legendario,
+  igual que los demás.
+
+Regla de red de seguridad, por si el agrupamiento deja alguna fuera: **una
+especie sin zona asignada puede aparecer en cualquier zona con probabilidad de
+tier raro**. Así ninguna se vuelve incompletable por un descuido de la tabla, y
+el generador debe **listar** las que caen en ese caso para que sea una decisión
+visible y no un silencio.
+
+| Región | Zona | Se abre con |
+|---|---|---|
+| Johto | Ruta 29-30 (inicial) | siempre |
+| Johto | Bosque Verde | 1 medalla |
+| Johto | Monte Moon | 2 medallas |
+| Johto | Ruinas Alfa | 4 medallas |
+| Johto | Zona Safari | 6 medallas |
+| Johto | Torre Quemada | 8 medallas |
+| Kanto | Central Eléctrica | Kanto abierta |
+| Kanto | Islas Espuma | Kanto abierta + 12 |
+| Kanto | Cueva Celeste | Red vencido |
+
+#### ¿Y la agencia sobre qué cazar?
+
+Con desbloqueo puro, el jugador no elige: se abren zonas y todas suman al pool.
+Queda como decisión aparte (D11) permitir **enfocar** una zona desbloqueada para
+que pese más, que es lo que convierte "me falta un Lucha" en una acción.
 
 ### C. Hitos legendarios
 
@@ -160,10 +196,66 @@ Se afrontan cuando tú quieras (una vez cumplido el requisito), con HP de
 legendario y absorción alta. Al vencerlos **sí se capturan**: son la única
 excepción a "un jefe no se queda", porque el objetivo es la Pokédex.
 
+Mew entra aquí también, por descarte: es la única especie sin encuentro salvaje
+y sin precursor, así que o es un hito o es incompletable.
+
 Efecto de fondo: el tier legendario deja de existir como sorteo y `Rarity`
 pierde su cuarto nivel en el spawn (D5).
 
-## 4. Cómo encaja con lo que hay
+## 5. Dinámicas de PokéClicker que merecen robarse
+
+Allí el input es hacer clic; aquí es tu consumo real de API. Cualquier mecánica
+que premie "jugar más" está descartada de entrada, porque premiaría trabajar
+más. Estas cuatro sí funcionan con nuestro input.
+
+### A. La colección da poder (la importante)
+
+En PokéClicker tu ataque sale de **todo lo que has capturado**. Aquí la caja es
+decoración: solo cuenta el equipado, así que capturar únicamente sube un
+contador.
+
+```
+multiplicador final = cruce de tipos + bonus de etapa + bonus de colección
+bonus de colección  = especies conseguidas / 251 × 1,0     (techo +1,0)
+```
+
+Con 60 especies son +0,24; con las 251, +1,0. Cambia el fondo del juego:
+capturar pasa a ser inversión, y un mal cruce deja de ser un muro absoluto
+cuando llevas media Pokédex.
+
+### B. Misiones cortas
+
+El juego solo tiene metas larguísimas: 300k tokens por gimnasio, 251 especies.
+Tres misiones activas del tipo "vence 5 salvajes de tipo planta" o "captura 2
+especies nuevas", que se cumplen solas jugando y se renuevan.
+
+La recompensa **no puede ser tokens**: son tu consumo real y falsearlos rompe la
+única cifra verdadera. Sí puede ser experiencia para el compañero equipado, que
+es moneda de juego.
+
+### C. Logros con bonus pequeños
+
+50 especies, 100 especies, un shiny, las 8 medallas de Johto, un legendario.
+Cada uno da un bonus fijo y pequeño (+0,05 al multiplicador, +0,25 % de shiny).
+Es lo más barato de implementar y lo que mejor sostiene el medio juego.
+
+### D. Revanchas de gimnasio
+
+Un líder ya vencido se puede volver a retar con absorción subida, sin medalla
+nueva pero contando para misiones y logros. Resuelve que tras las 16 medallas y
+Red no queda nada que hacer.
+
+### Lo que NO merece robarse
+
+- **Probabilidad de captura / tipos de Poké Ball**: hoy vencer es capturar. Meter
+  fallo es frustración pura cuando el input es tu trabajo y no puedes reintentar
+  a voluntad.
+- **Granja de bayas, minería, huevos**: piden sesiones activas. Esto es una app
+  de barra de menú.
+- **Moneda y tienda**: no hay nada que comprar que no sea progreso, y la moneda
+  natural —los tokens— no se puede regalar.
+
+## 6. Cómo encaja con lo que hay
 
 | Pieza | Qué cambia |
 |---|---|
@@ -174,7 +266,7 @@ pierde su cuarto nivel en el spawn (D5).
 | `ActiveGymBattle` | vale igual para un jefe de la Liga o un legendario; solo cambia la recompensa |
 | UI | selector de zona (nuevo), lista de hitos disponibles (nuevo), pantalla de Liga (nuevo) |
 
-## 5. Decisiones abiertas
+## 7. Decisiones abiertas
 
 **D1 — ¿Un catálogo o tres?** Propuesta: **uno** (`encounters.json`) con un campo
 de tipo. Tres ficheros repetirían el 80 % del esquema y la UI tendría que
@@ -185,6 +277,30 @@ Johto **abre Kanto**, así que su premio es el contenido siguiente y no hay que
 inventar nada. Red da **Mewtwo y el título de Campeón**. Las revanchas de
 gimnasio con absorción subida quedan como contenido posterior si hiciera falta
 alargar el final.
+
+**D9 — ¿La colección da multiplicador y con qué techo?** Es la dinámica con más
+consecuencias: toca el daño a salvajes **y** el bloqueo de gimnasios. Propuesta:
+sí, techo +1,0 lineal sobre especies conseguidas, y subir la absorción de los
+gimnasios tardíos para compensar. Alternativa conservadora: que el bonus **solo
+cuente contra salvajes**, así los gimnasios siguen siendo un problema de
+cobertura de tipos y no de acumulación.
+
+**D10 — ¿Qué recompensan las misiones?** Tokens reales están descartados. Lo más
+limpio es experiencia para el compañero equipado, la única moneda de juego que
+ya existe. Un empujón temporal a la tasa de shiny es más goloso pero pide estado
+nuevo con caducidad.
+
+**D11 — ¿Se puede enfocar una zona?** Con desbloqueo puro el jugador no elige
+dónde caza: solo se le van abriendo zonas. Propuesta: sí, poder marcar **una**
+zona desbloqueada como enfocada, con un 70 % de probabilidad de que la especie
+salga de ella y 30 % del pool completo. Al 100 % la zona se vuelve una lista de
+la compra y mata la sorpresa.
+
+**D12 — ¿El gate por rango sobrevive a las zonas?** Hoy las medallas abren
+tiers (raro a 2, legendario a 8) y con zonas abrirían **especies**. Los dos
+sistemas hacen lo mismo por vías distintas. Propuesta: **quedarse con las
+zonas** y que `Rarity` siga decidiendo HP y peso de aparición, pero no gate. Es
+un gate menos y más legible.
 
 **D8 — ¿La puerta entre regiones bloquea de verdad?** Es el cambio con más
 consecuencias: hoy los 16 gimnasios se abren solos en orden, y con la puerta el
@@ -215,14 +331,19 @@ salida.
 cumple el requisito y se pueden afrontar cuando quieras. Un legendario que se
 pierde para siempre castiga por no mirar la app.
 
-## 6. Fases
+## 8. Fases
 
 1. **Zonas de caza.** Es lo más pequeño y lo que más cambia el día a día: un
    catálogo de zonas, el sesgo en `SpawnService` y un selector. Verificable
    entero con el arnés (distribuciones con RNG sembrado).
 2. **Hitos legendarios.** Generalizar el encuentro guionizado y sacar el tier
    legendario del sorteo.
-3. **Regiones y ligas.** La puerta entre Johto y Kanto, el gauntlet del Alto
+3. **La colección da poder** (dinámica A): una fórmula y un techo, entra entera
+   con tests y sin UI nueva más allá de mostrar el bonus.
+4. **Regiones y ligas.** La puerta entre Johto y Kanto, el gauntlet del Alto
    Mando y Red, encima de la generalización de la fase 2. La escalera de
    desbloqueo pasa a ser una pantalla: sin ella, el jugador no ve la
    progresión que esto añade.
+5. **Misiones y logros** (B y C), que son los que sostienen el medio juego una
+   vez existen las puertas.
+6. **Revanchas** (D), solo si el final se queda vacío.
