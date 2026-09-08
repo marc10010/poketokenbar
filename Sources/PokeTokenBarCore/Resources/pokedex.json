@@ -1,0 +1,4872 @@
+{
+ "schemaVersion": 1,
+ "generatedAt": "2026-09-08T10:43:54.792Z",
+ "source": "https://pokeapi.co/api/v2 (CC-BY / dominio publico para datos de juego)",
+ "pokemon": [
+  {
+   "id": 1,
+   "name": "Bulbasaur",
+   "localizedName": "Bulbasaur",
+   "slug": "bulbasaur",
+   "generation": 1,
+   "types": [
+    "grass",
+    "poison"
+   ],
+   "baseStatTotal": 318,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 1,
+   "evolvesInto": [
+    2
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 2,
+   "name": "Ivysaur",
+   "localizedName": "Ivysaur",
+   "slug": "ivysaur",
+   "generation": 1,
+   "types": [
+    "grass",
+    "poison"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 1,
+   "evolvesInto": [
+    3
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 3,
+   "name": "Venusaur",
+   "localizedName": "Venusaur",
+   "slug": "venusaur",
+   "generation": 1,
+   "types": [
+    "grass",
+    "poison"
+   ],
+   "baseStatTotal": 525,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 2,
+   "baseFormID": 1,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 4,
+   "name": "Charmander",
+   "localizedName": "Charmander",
+   "slug": "charmander",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 309,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 4,
+   "evolvesInto": [
+    5
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 5,
+   "name": "Charmeleon",
+   "localizedName": "Charmeleon",
+   "slug": "charmeleon",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 4,
+   "evolvesInto": [
+    6
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 6,
+   "name": "Charizard",
+   "localizedName": "Charizard",
+   "slug": "charizard",
+   "generation": 1,
+   "types": [
+    "fire",
+    "flying"
+   ],
+   "baseStatTotal": 534,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 2,
+   "baseFormID": 4,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 7,
+   "name": "Squirtle",
+   "localizedName": "Squirtle",
+   "slug": "squirtle",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 314,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 7,
+   "evolvesInto": [
+    8
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 8,
+   "name": "Wartortle",
+   "localizedName": "Wartortle",
+   "slug": "wartortle",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 7,
+   "evolvesInto": [
+    9
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 9,
+   "name": "Blastoise",
+   "localizedName": "Blastoise",
+   "slug": "blastoise",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 530,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 2,
+   "baseFormID": 7,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 10,
+   "name": "Caterpie",
+   "localizedName": "Caterpie",
+   "slug": "caterpie",
+   "generation": 1,
+   "types": [
+    "bug"
+   ],
+   "baseStatTotal": 195,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 10,
+   "evolvesInto": [
+    11
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 11,
+   "name": "Metapod",
+   "localizedName": "Metapod",
+   "slug": "metapod",
+   "generation": 1,
+   "types": [
+    "bug"
+   ],
+   "baseStatTotal": 205,
+   "captureRate": 120,
+   "rarity": "common",
+   "stage": 1,
+   "baseFormID": 10,
+   "evolvesInto": [
+    12
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 12,
+   "name": "Butterfree",
+   "localizedName": "Butterfree",
+   "slug": "butterfree",
+   "generation": 1,
+   "types": [
+    "bug",
+    "flying"
+   ],
+   "baseStatTotal": 395,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 10,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 13,
+   "name": "Weedle",
+   "localizedName": "Weedle",
+   "slug": "weedle",
+   "generation": 1,
+   "types": [
+    "bug",
+    "poison"
+   ],
+   "baseStatTotal": 195,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 13,
+   "evolvesInto": [
+    14
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 14,
+   "name": "Kakuna",
+   "localizedName": "Kakuna",
+   "slug": "kakuna",
+   "generation": 1,
+   "types": [
+    "bug",
+    "poison"
+   ],
+   "baseStatTotal": 205,
+   "captureRate": 120,
+   "rarity": "common",
+   "stage": 1,
+   "baseFormID": 13,
+   "evolvesInto": [
+    15
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 15,
+   "name": "Beedrill",
+   "localizedName": "Beedrill",
+   "slug": "beedrill",
+   "generation": 1,
+   "types": [
+    "bug",
+    "poison"
+   ],
+   "baseStatTotal": 395,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 13,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 16,
+   "name": "Pidgey",
+   "localizedName": "Pidgey",
+   "slug": "pidgey",
+   "generation": 1,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 251,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 16,
+   "evolvesInto": [
+    17
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 17,
+   "name": "Pidgeotto",
+   "localizedName": "Pidgeotto",
+   "slug": "pidgeotto",
+   "generation": 1,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 349,
+   "captureRate": 120,
+   "rarity": "common",
+   "stage": 1,
+   "baseFormID": 16,
+   "evolvesInto": [
+    18
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 18,
+   "name": "Pidgeot",
+   "localizedName": "Pidgeot",
+   "slug": "pidgeot",
+   "generation": 1,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 479,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 16,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 19,
+   "name": "Rattata",
+   "localizedName": "Rattata",
+   "slug": "rattata",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 253,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 19,
+   "evolvesInto": [
+    20
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 20,
+   "name": "Raticate",
+   "localizedName": "Raticate",
+   "slug": "raticate",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 413,
+   "captureRate": 127,
+   "rarity": "common",
+   "stage": 1,
+   "baseFormID": 19,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 21,
+   "name": "Spearow",
+   "localizedName": "Spearow",
+   "slug": "spearow",
+   "generation": 1,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 262,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 21,
+   "evolvesInto": [
+    22
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 22,
+   "name": "Fearow",
+   "localizedName": "Fearow",
+   "slug": "fearow",
+   "generation": 1,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 442,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 21,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 23,
+   "name": "Ekans",
+   "localizedName": "Ekans",
+   "slug": "ekans",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 288,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 23,
+   "evolvesInto": [
+    24
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 24,
+   "name": "Arbok",
+   "localizedName": "Arbok",
+   "slug": "arbok",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 448,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 23,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 25,
+   "name": "Pikachu",
+   "localizedName": "Pikachu",
+   "slug": "pikachu",
+   "generation": 1,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 320,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 172,
+   "evolvesInto": [
+    26
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 26,
+   "name": "Raichu",
+   "localizedName": "Raichu",
+   "slug": "raichu",
+   "generation": 1,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 485,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 172,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 27,
+   "name": "Sandshrew",
+   "localizedName": "Sandshrew",
+   "slug": "sandshrew",
+   "generation": 1,
+   "types": [
+    "ground"
+   ],
+   "baseStatTotal": 300,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 27,
+   "evolvesInto": [
+    28
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 28,
+   "name": "Sandslash",
+   "localizedName": "Sandslash",
+   "slug": "sandslash",
+   "generation": 1,
+   "types": [
+    "ground"
+   ],
+   "baseStatTotal": 450,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 27,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 29,
+   "name": "Nidoran♀",
+   "localizedName": "Nidoran♀",
+   "slug": "nidoran-f",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 275,
+   "captureRate": 235,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 29,
+   "evolvesInto": [
+    30
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 30,
+   "name": "Nidorina",
+   "localizedName": "Nidorina",
+   "slug": "nidorina",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 365,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 29,
+   "evolvesInto": [
+    31
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 31,
+   "name": "Nidoqueen",
+   "localizedName": "Nidoqueen",
+   "slug": "nidoqueen",
+   "generation": 1,
+   "types": [
+    "poison",
+    "ground"
+   ],
+   "baseStatTotal": 505,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 29,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 32,
+   "name": "Nidoran♂",
+   "localizedName": "Nidoran♂",
+   "slug": "nidoran-m",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 273,
+   "captureRate": 235,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 32,
+   "evolvesInto": [
+    33
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 33,
+   "name": "Nidorino",
+   "localizedName": "Nidorino",
+   "slug": "nidorino",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 365,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 32,
+   "evolvesInto": [
+    34
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 34,
+   "name": "Nidoking",
+   "localizedName": "Nidoking",
+   "slug": "nidoking",
+   "generation": 1,
+   "types": [
+    "poison",
+    "ground"
+   ],
+   "baseStatTotal": 505,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 32,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 35,
+   "name": "Clefairy",
+   "localizedName": "Clefairy",
+   "slug": "clefairy",
+   "generation": 1,
+   "types": [
+    "fairy"
+   ],
+   "baseStatTotal": 323,
+   "captureRate": 150,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 173,
+   "evolvesInto": [
+    36
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 36,
+   "name": "Clefable",
+   "localizedName": "Clefable",
+   "slug": "clefable",
+   "generation": 1,
+   "types": [
+    "fairy"
+   ],
+   "baseStatTotal": 483,
+   "captureRate": 25,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 173,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 37,
+   "name": "Vulpix",
+   "localizedName": "Vulpix",
+   "slug": "vulpix",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 299,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 37,
+   "evolvesInto": [
+    38
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 38,
+   "name": "Ninetales",
+   "localizedName": "Ninetales",
+   "slug": "ninetales",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 505,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 37,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 39,
+   "name": "Jigglypuff",
+   "localizedName": "Jigglypuff",
+   "slug": "jigglypuff",
+   "generation": 1,
+   "types": [
+    "normal",
+    "fairy"
+   ],
+   "baseStatTotal": 270,
+   "captureRate": 170,
+   "rarity": "common",
+   "stage": 1,
+   "baseFormID": 174,
+   "evolvesInto": [
+    40
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 40,
+   "name": "Wigglytuff",
+   "localizedName": "Wigglytuff",
+   "slug": "wigglytuff",
+   "generation": 1,
+   "types": [
+    "normal",
+    "fairy"
+   ],
+   "baseStatTotal": 435,
+   "captureRate": 50,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 174,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 41,
+   "name": "Zubat",
+   "localizedName": "Zubat",
+   "slug": "zubat",
+   "generation": 1,
+   "types": [
+    "poison",
+    "flying"
+   ],
+   "baseStatTotal": 245,
+   "captureRate": 255,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 41,
+   "evolvesInto": [
+    42
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 42,
+   "name": "Golbat",
+   "localizedName": "Golbat",
+   "slug": "golbat",
+   "generation": 1,
+   "types": [
+    "poison",
+    "flying"
+   ],
+   "baseStatTotal": 455,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 41,
+   "evolvesInto": [
+    169
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 43,
+   "name": "Oddish",
+   "localizedName": "Oddish",
+   "slug": "oddish",
+   "generation": 1,
+   "types": [
+    "grass",
+    "poison"
+   ],
+   "baseStatTotal": 320,
+   "captureRate": 255,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 43,
+   "evolvesInto": [
+    44
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 44,
+   "name": "Gloom",
+   "localizedName": "Gloom",
+   "slug": "gloom",
+   "generation": 1,
+   "types": [
+    "grass",
+    "poison"
+   ],
+   "baseStatTotal": 395,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 43,
+   "evolvesInto": [
+    45,
+    182
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 45,
+   "name": "Vileplume",
+   "localizedName": "Vileplume",
+   "slug": "vileplume",
+   "generation": 1,
+   "types": [
+    "grass",
+    "poison"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 43,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 46,
+   "name": "Paras",
+   "localizedName": "Paras",
+   "slug": "paras",
+   "generation": 1,
+   "types": [
+    "bug",
+    "grass"
+   ],
+   "baseStatTotal": 285,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 46,
+   "evolvesInto": [
+    47
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 47,
+   "name": "Parasect",
+   "localizedName": "Parasect",
+   "slug": "parasect",
+   "generation": 1,
+   "types": [
+    "bug",
+    "grass"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 46,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 48,
+   "name": "Venonat",
+   "localizedName": "Venonat",
+   "slug": "venonat",
+   "generation": 1,
+   "types": [
+    "bug",
+    "poison"
+   ],
+   "baseStatTotal": 305,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 48,
+   "evolvesInto": [
+    49
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 49,
+   "name": "Venomoth",
+   "localizedName": "Venomoth",
+   "slug": "venomoth",
+   "generation": 1,
+   "types": [
+    "bug",
+    "poison"
+   ],
+   "baseStatTotal": 450,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 48,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 50,
+   "name": "Diglett",
+   "localizedName": "Diglett",
+   "slug": "diglett",
+   "generation": 1,
+   "types": [
+    "ground"
+   ],
+   "baseStatTotal": 265,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 50,
+   "evolvesInto": [
+    51
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 51,
+   "name": "Dugtrio",
+   "localizedName": "Dugtrio",
+   "slug": "dugtrio",
+   "generation": 1,
+   "types": [
+    "ground"
+   ],
+   "baseStatTotal": 425,
+   "captureRate": 50,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 50,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 52,
+   "name": "Meowth",
+   "localizedName": "Meowth",
+   "slug": "meowth",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 290,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 52,
+   "evolvesInto": [
+    53
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 53,
+   "name": "Persian",
+   "localizedName": "Persian",
+   "slug": "persian",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 440,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 52,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 54,
+   "name": "Psyduck",
+   "localizedName": "Psyduck",
+   "slug": "psyduck",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 320,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 54,
+   "evolvesInto": [
+    55
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 55,
+   "name": "Golduck",
+   "localizedName": "Golduck",
+   "slug": "golduck",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 54,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 56,
+   "name": "Mankey",
+   "localizedName": "Mankey",
+   "slug": "mankey",
+   "generation": 1,
+   "types": [
+    "fighting"
+   ],
+   "baseStatTotal": 305,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 56,
+   "evolvesInto": [
+    57
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 57,
+   "name": "Primeape",
+   "localizedName": "Primeape",
+   "slug": "primeape",
+   "generation": 1,
+   "types": [
+    "fighting"
+   ],
+   "baseStatTotal": 455,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 56,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 58,
+   "name": "Growlithe",
+   "localizedName": "Growlithe",
+   "slug": "growlithe",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 350,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 58,
+   "evolvesInto": [
+    59
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 59,
+   "name": "Arcanine",
+   "localizedName": "Arcanine",
+   "slug": "arcanine",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 555,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 58,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 60,
+   "name": "Poliwag",
+   "localizedName": "Poliwag",
+   "slug": "poliwag",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 300,
+   "captureRate": 255,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 60,
+   "evolvesInto": [
+    61
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 61,
+   "name": "Poliwhirl",
+   "localizedName": "Poliwhirl",
+   "slug": "poliwhirl",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 385,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 60,
+   "evolvesInto": [
+    62,
+    186
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 62,
+   "name": "Poliwrath",
+   "localizedName": "Poliwrath",
+   "slug": "poliwrath",
+   "generation": 1,
+   "types": [
+    "water",
+    "fighting"
+   ],
+   "baseStatTotal": 510,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 60,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 63,
+   "name": "Abra",
+   "localizedName": "Abra",
+   "slug": "abra",
+   "generation": 1,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 310,
+   "captureRate": 200,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 63,
+   "evolvesInto": [
+    64
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 64,
+   "name": "Kadabra",
+   "localizedName": "Kadabra",
+   "slug": "kadabra",
+   "generation": 1,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 400,
+   "captureRate": 100,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 63,
+   "evolvesInto": [
+    65
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 65,
+   "name": "Alakazam",
+   "localizedName": "Alakazam",
+   "slug": "alakazam",
+   "generation": 1,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 50,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 63,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 66,
+   "name": "Machop",
+   "localizedName": "Machop",
+   "slug": "machop",
+   "generation": 1,
+   "types": [
+    "fighting"
+   ],
+   "baseStatTotal": 305,
+   "captureRate": 180,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 66,
+   "evolvesInto": [
+    67
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 67,
+   "name": "Machoke",
+   "localizedName": "Machoke",
+   "slug": "machoke",
+   "generation": 1,
+   "types": [
+    "fighting"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 66,
+   "evolvesInto": [
+    68
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 68,
+   "name": "Machamp",
+   "localizedName": "Machamp",
+   "slug": "machamp",
+   "generation": 1,
+   "types": [
+    "fighting"
+   ],
+   "baseStatTotal": 505,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 66,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 69,
+   "name": "Bellsprout",
+   "localizedName": "Bellsprout",
+   "slug": "bellsprout",
+   "generation": 1,
+   "types": [
+    "grass",
+    "poison"
+   ],
+   "baseStatTotal": 300,
+   "captureRate": 255,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 69,
+   "evolvesInto": [
+    70
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 70,
+   "name": "Weepinbell",
+   "localizedName": "Weepinbell",
+   "slug": "weepinbell",
+   "generation": 1,
+   "types": [
+    "grass",
+    "poison"
+   ],
+   "baseStatTotal": 390,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 69,
+   "evolvesInto": [
+    71
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 71,
+   "name": "Victreebel",
+   "localizedName": "Victreebel",
+   "slug": "victreebel",
+   "generation": 1,
+   "types": [
+    "grass",
+    "poison"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 69,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 72,
+   "name": "Tentacool",
+   "localizedName": "Tentacool",
+   "slug": "tentacool",
+   "generation": 1,
+   "types": [
+    "water",
+    "poison"
+   ],
+   "baseStatTotal": 335,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 72,
+   "evolvesInto": [
+    73
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 73,
+   "name": "Tentacruel",
+   "localizedName": "Tentacruel",
+   "slug": "tentacruel",
+   "generation": 1,
+   "types": [
+    "water",
+    "poison"
+   ],
+   "baseStatTotal": 515,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 72,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 74,
+   "name": "Geodude",
+   "localizedName": "Geodude",
+   "slug": "geodude",
+   "generation": 1,
+   "types": [
+    "rock",
+    "ground"
+   ],
+   "baseStatTotal": 300,
+   "captureRate": 255,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 74,
+   "evolvesInto": [
+    75
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 75,
+   "name": "Graveler",
+   "localizedName": "Graveler",
+   "slug": "graveler",
+   "generation": 1,
+   "types": [
+    "rock",
+    "ground"
+   ],
+   "baseStatTotal": 390,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 74,
+   "evolvesInto": [
+    76
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 76,
+   "name": "Golem",
+   "localizedName": "Golem",
+   "slug": "golem",
+   "generation": 1,
+   "types": [
+    "rock",
+    "ground"
+   ],
+   "baseStatTotal": 495,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 74,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 77,
+   "name": "Ponyta",
+   "localizedName": "Ponyta",
+   "slug": "ponyta",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 410,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 77,
+   "evolvesInto": [
+    78
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 78,
+   "name": "Rapidash",
+   "localizedName": "Rapidash",
+   "slug": "rapidash",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 77,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 79,
+   "name": "Slowpoke",
+   "localizedName": "Slowpoke",
+   "slug": "slowpoke",
+   "generation": 1,
+   "types": [
+    "water",
+    "psychic"
+   ],
+   "baseStatTotal": 315,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 79,
+   "evolvesInto": [
+    80,
+    199
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 80,
+   "name": "Slowbro",
+   "localizedName": "Slowbro",
+   "slug": "slowbro",
+   "generation": 1,
+   "types": [
+    "water",
+    "psychic"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 79,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 81,
+   "name": "Magnemite",
+   "localizedName": "Magnemite",
+   "slug": "magnemite",
+   "generation": 1,
+   "types": [
+    "electric",
+    "steel"
+   ],
+   "baseStatTotal": 325,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 81,
+   "evolvesInto": [
+    82
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 82,
+   "name": "Magneton",
+   "localizedName": "Magneton",
+   "slug": "magneton",
+   "generation": 1,
+   "types": [
+    "electric",
+    "steel"
+   ],
+   "baseStatTotal": 465,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 81,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 83,
+   "name": "Farfetch’d",
+   "localizedName": "Farfetch’d",
+   "slug": "farfetchd",
+   "generation": 1,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 377,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 83,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 84,
+   "name": "Doduo",
+   "localizedName": "Doduo",
+   "slug": "doduo",
+   "generation": 1,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 310,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 84,
+   "evolvesInto": [
+    85
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 85,
+   "name": "Dodrio",
+   "localizedName": "Dodrio",
+   "slug": "dodrio",
+   "generation": 1,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 470,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 84,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 86,
+   "name": "Seel",
+   "localizedName": "Seel",
+   "slug": "seel",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 325,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 86,
+   "evolvesInto": [
+    87
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 87,
+   "name": "Dewgong",
+   "localizedName": "Dewgong",
+   "slug": "dewgong",
+   "generation": 1,
+   "types": [
+    "water",
+    "ice"
+   ],
+   "baseStatTotal": 475,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 86,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 88,
+   "name": "Grimer",
+   "localizedName": "Grimer",
+   "slug": "grimer",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 325,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 88,
+   "evolvesInto": [
+    89
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 89,
+   "name": "Muk",
+   "localizedName": "Muk",
+   "slug": "muk",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 88,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 90,
+   "name": "Shellder",
+   "localizedName": "Shellder",
+   "slug": "shellder",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 305,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 90,
+   "evolvesInto": [
+    91
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 91,
+   "name": "Cloyster",
+   "localizedName": "Cloyster",
+   "slug": "cloyster",
+   "generation": 1,
+   "types": [
+    "water",
+    "ice"
+   ],
+   "baseStatTotal": 525,
+   "captureRate": 60,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 90,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 92,
+   "name": "Gastly",
+   "localizedName": "Gastly",
+   "slug": "gastly",
+   "generation": 1,
+   "types": [
+    "ghost",
+    "poison"
+   ],
+   "baseStatTotal": 310,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 92,
+   "evolvesInto": [
+    93
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 93,
+   "name": "Haunter",
+   "localizedName": "Haunter",
+   "slug": "haunter",
+   "generation": 1,
+   "types": [
+    "ghost",
+    "poison"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 92,
+   "evolvesInto": [
+    94
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 94,
+   "name": "Gengar",
+   "localizedName": "Gengar",
+   "slug": "gengar",
+   "generation": 1,
+   "types": [
+    "ghost",
+    "poison"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 92,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 95,
+   "name": "Onix",
+   "localizedName": "Onix",
+   "slug": "onix",
+   "generation": 1,
+   "types": [
+    "rock",
+    "ground"
+   ],
+   "baseStatTotal": 385,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 95,
+   "evolvesInto": [
+    208
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 96,
+   "name": "Drowzee",
+   "localizedName": "Drowzee",
+   "slug": "drowzee",
+   "generation": 1,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 328,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 96,
+   "evolvesInto": [
+    97
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 97,
+   "name": "Hypno",
+   "localizedName": "Hypno",
+   "slug": "hypno",
+   "generation": 1,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 483,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 96,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 98,
+   "name": "Krabby",
+   "localizedName": "Krabby",
+   "slug": "krabby",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 325,
+   "captureRate": 225,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 98,
+   "evolvesInto": [
+    99
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 99,
+   "name": "Kingler",
+   "localizedName": "Kingler",
+   "slug": "kingler",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 475,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 98,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 100,
+   "name": "Voltorb",
+   "localizedName": "Voltorb",
+   "slug": "voltorb",
+   "generation": 1,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 330,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 100,
+   "evolvesInto": [
+    101
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 101,
+   "name": "Electrode",
+   "localizedName": "Electrode",
+   "slug": "electrode",
+   "generation": 1,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 100,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 102,
+   "name": "Exeggcute",
+   "localizedName": "Exeggcute",
+   "slug": "exeggcute",
+   "generation": 1,
+   "types": [
+    "grass",
+    "psychic"
+   ],
+   "baseStatTotal": 325,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 102,
+   "evolvesInto": [
+    103
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 103,
+   "name": "Exeggutor",
+   "localizedName": "Exeggutor",
+   "slug": "exeggutor",
+   "generation": 1,
+   "types": [
+    "grass",
+    "psychic"
+   ],
+   "baseStatTotal": 530,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 102,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 104,
+   "name": "Cubone",
+   "localizedName": "Cubone",
+   "slug": "cubone",
+   "generation": 1,
+   "types": [
+    "ground"
+   ],
+   "baseStatTotal": 320,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 104,
+   "evolvesInto": [
+    105
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 105,
+   "name": "Marowak",
+   "localizedName": "Marowak",
+   "slug": "marowak",
+   "generation": 1,
+   "types": [
+    "ground"
+   ],
+   "baseStatTotal": 425,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 104,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 106,
+   "name": "Hitmonlee",
+   "localizedName": "Hitmonlee",
+   "slug": "hitmonlee",
+   "generation": 1,
+   "types": [
+    "fighting"
+   ],
+   "baseStatTotal": 455,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 236,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 107,
+   "name": "Hitmonchan",
+   "localizedName": "Hitmonchan",
+   "slug": "hitmonchan",
+   "generation": 1,
+   "types": [
+    "fighting"
+   ],
+   "baseStatTotal": 455,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 236,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 108,
+   "name": "Lickitung",
+   "localizedName": "Lickitung",
+   "slug": "lickitung",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 385,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 108,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 109,
+   "name": "Koffing",
+   "localizedName": "Koffing",
+   "slug": "koffing",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 340,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 109,
+   "evolvesInto": [
+    110
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 110,
+   "name": "Weezing",
+   "localizedName": "Weezing",
+   "slug": "weezing",
+   "generation": 1,
+   "types": [
+    "poison"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 109,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 111,
+   "name": "Rhyhorn",
+   "localizedName": "Rhyhorn",
+   "slug": "rhyhorn",
+   "generation": 1,
+   "types": [
+    "ground",
+    "rock"
+   ],
+   "baseStatTotal": 345,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 111,
+   "evolvesInto": [
+    112
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 112,
+   "name": "Rhydon",
+   "localizedName": "Rhydon",
+   "slug": "rhydon",
+   "generation": 1,
+   "types": [
+    "ground",
+    "rock"
+   ],
+   "baseStatTotal": 485,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 111,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 113,
+   "name": "Chansey",
+   "localizedName": "Chansey",
+   "slug": "chansey",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 450,
+   "captureRate": 30,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 113,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 114,
+   "name": "Tangela",
+   "localizedName": "Tangela",
+   "slug": "tangela",
+   "generation": 1,
+   "types": [
+    "grass"
+   ],
+   "baseStatTotal": 435,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 114,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 115,
+   "name": "Kangaskhan",
+   "localizedName": "Kangaskhan",
+   "slug": "kangaskhan",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 115,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 116,
+   "name": "Horsea",
+   "localizedName": "Horsea",
+   "slug": "horsea",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 295,
+   "captureRate": 225,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 116,
+   "evolvesInto": [
+    117
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 117,
+   "name": "Seadra",
+   "localizedName": "Seadra",
+   "slug": "seadra",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 440,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 116,
+   "evolvesInto": [
+    230
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 118,
+   "name": "Goldeen",
+   "localizedName": "Goldeen",
+   "slug": "goldeen",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 320,
+   "captureRate": 225,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 118,
+   "evolvesInto": [
+    119
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 119,
+   "name": "Seaking",
+   "localizedName": "Seaking",
+   "slug": "seaking",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 450,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 118,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 120,
+   "name": "Staryu",
+   "localizedName": "Staryu",
+   "slug": "staryu",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 340,
+   "captureRate": 225,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 120,
+   "evolvesInto": [
+    121
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 121,
+   "name": "Starmie",
+   "localizedName": "Starmie",
+   "slug": "starmie",
+   "generation": 1,
+   "types": [
+    "water",
+    "psychic"
+   ],
+   "baseStatTotal": 520,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 120,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 122,
+   "name": "Mr. Mime",
+   "localizedName": "Mr. Mime",
+   "slug": "mr-mime",
+   "generation": 1,
+   "types": [
+    "psychic",
+    "fairy"
+   ],
+   "baseStatTotal": 460,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 122,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 123,
+   "name": "Scyther",
+   "localizedName": "Scyther",
+   "slug": "scyther",
+   "generation": 1,
+   "types": [
+    "bug",
+    "flying"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 123,
+   "evolvesInto": [
+    212
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 124,
+   "name": "Jynx",
+   "localizedName": "Jynx",
+   "slug": "jynx",
+   "generation": 1,
+   "types": [
+    "ice",
+    "psychic"
+   ],
+   "baseStatTotal": 455,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 238,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 125,
+   "name": "Electabuzz",
+   "localizedName": "Electabuzz",
+   "slug": "electabuzz",
+   "generation": 1,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 239,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 126,
+   "name": "Magmar",
+   "localizedName": "Magmar",
+   "slug": "magmar",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 495,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 240,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 127,
+   "name": "Pinsir",
+   "localizedName": "Pinsir",
+   "slug": "pinsir",
+   "generation": 1,
+   "types": [
+    "bug"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 127,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 128,
+   "name": "Tauros",
+   "localizedName": "Tauros",
+   "slug": "tauros",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 128,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 129,
+   "name": "Magikarp",
+   "localizedName": "Magikarp",
+   "slug": "magikarp",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 200,
+   "captureRate": 255,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 129,
+   "evolvesInto": [
+    130
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 130,
+   "name": "Gyarados",
+   "localizedName": "Gyarados",
+   "slug": "gyarados",
+   "generation": 1,
+   "types": [
+    "water",
+    "flying"
+   ],
+   "baseStatTotal": 540,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 129,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 131,
+   "name": "Lapras",
+   "localizedName": "Lapras",
+   "slug": "lapras",
+   "generation": 1,
+   "types": [
+    "water",
+    "ice"
+   ],
+   "baseStatTotal": 535,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 131,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 132,
+   "name": "Ditto",
+   "localizedName": "Ditto",
+   "slug": "ditto",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 288,
+   "captureRate": 35,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 132,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 133,
+   "name": "Eevee",
+   "localizedName": "Eevee",
+   "slug": "eevee",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 325,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 133,
+   "evolvesInto": [
+    134,
+    135,
+    136,
+    196,
+    197
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 134,
+   "name": "Vaporeon",
+   "localizedName": "Vaporeon",
+   "slug": "vaporeon",
+   "generation": 1,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 525,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 133,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 135,
+   "name": "Jolteon",
+   "localizedName": "Jolteon",
+   "slug": "jolteon",
+   "generation": 1,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 525,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 133,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 136,
+   "name": "Flareon",
+   "localizedName": "Flareon",
+   "slug": "flareon",
+   "generation": 1,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 525,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 133,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 137,
+   "name": "Porygon",
+   "localizedName": "Porygon",
+   "slug": "porygon",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 395,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 137,
+   "evolvesInto": [
+    233
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 138,
+   "name": "Omanyte",
+   "localizedName": "Omanyte",
+   "slug": "omanyte",
+   "generation": 1,
+   "types": [
+    "rock",
+    "water"
+   ],
+   "baseStatTotal": 355,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 138,
+   "evolvesInto": [
+    139
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 139,
+   "name": "Omastar",
+   "localizedName": "Omastar",
+   "slug": "omastar",
+   "generation": 1,
+   "types": [
+    "rock",
+    "water"
+   ],
+   "baseStatTotal": 495,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 138,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 140,
+   "name": "Kabuto",
+   "localizedName": "Kabuto",
+   "slug": "kabuto",
+   "generation": 1,
+   "types": [
+    "rock",
+    "water"
+   ],
+   "baseStatTotal": 355,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 140,
+   "evolvesInto": [
+    141
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 141,
+   "name": "Kabutops",
+   "localizedName": "Kabutops",
+   "slug": "kabutops",
+   "generation": 1,
+   "types": [
+    "rock",
+    "water"
+   ],
+   "baseStatTotal": 495,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 140,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 142,
+   "name": "Aerodactyl",
+   "localizedName": "Aerodactyl",
+   "slug": "aerodactyl",
+   "generation": 1,
+   "types": [
+    "rock",
+    "flying"
+   ],
+   "baseStatTotal": 515,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 142,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 143,
+   "name": "Snorlax",
+   "localizedName": "Snorlax",
+   "slug": "snorlax",
+   "generation": 1,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 540,
+   "captureRate": 25,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 143,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 144,
+   "name": "Articuno",
+   "localizedName": "Articuno",
+   "slug": "articuno",
+   "generation": 1,
+   "types": [
+    "ice",
+    "flying"
+   ],
+   "baseStatTotal": 580,
+   "captureRate": 3,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 144,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 145,
+   "name": "Zapdos",
+   "localizedName": "Zapdos",
+   "slug": "zapdos",
+   "generation": 1,
+   "types": [
+    "electric",
+    "flying"
+   ],
+   "baseStatTotal": 580,
+   "captureRate": 3,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 145,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 146,
+   "name": "Moltres",
+   "localizedName": "Moltres",
+   "slug": "moltres",
+   "generation": 1,
+   "types": [
+    "fire",
+    "flying"
+   ],
+   "baseStatTotal": 580,
+   "captureRate": 3,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 146,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 147,
+   "name": "Dratini",
+   "localizedName": "Dratini",
+   "slug": "dratini",
+   "generation": 1,
+   "types": [
+    "dragon"
+   ],
+   "baseStatTotal": 300,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 147,
+   "evolvesInto": [
+    148
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 148,
+   "name": "Dragonair",
+   "localizedName": "Dragonair",
+   "slug": "dragonair",
+   "generation": 1,
+   "types": [
+    "dragon"
+   ],
+   "baseStatTotal": 420,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 147,
+   "evolvesInto": [
+    149
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 149,
+   "name": "Dragonite",
+   "localizedName": "Dragonite",
+   "slug": "dragonite",
+   "generation": 1,
+   "types": [
+    "dragon",
+    "flying"
+   ],
+   "baseStatTotal": 600,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 2,
+   "baseFormID": 147,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 150,
+   "name": "Mewtwo",
+   "localizedName": "Mewtwo",
+   "slug": "mewtwo",
+   "generation": 1,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 680,
+   "captureRate": 3,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 150,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 151,
+   "name": "Mew",
+   "localizedName": "Mew",
+   "slug": "mew",
+   "generation": 1,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 600,
+   "captureRate": 45,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 151,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 152,
+   "name": "Chikorita",
+   "localizedName": "Chikorita",
+   "slug": "chikorita",
+   "generation": 2,
+   "types": [
+    "grass"
+   ],
+   "baseStatTotal": 318,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 152,
+   "evolvesInto": [
+    153
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 153,
+   "name": "Bayleef",
+   "localizedName": "Bayleef",
+   "slug": "bayleef",
+   "generation": 2,
+   "types": [
+    "grass"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 152,
+   "evolvesInto": [
+    154
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 154,
+   "name": "Meganium",
+   "localizedName": "Meganium",
+   "slug": "meganium",
+   "generation": 2,
+   "types": [
+    "grass"
+   ],
+   "baseStatTotal": 525,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 2,
+   "baseFormID": 152,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 155,
+   "name": "Cyndaquil",
+   "localizedName": "Cyndaquil",
+   "slug": "cyndaquil",
+   "generation": 2,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 309,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 155,
+   "evolvesInto": [
+    156
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 156,
+   "name": "Quilava",
+   "localizedName": "Quilava",
+   "slug": "quilava",
+   "generation": 2,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 155,
+   "evolvesInto": [
+    157
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 157,
+   "name": "Typhlosion",
+   "localizedName": "Typhlosion",
+   "slug": "typhlosion",
+   "generation": 2,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 534,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 2,
+   "baseFormID": 155,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 158,
+   "name": "Totodile",
+   "localizedName": "Totodile",
+   "slug": "totodile",
+   "generation": 2,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 314,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 158,
+   "evolvesInto": [
+    159
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 159,
+   "name": "Croconaw",
+   "localizedName": "Croconaw",
+   "slug": "croconaw",
+   "generation": 2,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 158,
+   "evolvesInto": [
+    160
+   ],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 160,
+   "name": "Feraligatr",
+   "localizedName": "Feraligatr",
+   "slug": "feraligatr",
+   "generation": 2,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 530,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 2,
+   "baseFormID": 158,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": true
+  },
+  {
+   "id": 161,
+   "name": "Sentret",
+   "localizedName": "Sentret",
+   "slug": "sentret",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 215,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 161,
+   "evolvesInto": [
+    162
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 162,
+   "name": "Furret",
+   "localizedName": "Furret",
+   "slug": "furret",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 415,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 161,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 163,
+   "name": "Hoothoot",
+   "localizedName": "Hoothoot",
+   "slug": "hoothoot",
+   "generation": 2,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 262,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 163,
+   "evolvesInto": [
+    164
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 164,
+   "name": "Noctowl",
+   "localizedName": "Noctowl",
+   "slug": "noctowl",
+   "generation": 2,
+   "types": [
+    "normal",
+    "flying"
+   ],
+   "baseStatTotal": 452,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 163,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 165,
+   "name": "Ledyba",
+   "localizedName": "Ledyba",
+   "slug": "ledyba",
+   "generation": 2,
+   "types": [
+    "bug",
+    "flying"
+   ],
+   "baseStatTotal": 265,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 165,
+   "evolvesInto": [
+    166
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 166,
+   "name": "Ledian",
+   "localizedName": "Ledian",
+   "slug": "ledian",
+   "generation": 2,
+   "types": [
+    "bug",
+    "flying"
+   ],
+   "baseStatTotal": 390,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 165,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 167,
+   "name": "Spinarak",
+   "localizedName": "Spinarak",
+   "slug": "spinarak",
+   "generation": 2,
+   "types": [
+    "bug",
+    "poison"
+   ],
+   "baseStatTotal": 250,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 167,
+   "evolvesInto": [
+    168
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 168,
+   "name": "Ariados",
+   "localizedName": "Ariados",
+   "slug": "ariados",
+   "generation": 2,
+   "types": [
+    "bug",
+    "poison"
+   ],
+   "baseStatTotal": 400,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 167,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 169,
+   "name": "Crobat",
+   "localizedName": "Crobat",
+   "slug": "crobat",
+   "generation": 2,
+   "types": [
+    "poison",
+    "flying"
+   ],
+   "baseStatTotal": 535,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 41,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 170,
+   "name": "Chinchou",
+   "localizedName": "Chinchou",
+   "slug": "chinchou",
+   "generation": 2,
+   "types": [
+    "water",
+    "electric"
+   ],
+   "baseStatTotal": 330,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 170,
+   "evolvesInto": [
+    171
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 171,
+   "name": "Lanturn",
+   "localizedName": "Lanturn",
+   "slug": "lanturn",
+   "generation": 2,
+   "types": [
+    "water",
+    "electric"
+   ],
+   "baseStatTotal": 460,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 170,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 172,
+   "name": "Pichu",
+   "localizedName": "Pichu",
+   "slug": "pichu",
+   "generation": 2,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 205,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 172,
+   "evolvesInto": [
+    25
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 173,
+   "name": "Cleffa",
+   "localizedName": "Cleffa",
+   "slug": "cleffa",
+   "generation": 2,
+   "types": [
+    "fairy"
+   ],
+   "baseStatTotal": 218,
+   "captureRate": 150,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 173,
+   "evolvesInto": [
+    35
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 174,
+   "name": "Igglybuff",
+   "localizedName": "Igglybuff",
+   "slug": "igglybuff",
+   "generation": 2,
+   "types": [
+    "normal",
+    "fairy"
+   ],
+   "baseStatTotal": 210,
+   "captureRate": 170,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 174,
+   "evolvesInto": [
+    39
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 175,
+   "name": "Togepi",
+   "localizedName": "Togepi",
+   "slug": "togepi",
+   "generation": 2,
+   "types": [
+    "fairy"
+   ],
+   "baseStatTotal": 245,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 175,
+   "evolvesInto": [
+    176
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 176,
+   "name": "Togetic",
+   "localizedName": "Togetic",
+   "slug": "togetic",
+   "generation": 2,
+   "types": [
+    "fairy",
+    "flying"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 175,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 177,
+   "name": "Natu",
+   "localizedName": "Natu",
+   "slug": "natu",
+   "generation": 2,
+   "types": [
+    "psychic",
+    "flying"
+   ],
+   "baseStatTotal": 320,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 177,
+   "evolvesInto": [
+    178
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 178,
+   "name": "Xatu",
+   "localizedName": "Xatu",
+   "slug": "xatu",
+   "generation": 2,
+   "types": [
+    "psychic",
+    "flying"
+   ],
+   "baseStatTotal": 470,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 177,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 179,
+   "name": "Mareep",
+   "localizedName": "Mareep",
+   "slug": "mareep",
+   "generation": 2,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 280,
+   "captureRate": 235,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 179,
+   "evolvesInto": [
+    180
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 180,
+   "name": "Flaaffy",
+   "localizedName": "Flaaffy",
+   "slug": "flaaffy",
+   "generation": 2,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 365,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 179,
+   "evolvesInto": [
+    181
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 181,
+   "name": "Ampharos",
+   "localizedName": "Ampharos",
+   "slug": "ampharos",
+   "generation": 2,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 510,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 179,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 182,
+   "name": "Bellossom",
+   "localizedName": "Bellossom",
+   "slug": "bellossom",
+   "generation": 2,
+   "types": [
+    "grass"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 43,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 183,
+   "name": "Marill",
+   "localizedName": "Marill",
+   "slug": "marill",
+   "generation": 2,
+   "types": [
+    "water",
+    "fairy"
+   ],
+   "baseStatTotal": 250,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 183,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 184,
+   "name": "Azumarill",
+   "localizedName": "Azumarill",
+   "slug": "azumarill",
+   "generation": 2,
+   "types": [
+    "water",
+    "fairy"
+   ],
+   "baseStatTotal": 420,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 184,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 185,
+   "name": "Sudowoodo",
+   "localizedName": "Sudowoodo",
+   "slug": "sudowoodo",
+   "generation": 2,
+   "types": [
+    "rock"
+   ],
+   "baseStatTotal": 410,
+   "captureRate": 65,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 185,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 186,
+   "name": "Politoed",
+   "localizedName": "Politoed",
+   "slug": "politoed",
+   "generation": 2,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 60,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 187,
+   "name": "Hoppip",
+   "localizedName": "Hoppip",
+   "slug": "hoppip",
+   "generation": 2,
+   "types": [
+    "grass",
+    "flying"
+   ],
+   "baseStatTotal": 250,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 187,
+   "evolvesInto": [
+    188
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 188,
+   "name": "Skiploom",
+   "localizedName": "Skiploom",
+   "slug": "skiploom",
+   "generation": 2,
+   "types": [
+    "grass",
+    "flying"
+   ],
+   "baseStatTotal": 340,
+   "captureRate": 120,
+   "rarity": "common",
+   "stage": 1,
+   "baseFormID": 187,
+   "evolvesInto": [
+    189
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 189,
+   "name": "Jumpluff",
+   "localizedName": "Jumpluff",
+   "slug": "jumpluff",
+   "generation": 2,
+   "types": [
+    "grass",
+    "flying"
+   ],
+   "baseStatTotal": 460,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 2,
+   "baseFormID": 187,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 190,
+   "name": "Aipom",
+   "localizedName": "Aipom",
+   "slug": "aipom",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 360,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 190,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 191,
+   "name": "Sunkern",
+   "localizedName": "Sunkern",
+   "slug": "sunkern",
+   "generation": 2,
+   "types": [
+    "grass"
+   ],
+   "baseStatTotal": 180,
+   "captureRate": 235,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 191,
+   "evolvesInto": [
+    192
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 192,
+   "name": "Sunflora",
+   "localizedName": "Sunflora",
+   "slug": "sunflora",
+   "generation": 2,
+   "types": [
+    "grass"
+   ],
+   "baseStatTotal": 425,
+   "captureRate": 120,
+   "rarity": "common",
+   "stage": 1,
+   "baseFormID": 191,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 193,
+   "name": "Yanma",
+   "localizedName": "Yanma",
+   "slug": "yanma",
+   "generation": 2,
+   "types": [
+    "bug",
+    "flying"
+   ],
+   "baseStatTotal": 390,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 193,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 194,
+   "name": "Wooper",
+   "localizedName": "Wooper",
+   "slug": "wooper",
+   "generation": 2,
+   "types": [
+    "water",
+    "ground"
+   ],
+   "baseStatTotal": 210,
+   "captureRate": 255,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 194,
+   "evolvesInto": [
+    195
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 195,
+   "name": "Quagsire",
+   "localizedName": "Quagsire",
+   "slug": "quagsire",
+   "generation": 2,
+   "types": [
+    "water",
+    "ground"
+   ],
+   "baseStatTotal": 430,
+   "captureRate": 90,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 194,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 196,
+   "name": "Espeon",
+   "localizedName": "Espeon",
+   "slug": "espeon",
+   "generation": 2,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 525,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 133,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 197,
+   "name": "Umbreon",
+   "localizedName": "Umbreon",
+   "slug": "umbreon",
+   "generation": 2,
+   "types": [
+    "dark"
+   ],
+   "baseStatTotal": 525,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 133,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 198,
+   "name": "Murkrow",
+   "localizedName": "Murkrow",
+   "slug": "murkrow",
+   "generation": 2,
+   "types": [
+    "dark",
+    "flying"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 30,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 198,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 199,
+   "name": "Slowking",
+   "localizedName": "Slowking",
+   "slug": "slowking",
+   "generation": 2,
+   "types": [
+    "water",
+    "psychic"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 70,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 79,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 200,
+   "name": "Misdreavus",
+   "localizedName": "Misdreavus",
+   "slug": "misdreavus",
+   "generation": 2,
+   "types": [
+    "ghost"
+   ],
+   "baseStatTotal": 435,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 200,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 201,
+   "name": "Unown",
+   "localizedName": "Unown",
+   "slug": "unown",
+   "generation": 2,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 336,
+   "captureRate": 225,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 201,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 202,
+   "name": "Wobbuffet",
+   "localizedName": "Wobbuffet",
+   "slug": "wobbuffet",
+   "generation": 2,
+   "types": [
+    "psychic"
+   ],
+   "baseStatTotal": 405,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 202,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 203,
+   "name": "Girafarig",
+   "localizedName": "Girafarig",
+   "slug": "girafarig",
+   "generation": 2,
+   "types": [
+    "normal",
+    "psychic"
+   ],
+   "baseStatTotal": 455,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 203,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 204,
+   "name": "Pineco",
+   "localizedName": "Pineco",
+   "slug": "pineco",
+   "generation": 2,
+   "types": [
+    "bug"
+   ],
+   "baseStatTotal": 290,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 204,
+   "evolvesInto": [
+    205
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 205,
+   "name": "Forretress",
+   "localizedName": "Forretress",
+   "slug": "forretress",
+   "generation": 2,
+   "types": [
+    "bug",
+    "steel"
+   ],
+   "baseStatTotal": 465,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 204,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 206,
+   "name": "Dunsparce",
+   "localizedName": "Dunsparce",
+   "slug": "dunsparce",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 415,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 206,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 207,
+   "name": "Gligar",
+   "localizedName": "Gligar",
+   "slug": "gligar",
+   "generation": 2,
+   "types": [
+    "ground",
+    "flying"
+   ],
+   "baseStatTotal": 430,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 207,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 208,
+   "name": "Steelix",
+   "localizedName": "Steelix",
+   "slug": "steelix",
+   "generation": 2,
+   "types": [
+    "steel",
+    "ground"
+   ],
+   "baseStatTotal": 510,
+   "captureRate": 25,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 95,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 209,
+   "name": "Snubbull",
+   "localizedName": "Snubbull",
+   "slug": "snubbull",
+   "generation": 2,
+   "types": [
+    "fairy"
+   ],
+   "baseStatTotal": 300,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 209,
+   "evolvesInto": [
+    210
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 210,
+   "name": "Granbull",
+   "localizedName": "Granbull",
+   "slug": "granbull",
+   "generation": 2,
+   "types": [
+    "fairy"
+   ],
+   "baseStatTotal": 450,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 209,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 211,
+   "name": "Qwilfish",
+   "localizedName": "Qwilfish",
+   "slug": "qwilfish",
+   "generation": 2,
+   "types": [
+    "water",
+    "poison"
+   ],
+   "baseStatTotal": 440,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 211,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 212,
+   "name": "Scizor",
+   "localizedName": "Scizor",
+   "slug": "scizor",
+   "generation": 2,
+   "types": [
+    "bug",
+    "steel"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 25,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 123,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 213,
+   "name": "Shuckle",
+   "localizedName": "Shuckle",
+   "slug": "shuckle",
+   "generation": 2,
+   "types": [
+    "bug",
+    "rock"
+   ],
+   "baseStatTotal": 505,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 213,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 214,
+   "name": "Heracross",
+   "localizedName": "Heracross",
+   "slug": "heracross",
+   "generation": 2,
+   "types": [
+    "bug",
+    "fighting"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 214,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 215,
+   "name": "Sneasel",
+   "localizedName": "Sneasel",
+   "slug": "sneasel",
+   "generation": 2,
+   "types": [
+    "dark",
+    "ice"
+   ],
+   "baseStatTotal": 430,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 215,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 216,
+   "name": "Teddiursa",
+   "localizedName": "Teddiursa",
+   "slug": "teddiursa",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 330,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 216,
+   "evolvesInto": [
+    217
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 217,
+   "name": "Ursaring",
+   "localizedName": "Ursaring",
+   "slug": "ursaring",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 216,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 218,
+   "name": "Slugma",
+   "localizedName": "Slugma",
+   "slug": "slugma",
+   "generation": 2,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 250,
+   "captureRate": 190,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 218,
+   "evolvesInto": [
+    219
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 219,
+   "name": "Magcargo",
+   "localizedName": "Magcargo",
+   "slug": "magcargo",
+   "generation": 2,
+   "types": [
+    "fire",
+    "rock"
+   ],
+   "baseStatTotal": 430,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 218,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 220,
+   "name": "Swinub",
+   "localizedName": "Swinub",
+   "slug": "swinub",
+   "generation": 2,
+   "types": [
+    "ice",
+    "ground"
+   ],
+   "baseStatTotal": 250,
+   "captureRate": 225,
+   "rarity": "common",
+   "stage": 0,
+   "baseFormID": 220,
+   "evolvesInto": [
+    221
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 221,
+   "name": "Piloswine",
+   "localizedName": "Piloswine",
+   "slug": "piloswine",
+   "generation": 2,
+   "types": [
+    "ice",
+    "ground"
+   ],
+   "baseStatTotal": 450,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 220,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 222,
+   "name": "Corsola",
+   "localizedName": "Corsola",
+   "slug": "corsola",
+   "generation": 2,
+   "types": [
+    "water",
+    "rock"
+   ],
+   "baseStatTotal": 410,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 222,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 223,
+   "name": "Remoraid",
+   "localizedName": "Remoraid",
+   "slug": "remoraid",
+   "generation": 2,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 300,
+   "captureRate": 190,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 223,
+   "evolvesInto": [
+    224
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 224,
+   "name": "Octillery",
+   "localizedName": "Octillery",
+   "slug": "octillery",
+   "generation": 2,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 480,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 223,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 225,
+   "name": "Delibird",
+   "localizedName": "Delibird",
+   "slug": "delibird",
+   "generation": 2,
+   "types": [
+    "ice",
+    "flying"
+   ],
+   "baseStatTotal": 330,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 225,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 226,
+   "name": "Mantine",
+   "localizedName": "Mantine",
+   "slug": "mantine",
+   "generation": 2,
+   "types": [
+    "water",
+    "flying"
+   ],
+   "baseStatTotal": 485,
+   "captureRate": 25,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 226,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 227,
+   "name": "Skarmory",
+   "localizedName": "Skarmory",
+   "slug": "skarmory",
+   "generation": 2,
+   "types": [
+    "steel",
+    "flying"
+   ],
+   "baseStatTotal": 465,
+   "captureRate": 25,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 227,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 228,
+   "name": "Houndour",
+   "localizedName": "Houndour",
+   "slug": "houndour",
+   "generation": 2,
+   "types": [
+    "dark",
+    "fire"
+   ],
+   "baseStatTotal": 330,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 228,
+   "evolvesInto": [
+    229
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 229,
+   "name": "Houndoom",
+   "localizedName": "Houndoom",
+   "slug": "houndoom",
+   "generation": 2,
+   "types": [
+    "dark",
+    "fire"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 228,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 230,
+   "name": "Kingdra",
+   "localizedName": "Kingdra",
+   "slug": "kingdra",
+   "generation": 2,
+   "types": [
+    "water",
+    "dragon"
+   ],
+   "baseStatTotal": 540,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 2,
+   "baseFormID": 116,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 231,
+   "name": "Phanpy",
+   "localizedName": "Phanpy",
+   "slug": "phanpy",
+   "generation": 2,
+   "types": [
+    "ground"
+   ],
+   "baseStatTotal": 330,
+   "captureRate": 120,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 231,
+   "evolvesInto": [
+    232
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 232,
+   "name": "Donphan",
+   "localizedName": "Donphan",
+   "slug": "donphan",
+   "generation": 2,
+   "types": [
+    "ground"
+   ],
+   "baseStatTotal": 500,
+   "captureRate": 60,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 231,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 233,
+   "name": "Porygon2",
+   "localizedName": "Porygon2",
+   "slug": "porygon2",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 515,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 137,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 234,
+   "name": "Stantler",
+   "localizedName": "Stantler",
+   "slug": "stantler",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 465,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 234,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 235,
+   "name": "Smeargle",
+   "localizedName": "Smeargle",
+   "slug": "smeargle",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 250,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 235,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 236,
+   "name": "Tyrogue",
+   "localizedName": "Tyrogue",
+   "slug": "tyrogue",
+   "generation": 2,
+   "types": [
+    "fighting"
+   ],
+   "baseStatTotal": 210,
+   "captureRate": 75,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 236,
+   "evolvesInto": [
+    106,
+    107,
+    237
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 237,
+   "name": "Hitmontop",
+   "localizedName": "Hitmontop",
+   "slug": "hitmontop",
+   "generation": 2,
+   "types": [
+    "fighting"
+   ],
+   "baseStatTotal": 455,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 1,
+   "baseFormID": 236,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 238,
+   "name": "Smoochum",
+   "localizedName": "Smoochum",
+   "slug": "smoochum",
+   "generation": 2,
+   "types": [
+    "ice",
+    "psychic"
+   ],
+   "baseStatTotal": 305,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 238,
+   "evolvesInto": [
+    124
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 239,
+   "name": "Elekid",
+   "localizedName": "Elekid",
+   "slug": "elekid",
+   "generation": 2,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 360,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 239,
+   "evolvesInto": [
+    125
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 240,
+   "name": "Magby",
+   "localizedName": "Magby",
+   "slug": "magby",
+   "generation": 2,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 365,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 240,
+   "evolvesInto": [
+    126
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 241,
+   "name": "Miltank",
+   "localizedName": "Miltank",
+   "slug": "miltank",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 490,
+   "captureRate": 45,
+   "rarity": "uncommon",
+   "stage": 0,
+   "baseFormID": 241,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 242,
+   "name": "Blissey",
+   "localizedName": "Blissey",
+   "slug": "blissey",
+   "generation": 2,
+   "types": [
+    "normal"
+   ],
+   "baseStatTotal": 540,
+   "captureRate": 30,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 242,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 243,
+   "name": "Raikou",
+   "localizedName": "Raikou",
+   "slug": "raikou",
+   "generation": 2,
+   "types": [
+    "electric"
+   ],
+   "baseStatTotal": 580,
+   "captureRate": 3,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 243,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 244,
+   "name": "Entei",
+   "localizedName": "Entei",
+   "slug": "entei",
+   "generation": 2,
+   "types": [
+    "fire"
+   ],
+   "baseStatTotal": 580,
+   "captureRate": 3,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 244,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 245,
+   "name": "Suicune",
+   "localizedName": "Suicune",
+   "slug": "suicune",
+   "generation": 2,
+   "types": [
+    "water"
+   ],
+   "baseStatTotal": 580,
+   "captureRate": 3,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 245,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 246,
+   "name": "Larvitar",
+   "localizedName": "Larvitar",
+   "slug": "larvitar",
+   "generation": 2,
+   "types": [
+    "rock",
+    "ground"
+   ],
+   "baseStatTotal": 300,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 0,
+   "baseFormID": 246,
+   "evolvesInto": [
+    247
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 247,
+   "name": "Pupitar",
+   "localizedName": "Pupitar",
+   "slug": "pupitar",
+   "generation": 2,
+   "types": [
+    "rock",
+    "ground"
+   ],
+   "baseStatTotal": 410,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 1,
+   "baseFormID": 246,
+   "evolvesInto": [
+    248
+   ],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 248,
+   "name": "Tyranitar",
+   "localizedName": "Tyranitar",
+   "slug": "tyranitar",
+   "generation": 2,
+   "types": [
+    "rock",
+    "dark"
+   ],
+   "baseStatTotal": 600,
+   "captureRate": 45,
+   "rarity": "rare",
+   "stage": 2,
+   "baseFormID": 246,
+   "evolvesInto": [],
+   "isLegendary": false,
+   "isStarter": false
+  },
+  {
+   "id": 249,
+   "name": "Lugia",
+   "localizedName": "Lugia",
+   "slug": "lugia",
+   "generation": 2,
+   "types": [
+    "psychic",
+    "flying"
+   ],
+   "baseStatTotal": 680,
+   "captureRate": 3,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 249,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 250,
+   "name": "Ho-Oh",
+   "localizedName": "Ho-Oh",
+   "slug": "ho-oh",
+   "generation": 2,
+   "types": [
+    "fire",
+    "flying"
+   ],
+   "baseStatTotal": 680,
+   "captureRate": 3,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 250,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  },
+  {
+   "id": 251,
+   "name": "Celebi",
+   "localizedName": "Celebi",
+   "slug": "celebi",
+   "generation": 2,
+   "types": [
+    "psychic",
+    "grass"
+   ],
+   "baseStatTotal": 600,
+   "captureRate": 45,
+   "rarity": "legendary",
+   "stage": 0,
+   "baseFormID": 251,
+   "evolvesInto": [],
+   "isLegendary": true,
+   "isStarter": false
+  }
+ ]
+}

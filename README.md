@@ -1,0 +1,228 @@
+# PokeTokenBar
+
+App de barra de menú para macOS que convierte el consumo de tokens de la API de
+Anthropic en combates Pokémon estilo retro. **1 token = 1 punto de daño.**
+Cuando el rival llega a 0 HP se captura, entra en tu caja PC y aparece otro.
+
+```
+ [ Typhlosion vs Diglett ]  37.3k/42.8k
+```
+
+---
+
+## 1. Arquitectura
+
+Tres capas, con el juego aislado de AppKit para que sea comprobable sin UI:
+
+```
+┌──────────────────────── PokeTokenBar (app target) ─────────────────────────┐
+│  Entry ─▶ AppDelegate ─▶ StatusItemController ─▶ NSPopover(SwiftUI)        │
+│                │                    ▲                                     │
+│                │  TokenSourceCoordinator      SpriteStore (caché en disco) │
+└────────────────┼───────────────┬───────────────────────────────────────────┘
+                 │               │ UsageEvent
+┌────────────────▼───────────────▼──── PokeTokenBarCore (librería) ──────────┐
+│  Ingest      ClaudeCodeTranscriptSource   IngestServer (127.0.0.1:8317)    │
+│  Store       GameStore  ──────────────▶  StateFileStore (JSON atómico)     │
+│  Engine      BattleEngine · SpawnService · EvolutionService · RandomProvider│
+│  Data        Pokedex  ◀── Resources/pokedex.json (#1-#251, generado)       │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+Flujo de un evento:
+
+```
+usage de la API ─▶ TokenSource ─▶ GameStore.ingest(UsageEvent)
+                                    │  ¿id ya visto? ─▶ descartar
+                                    ├─ ledger.record(tokens)
+                                    ├─ BattleEngine.apply(damage:)
+                                    │     └─ HP 0 ─▶ captura ─▶ SpawnService.spawn()
+                                    └─ persist() (debounce 700 ms)
+```
+
+Decisiones que importan:
+
+- **El motor no sabe nada de AppKit.** `PokeTokenBarCore` es Foundation puro,
+  así que el juego entero se prueba sin abrir una ventana.
+- **El RNG es una dependencia** (`RandomProvider`). En producción es
+  `SystemRandomProvider`; en tests, `SeededRandomProvider` (SplitMix64), lo que
+  permite verificar los ratios de aparición con 200.000 muestras deterministas.
+- **La idempotencia vive en el store, no en las fuentes.** Cada `UsageEvent`
+  trae un id estable (`requestId` del transcript, `id` del proxy). Las fuentes
+  pueden solaparse, reintentar o releer un fichero sin duplicar daño.
+- **La app nunca ve tu API key.** No intercepta el proceso ni proxea tráfico:
+  o lee los transcripts que Claude Code ya escribe, o recibe un `usage` ya
+  contabilizado en un endpoint de loopback.
+- **Escritura atómica y estado en cuarentena.** `state.json` se escribe con
+  `replaceItemAt`; si aparece corrupto se aparta con sufijo `.corrupt-<epoch>`
+  en vez de perderse en silencio.
+
+## 2. Modelo de datos
+
+`Sources/PokeTokenBarCore/Resources/pokedex.json` (generado, 251 entradas):
+
+```jsonc
+{
+  "id": 147, "name": "Dratini", "localizedName": "Dratini", "slug": "dratini",
+  "generation": 1, "types": ["dragon"],
+  "baseStatTotal": 300, "captureRate": 45,
+  "rarity": "rare",            // tier de aparición
+  "stage": 0,                  // distancia a la forma base (0-2)
+  "baseFormID": 147,
+  "evolvesInto": [148],        // varias si la cadena bifurca (Eevee: 5)
+  "isLegendary": false, "isStarter": false
+}
+```
+
+Estado persistido en `~/Library/Application Support/PokeTokenBar/state.json`:
+
+```jsonc
+{
+  "schemaVersion": 1,
+  "ledger": { "total": 5500, "monthly": { "2026-09": 5500 }, "eventCount": 2 },
+  "box": [{ "id": "<uuid>", "speciesID": 4, "isShiny": false,
+            "capturedAt": "...", "capturedAtTotalTokens": 0,
+            "evolutionSeed": 12345 }],
+  "activeCompanionID": "<uuid>",
+  "encounter": { "speciesID": 50, "rarity": "common", "isShiny": false,
+                 "maxHP": 42814, "currentHP": 37314, "spawnedAt": "..." },
+  "settings": { "countCacheTokens": false, "watchClaudeCodeTranscripts": true,
+                "ingestServerEnabled": true, "ingestPort": 8317 },
+  "processedEventIDs": ["ingest:req_1"]
+}
+```
+
+`evolutionSeed` fija la rama evolutiva de por vida: tu Eevee siempre evoluciona
+al mismo sitio, aunque la cadena tenga cinco salidas.
+
+## 3. Reglas
+
+| Tier | Prob. | HP | Requiere | Ejemplos |
+|---|---|---|---|---|
+| Común | 60 % | 10.000 – 50.000 | — | Rattata, Sentret |
+| Poco común | 28 % | 75.000 – 200.000 | — | Gastly, Scyther |
+| Raro | 10 % | 250.000 – 600.000 | > 200.000 tokens | Dratini, Larvitar, iniciales |
+| Legendario | 2 % | 1.500.000 – 4.000.000 | > 2.000.000 tokens | Mewtwo, Lugia |
+
+- Variocolor (shiny): 1 % en cualquier aparición, y se conserva al capturar.
+- Un tier bloqueado no "reintenta": su peso se reparte entre los disponibles.
+- Los tiers salen de los datos de PokeAPI (legendario/mítico, `capture_rate` y
+  mejor BST de la familia), no de una lista a mano. La regla está en
+  `tools/generate_pokedex.mjs`.
+- Evolución del compañero por histórico acumulado: base ≤ 200.000 · etapa 1
+  200.001–1.000.000 · etapa 2 > 1.000.000. Las líneas de dos formas se quedan
+  en su última forma.
+- El daño sobrante de una captura se arrastra al rival siguiente: ningún token
+  se pierde, y un evento grande puede encadenar varias capturas.
+
+## 4. Puesta en marcha
+
+```bash
+git clone <este repo> && cd poketokenbar
+./scripts/bundle.sh              # compila en release y arma dist/PokeTokenBar.app
+open dist/PokeTokenBar.app       # o: cp -R dist/PokeTokenBar.app /Applications/
+```
+
+Requisitos: macOS 13+ y Swift 6.x (las Command Line Tools bastan; no hace falta
+Xcode). Al primer arranque eliges inicial entre los seis de Gen 1 y Gen 2.
+
+Para desarrollar: `swift run PokeTokenBar` (el status item funciona igual sin
+empaquetar, pero sin `LSUIElement` aparece en el Dock).
+
+Autoarranque al iniciar sesión:
+
+```bash
+cat > ~/Library/LaunchAgents/dev.poketokenbar.plist <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>dev.poketokenbar</string>
+  <key>ProgramArguments</key>
+  <array><string>/Applications/PokeTokenBar.app/Contents/MacOS/PokeTokenBar</string></array>
+  <key>RunAtLoad</key><true/>
+</dict></plist>
+PLIST
+launchctl load ~/Library/LaunchAgents/dev.poketokenbar.plist
+```
+
+## 5. De dónde salen los tokens
+
+### a) Transcripts de Claude Code (activo por defecto, cero configuración)
+
+Sigue `~/.claude/projects/**/*.jsonl` y lee `message.usage` de cada línea. En el
+primer arranque se coloca al final de cada fichero, así que no te vuelca meses
+de historial sobre el primer Rattata.
+
+### b) Proxy de la API (para tu propio código)
+
+```bash
+node tools/anthropic-proxy.mjs
+export ANTHROPIC_BASE_URL=http://127.0.0.1:8318
+```
+
+Reenvía a `api.anthropic.com` tal cual —streaming SSE incluido— y reporta el
+`usage` a la app. Las cabeceras de autenticación se reenvían sin leerse ni
+registrarse.
+
+### c) Reportar a mano desde cualquier sitio
+
+```bash
+curl -X POST http://127.0.0.1:8317/usage \
+  -H 'content-type: application/json' \
+  -d '{"id":"req_123","model":"claude-opus-5",
+       "usage":{"input_tokens":4000,"output_tokens":1000}}'
+```
+
+`id` es la clave de idempotencia: repetir la misma petición no hace más daño.
+El servidor escucha solo en `127.0.0.1` y expone únicamente `GET /health` y
+`POST /usage`.
+
+Los tokens de caché (`cache_creation_input_tokens`, `cache_read_input_tokens`)
+**no** cuentan por defecto: en sesiones largas dominan el total y desequilibran
+el combate. Hay un check en el popover para incluirlos.
+
+## 6. Overrides por entorno
+
+Útiles para probar contra una partida desechable sin tocar la real:
+
+| Variable | Efecto |
+|---|---|
+| `POKETOKENBAR_STATE_DIR` | dónde vive `state.json` y los offsets |
+| `POKETOKENBAR_CLAUDE_PROJECTS` | raíz de transcripts a vigilar |
+| `POKETOKENBAR_INGEST_PORT` | puerto del servidor de ingest |
+
+## 7. Tests
+
+```bash
+swift run PokeTokenBarSelfTest     # 43 tests, ~13k comprobaciones
+swift run PokeTokenBar --ui-smoke-test
+```
+
+El arnés de `Sources/PokeTokenBarSelfTest` es propio y sin dependencias porque
+XCTest y swift-testing necesitan Xcode completo; así la suite corre con solo las
+Command Line Tools. Cubre gates de tier, ratios de aparición (200k muestras),
+rangos de HP, tasa de shiny, arrastre de daño, capturas en cadena, umbrales y
+ramas de evolución, idempotencia del ingest, persistencia entre reinicios,
+cuarentena de estado corrupto y el parseo de transcripts y del payload HTTP.
+
+`--ui-smoke-test` monta el árbol de SwiftUI en las tres pantallas (selector de
+inicial, combate, tras captura) y falla si alguna mide 0.
+
+## 8. Regenerar la Pokédex
+
+```bash
+node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
+```
+
+## 9. Límites conocidos del MVP
+
+- Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
+  vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Sin red, la app
+  funciona y muestra el número de Pokédex como placeholder.
+- No hay notificaciones del sistema en las capturas (evita pedir permisos): la
+  barra muestra "¡X capturado!" durante 6 segundos.
+- La caja PC no permite liberar ni renombrar todavía (`nickname` ya está en el
+  modelo).
+- Sin tipos ni efectividad en combate: el daño es plano, 1 token = 1 HP.
+- Los sprites son propiedad de Nintendo/Game Freak; esto es un juguete de uso
+  personal, no distribuible.
