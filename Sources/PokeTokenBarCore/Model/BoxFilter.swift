@@ -25,7 +25,6 @@ public struct BoxFilter: Hashable, Sendable {
     public var types: Set<String> = []
     public var onlyShiny = false
     public var onlyEvolved = false
-    public var onlyDuplicates = false
     /// `nil` = las dos generaciones.
     public var generation: Int?
     public var sort: Sort = .dex
@@ -37,7 +36,6 @@ public struct BoxFilter: Hashable, Sendable {
             || !types.isEmpty
             || onlyShiny
             || onlyEvolved
-            || onlyDuplicates
             || generation != nil
     }
 
@@ -47,7 +45,6 @@ public struct BoxFilter: Hashable, Sendable {
         if !types.isEmpty { parts.append(types.sorted().joined(separator: ", ")) }
         if onlyShiny { parts.append("shiny") }
         if onlyEvolved { parts.append("evolucionados") }
-        if onlyDuplicates { parts.append("repetidos") }
         if let generation { parts.append("gen \(generation)") }
         return parts
     }
@@ -64,7 +61,6 @@ public struct BoxFilter: Hashable, Sendable {
             }
             if onlyShiny, !group.isShiny { return false }
             if onlyEvolved, !group.hasEvolved { return false }
-            if onlyDuplicates, group.count < 2 { return false }
             if let generation, group.species.generation != generation { return false }
             return needle.isEmpty || Self.matches(group, needle: needle)
         }

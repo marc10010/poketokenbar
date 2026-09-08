@@ -15,6 +15,14 @@ struct GymCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 3 : 6) {
             HStack(spacing: 8) {
+                // El compañero también: hasta ahora se veía contra qué vas,
+                // pero no con quién.
+                if let companion = store.state.activeCompanion, let form = store.activeForm {
+                    SpriteView(speciesID: form.id, shiny: companion.displaysShiny, size: compact ? 38 : 54)
+                    Text("vs")
+                        .font(.system(size: compact ? 9 : 11, weight: .bold))
+                        .foregroundStyle(.secondary)
+                }
                 SpriteView(speciesID: gym.signatureSpeciesID, shiny: false, size: compact ? 42 : 62, flipped: true)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 4) {
