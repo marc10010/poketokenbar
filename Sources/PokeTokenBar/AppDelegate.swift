@@ -7,11 +7,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let sprites = SpriteStore()
     private lazy var sources = TokenSourceCoordinator(store: store)
     private var statusItem: StatusItemController?
+    private var hud: HUDController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         store.ensureEncounter()
         statusItem = StatusItemController(store: store, sprites: sprites, sources: sources)
+        hud = HUDController(store: store, sprites: sprites)
         sources.start()
         prefetchSprites()
     }

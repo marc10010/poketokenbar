@@ -83,11 +83,46 @@ public struct TokenLedger: Codable, Hashable, Sendable {
     public var currentMonth: Int { monthly[Self.monthKey(for: Date())] ?? 0 }
 }
 
+/// Esquina de la pantalla donde se ancla el HUD flotante.
+public enum HUDCorner: String, Codable, CaseIterable, Sendable {
+    case topLeft
+    case topRight
+    case bottomLeft
+    case bottomRight
+
+    public var label: String {
+        switch self {
+        case .topLeft: return "Arriba izq."
+        case .topRight: return "Arriba der."
+        case .bottomLeft: return "Abajo izq."
+        case .bottomRight: return "Abajo der."
+        }
+    }
+}
+
 public struct GameSettings: Codable, Hashable, Sendable {
     public var countCacheTokens: Bool = false
     public var watchClaudeCodeTranscripts: Bool = true
     public var ingestServerEnabled: Bool = true
     public var ingestPort: UInt16 = 8317
+    public var hudEnabled: Bool = true
+    public var hudCorner: HUDCorner = .topRight
+    public var hudOpacity: Double = 0.9
+
+    public init() {}
+
+    /// Decodificación tolerante: un `state.json` escrito por una versión
+    /// anterior no tiene las claves nuevas y debe seguir cargando.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        countCacheTokens = try container.decodeIfPresent(Bool.self, forKey: .countCacheTokens) ?? false
+        watchClaudeCodeTranscripts = try container.decodeIfPresent(Bool.self, forKey: .watchClaudeCodeTranscripts) ?? true
+        ingestServerEnabled = try container.decodeIfPresent(Bool.self, forKey: .ingestServerEnabled) ?? true
+        ingestPort = try container.decodeIfPresent(UInt16.self, forKey: .ingestPort) ?? 8317
+        hudEnabled = try container.decodeIfPresent(Bool.self, forKey: .hudEnabled) ?? true
+        hudCorner = try container.decodeIfPresent(HUDCorner.self, forKey: .hudCorner) ?? .topRight
+        hudOpacity = try container.decodeIfPresent(Double.self, forKey: .hudOpacity) ?? 0.9
+    }
 }
 
 /// Estado persistido completo. Cualquier cambio de forma requiere subir

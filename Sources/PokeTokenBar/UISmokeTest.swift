@@ -51,7 +51,28 @@ enum UISmokeTest {
         let rivalHP = store.state.encounter?.maxHP ?? 0
         store.ingest(UsageEvent(id: "smoke-2", inputTokens: rivalHP, outputTokens: 0))
         ok = layout("tras captura") && ok
-        print(ok ? "  ✓ el árbol de vistas renderiza" : "  ✗ alguna vista mide 0")
+
+        let hud = NSHostingView(
+            rootView: HUDView().environmentObject(store).environmentObject(sprites)
+        )
+        hud.layoutSubtreeIfNeeded()
+        let hudSize = hud.fittingSize
+        print("  HUD flotante: \(Int(hudSize.width))x\(Int(hudSize.height))")
+        ok = hudSize.width > 0 && hudSize.height > 0 && ok
+
+        var hudController: HUDController? = HUDController(store: store, sprites: sprites)
+        let panel = NSApp.windows.compactMap { $0 as? NSPanel }.first
+        if let panel, let screen = NSScreen.main ?? NSScreen.screens.first {
+            let inside = screen.visibleFrame.contains(panel.frame)
+            print("  panel del HUD: \(Int(panel.frame.origin.x)),\(Int(panel.frame.origin.y)) dentro=\(inside) clickThrough=\(panel.ignoresMouseEvents) opaco=\(panel.isOpaque)")
+            ok = inside && panel.ignoresMouseEvents && !panel.isOpaque && ok
+        } else {
+            print("  ✗ el HUD no creó panel")
+            ok = false
+        }
+        hudController = nil
+
+        print(ok ? "  ✓ el árbol de vistas renderiza" : "  ✗ algo no cuadra")
         return ok ? 0 : 1
     }
 }

@@ -17,6 +17,7 @@ enum GameStoreTests: TestSuite {
         ("switching active companion only accepts owned pokemon", testSwitchingActiveCompanionOnlyAcceptsOwnedPokemon),
         ("processed event window is bounded", testProcessedEventWindowIsBounded),
         ("corrupt state file is quarantined not crashing", testCorruptStateFileIsQuarantinedNotCrashing),
+        ("legacy settings decode with defaults", testLegacySettingsDecodeWithDefaults),
     ]
 
     private static func temporaryStateURL() -> URL {
@@ -148,5 +149,28 @@ enum GameStoreTests: TestSuite {
         let store = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 1))
         expectEqual(store.totalTokens, 0)
         expectFalse(store.state.hasStarter)
+    }
+
+    /// Un state.json escrito antes de que existiera el HUD debe seguir
+    /// cargando, con los ajustes nuevos en su valor por defecto.
+    static func testLegacySettingsDecodeWithDefaults() throws {
+        let url = temporaryStateURL()
+        let legacy = """
+        {
+          "schemaVersion": 1,
+          "ledger": { "total": 4321, "monthly": { "2026-09": 4321 }, "eventCount": 3 },
+          "box": [],
+          "processedEventIDs": [],
+          "settings": { "countCacheTokens": true, "watchClaudeCodeTranscripts": true,
+                        "ingestServerEnabled": true, "ingestPort": 8317 }
+        }
+        """
+        try Data(legacy.utf8).write(to: url)
+        let store = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 3))
+        expectEqual(store.totalTokens, 4321, "no se pierde el histórico")
+        expectEqual(store.state.settings.countCacheTokens, true, "se respeta lo que ya estaba")
+        expectEqual(store.state.settings.hudEnabled, true)
+        expectEqual(store.state.settings.hudCorner, HUDCorner.topRight)
+        expectEqual(store.state.settings.hudOpacity, 0.9, accuracy: 0.0001)
     }
 }

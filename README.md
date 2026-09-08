@@ -115,7 +115,17 @@ al mismo sitio, aunque la cadena tenga cinco salidas.
 - El daño sobrante de una captura se arrastra al rival siguiente: ningún token
   se pierde, y un evento grande puede encadenar varias capturas.
 
-## 4. Puesta en marcha
+## 4. HUD flotante
+
+Además del ítem de la barra de menú, la app puede mostrar un HUD anclado a una
+esquina: fondo transparente, sin bordes, sin sombra y **click-through**
+(`ignoresMouseEvents`), así que nunca roba foco ni tapa nada con lo que quieras
+interactuar. Vive en todos los escritorios y sobre apps a pantalla completa.
+
+Se controla desde el popover: activar/desactivar, esquina (4 opciones) y
+opacidad. Se oculta solo mientras no haya compañero elegido.
+
+## 5. Puesta en marcha
 
 ```bash
 git clone <este repo> && cd poketokenbar
@@ -129,7 +139,27 @@ Xcode). Al primer arranque eliges inicial entre los seis de Gen 1 y Gen 2.
 Para desarrollar: `swift run PokeTokenBar` (el status item funciona igual sin
 empaquetar, pero sin `LSUIElement` aparece en el Dock).
 
-Autoarranque al iniciar sesión:
+### Abrir junto a Claude Code
+
+Un hook `SessionStart` en `~/.claude/settings.json` la levanta si no está ya
+corriendo (el `pgrep` la hace idempotente, y el `|| true` evita que un fallo
+bloquee la sesión):
+
+```json
+{
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "pgrep -f 'PokeTokenBar.app/Contents/MacOS/PokeTokenBar' >/dev/null || open -ga /Applications/PokeTokenBar.app 2>/dev/null || true",
+        "timeout": 10
+      }]
+    }]
+  }
+}
+```
+
+Autoarranque al iniciar sesión (alternativa, independiente de Claude):
 
 ```bash
 cat > ~/Library/LaunchAgents/dev.poketokenbar.plist <<'PLIST'
@@ -145,7 +175,7 @@ PLIST
 launchctl load ~/Library/LaunchAgents/dev.poketokenbar.plist
 ```
 
-## 5. De dónde salen los tokens
+## 6. De dónde salen los tokens
 
 ### a) Transcripts de Claude Code (activo por defecto, cero configuración)
 
@@ -174,14 +204,15 @@ curl -X POST http://127.0.0.1:8317/usage \
 ```
 
 `id` es la clave de idempotencia: repetir la misma petición no hace más daño.
-El servidor escucha solo en `127.0.0.1` y expone únicamente `GET /health` y
-`POST /usage`.
+El servidor escucha solo en `127.0.0.1` y expone tres rutas: `GET /` (una
+página que explica qué es esto, por si abres el puerto en el navegador),
+`GET /health` y `POST /usage`.
 
 Los tokens de caché (`cache_creation_input_tokens`, `cache_read_input_tokens`)
 **no** cuentan por defecto: en sesiones largas dominan el total y desequilibran
 el combate. Hay un check en el popover para incluirlos.
 
-## 6. Overrides por entorno
+## 7. Overrides por entorno
 
 Útiles para probar contra una partida desechable sin tocar la real:
 
@@ -191,10 +222,10 @@ el combate. Hay un check en el popover para incluirlos.
 | `POKETOKENBAR_CLAUDE_PROJECTS` | raíz de transcripts a vigilar |
 | `POKETOKENBAR_INGEST_PORT` | puerto del servidor de ingest |
 
-## 7. Tests
+## 8. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 43 tests, ~13k comprobaciones
+swift run PokeTokenBarSelfTest     # 44 tests, ~13k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 
@@ -206,21 +237,24 @@ ramas de evolución, idempotencia del ingest, persistencia entre reinicios,
 cuarentena de estado corrupto y el parseo de transcripts y del payload HTTP.
 
 `--ui-smoke-test` monta el árbol de SwiftUI en las tres pantallas (selector de
-inicial, combate, tras captura) y falla si alguna mide 0.
+inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
+cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-## 8. Regenerar la Pokédex
+## 9. Regenerar la Pokédex
 
 ```bash
 node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
 ```
 
-## 9. Límites conocidos del MVP
+## 10. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Sin red, la app
   funciona y muestra el número de Pokédex como placeholder.
 - No hay notificaciones del sistema en las capturas (evita pedir permisos): la
   barra muestra "¡X capturado!" durante 6 segundos.
+- El HUD no se arrastra: al ser click-through no recibe eventos, así que la
+  posición se elige por esquina desde el popover.
 - La caja PC no permite liberar ni renombrar todavía (`nickname` ya está en el
   modelo).
 - Sin tipos ni efectividad en combate: el daño es plano, 1 token = 1 HP.

@@ -83,6 +83,10 @@ public final class IngestServer: TokenSource {
 
     private func respond(to request: HTTPRequest, on connection: NWConnection) {
         switch (request.method, request.path) {
+        case ("GET", "/"):
+            // Alguien ha abierto 127.0.0.1:puerto en el navegador: que se
+            // entienda qué es esto en vez de devolver un 404 seco.
+            send(status: "200 OK", body: Self.indexHTML(port: port), contentType: "text/html; charset=utf-8", on: connection)
         case ("GET", "/health"):
             send(status: "200 OK", body: #"{"ok":true}"#, on: connection)
         case ("POST", "/usage"):
@@ -123,11 +127,30 @@ public final class IngestServer: TokenSource {
         )
     }
 
-    private func send(status: String, body: String, on connection: NWConnection) {
+    static func indexHTML(port: UInt16) -> String {
+        """
+        <!doctype html><meta charset="utf-8"><title>PokeTokenBar</title>
+        <style>body{font:14px -apple-system,system-ui;margin:40px auto;max-width:34em;color:#222}
+        code{background:#f2f2f2;padding:2px 5px;border-radius:4px}h1{font-size:1.2em}</style>
+        <h1>PokeTokenBar · endpoint de consumo</h1>
+        <p>Esto no es una web: es el receptor local de tokens de la app de la barra
+        de menú. Escucha solo en <code>127.0.0.1:\(port)</code>.</p>
+        <ul>
+          <li><code>GET /health</code> — comprobar que está viva</li>
+          <li><code>POST /usage</code> — reportar consumo</li>
+        </ul>
+        <pre><code>curl -X POST http://127.0.0.1:\(port)/usage \\
+          -H 'content-type: application/json' \\
+          -d '{"id":"req_1","usage":{"input_tokens":4000,"output_tokens":1000}}'</code></pre>
+        <p>El estado del combate se ve en el menú de la barra, no aquí.</p>
+        """
+    }
+
+    private func send(status: String, body: String, contentType: String = "application/json", on connection: NWConnection) {
         let payload = Data(body.utf8)
         let head = """
         HTTP/1.1 \(status)\r
-        Content-Type: application/json\r
+        Content-Type: \(contentType)\r
         Content-Length: \(payload.count)\r
         Connection: close\r
         \r\n

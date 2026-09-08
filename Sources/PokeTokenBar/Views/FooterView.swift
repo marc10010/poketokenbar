@@ -25,6 +25,40 @@ struct FooterView: View {
             }
             .toggleStyle(.checkbox)
 
+            Toggle(isOn: Binding(
+                get: { store.state.settings.hudEnabled },
+                set: { newValue in store.updateSettings { $0.hudEnabled = newValue } }
+            )) {
+                Text("HUD flotante en una esquina").font(.system(size: 10))
+            }
+            .toggleStyle(.checkbox)
+
+            if store.state.settings.hudEnabled {
+                HStack(spacing: 6) {
+                    Picker("", selection: Binding(
+                        get: { store.state.settings.hudCorner },
+                        set: { newValue in store.updateSettings { $0.hudCorner = newValue } }
+                    )) {
+                        ForEach(HUDCorner.allCases, id: \.self) { corner in
+                            Text(corner.label).tag(corner)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 118)
+
+                    Slider(
+                        value: Binding(
+                            get: { store.state.settings.hudOpacity },
+                            set: { newValue in store.updateSettings { $0.hudOpacity = newValue } }
+                        ),
+                        in: 0.25...1
+                    )
+                    .frame(width: 90)
+                    .help("Opacidad del HUD")
+                }
+                .font(.system(size: 10))
+            }
+
             HStack {
                 Button("Salir") { NSApplication.shared.terminate(nil) }
                     .buttonStyle(.link)
