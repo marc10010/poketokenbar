@@ -218,8 +218,8 @@ public final class GameStore: ObservableObject {
         persist()
     }
 
-    /// Alterna entre la paleta variocolor y la normal. Solo tiene efecto en un
-    /// variocolor de verdad: no se puede "pintar" uno normal.
+    /// Alterna entre la paleta shiny y la normal. Solo tiene efecto en un
+    /// shiny de verdad: no se puede "pintar" uno normal.
     public func toggleShinyDisplay(_ capturedID: UUID) {
         guard let index = state.box.firstIndex(where: { $0.id == capturedID }), state.box[index].isShiny else { return }
         state.box[index].prefersShiny.toggle()
@@ -324,8 +324,8 @@ public final class GameStore: ObservableObject {
         for event in events { _ = ingest(event) }
     }
 
-    /// Líneas evolutivas ya conseguidas, separando variocolor: un Wartortle
-    /// bloquea al Squirtle, pero un Squirtle variocolor sigue siendo otra cosa.
+    /// Líneas evolutivas ya conseguidas, separando shiny: un Wartortle
+    /// bloquea al Squirtle, pero un Squirtle shiny sigue siendo otra cosa.
     public var ownedFamilies: Set<String> {
         Set(state.box.compactMap { captured in
             pokedex[captured.speciesID].map { familyKey(baseFormID: $0.baseFormID, shiny: captured.isShiny) }

@@ -28,13 +28,16 @@ struct BattleDashboardView: View {
             }
 
 
-            DisclosureGroup(isExpanded: $showBox) {
-                if let selected = store.selectedBoxGroupID,
-                   let group = store.boxGroups.first(where: { $0.id == selected }) {
+            if let selected = store.selectedBoxGroupID,
+               let group = store.boxGroups.first(where: { $0.id == selected }) {
+                SectionCard(title: "Ficha") {
                     PokemonDetailView(group: group)
-                } else {
-                    PCBoxView()
                 }
+                Divider()
+            }
+
+            DisclosureGroup(isExpanded: $showBox) {
+                PCBoxView()
             } label: {
                 Label("Caja PC · \(store.speciesCaught)/251", systemImage: "archivebox")
                     .font(.caption.weight(.semibold))
@@ -73,7 +76,7 @@ private struct ActiveCompanionCard: View {
                         Text(form.localizedName)
                             .font(.title3.weight(.semibold))
                         if companion.isShiny {
-                            Text("✦").foregroundStyle(.yellow).help("Variocolor")
+                            Text("✦").foregroundStyle(.yellow).help("Shiny")
                         }
                         Text("#\(String(format: "%03d", form.id))")
                             .font(.caption2.monospaced())
@@ -151,7 +154,7 @@ private struct EncounterCard: View {
                         HStack(spacing: 5) {
                             Text(rival.localizedName).font(.body.weight(.semibold))
                             if encounter.isShiny {
-                                Text("✦").foregroundStyle(.yellow).help("Variocolor")
+                                Text("✦").foregroundStyle(.yellow).help("Shiny")
                             }
                             RarityBadge(rarity: encounter.rarity)
                         }

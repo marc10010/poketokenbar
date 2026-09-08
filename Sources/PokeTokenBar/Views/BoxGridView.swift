@@ -28,6 +28,7 @@ struct BoxGridView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                    .padding(.trailing, Layout.scrollGutter)
                 }
             }
         }

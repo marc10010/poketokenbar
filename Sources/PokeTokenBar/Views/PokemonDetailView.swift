@@ -112,7 +112,7 @@ struct PokemonDetailView: View {
             .disabled(isActive)
 
             if group.isShiny {
-                Button(captured.prefersShiny ? "Ver en normal" : "Ver variocolor") {
+                Button(captured.prefersShiny ? "Ver en normal" : "Ver shiny") {
                     store.toggleShinyDisplay(captured.id)
                 }
             }

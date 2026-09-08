@@ -15,8 +15,8 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
     /// evolucionar, y solo crece: una evolución conseguida no se pierde al
     /// cambiar de compañero.
     public var tokensEarned: Int
-    /// Si se muestra con su paleta variocolor. Solo significa algo cuando
-    /// `isShiny`: quien captura un variocolor puede querer el look clásico.
+    /// Si se muestra con su paleta shiny. Solo significa algo cuando
+    /// `isShiny`: quien captura un shiny puede querer el look clásico.
     public var prefersShiny: Bool
     /// Salvajes vencidos llevándolo equipado.
     public var wildDefeats: Int
@@ -24,7 +24,7 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
     public var gymsWon: Int
     public var nickname: String?
 
-    /// Cómo se dibuja: variocolor solo si lo es y así lo quiere.
+    /// Cómo se dibuja: shiny solo si lo es y así lo quiere.
     public var displaysShiny: Bool { isShiny && prefersShiny }
 
     public init(

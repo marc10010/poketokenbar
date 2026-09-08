@@ -8,10 +8,10 @@ enum CollectionTests: TestSuite {
     static let tests: [(String, () throws -> Void)] = [
         ("una línea repetida no se captura", testRepeatedFamilyIsNotCaptured),
         ("tener a Wartortle bloquea al Squirtle", testEvolvedFormBlocksItsBaseForm),
-        ("el variocolor de una línea que tienes sí se queda", testShinyOfOwnedFamilyIsKept),
+        ("el shiny de una línea que tienes sí se queda", testShinyOfOwnedFamilyIsKept),
         ("dos iguales en el mismo evento solo dejan uno", testTwoOfTheSameFamilyInOneEvent),
         ("las victorias se apuntan al compañero", testDefeatsCreditTheCompanion),
-        ("alternar variocolor solo va en los variocolor", testShinyDisplayToggle),
+        ("alternar shiny solo va en los shiny", testShinyDisplayToggle),
     ]
 
     private static func makeStore(seed: UInt64 = 4) -> GameStore {
@@ -78,10 +78,10 @@ enum CollectionTests: TestSuite {
 
         store.debugSetEncounter(wild(19, shiny: true))
         store.ingest(event("shiny", tokens: 100))
-        expectEqual(store.state.box.count, after + 1, "un variocolor es otra cosa y sí se queda")
+        expectEqual(store.state.box.count, after + 1, "un shiny es otra cosa y sí se queda")
         expectTrue(try unwrap(store.state.box.last).isShiny)
 
-        // Pero un segundo variocolor de la misma línea ya no.
+        // Pero un segundo shiny de la misma línea ya no.
         store.debugSetEncounter(wild(19, shiny: true))
         store.ingest(event("shiny-2", tokens: 100))
         expectEqual(store.state.box.count, after + 1)
@@ -120,14 +120,14 @@ enum CollectionTests: TestSuite {
         store.debugSetEncounter(wild(19, shiny: true))
         store.ingest(event("shiny", tokens: 100))
         let shiny = try unwrap(store.state.box.last { $0.isShiny })
-        expectTrue(shiny.displaysShiny, "de fábrica se muestra variocolor")
+        expectTrue(shiny.displaysShiny, "de fábrica se muestra shiny")
 
         store.toggleShinyDisplay(shiny.id)
         expectFalse(try unwrap(store.state.box.first { $0.id == shiny.id }).displaysShiny, "ahora en normal")
         store.toggleShinyDisplay(shiny.id)
         expectTrue(try unwrap(store.state.box.first { $0.id == shiny.id }).displaysShiny, "y vuelta")
 
-        // Un normal no se puede "pintar" de variocolor.
+        // Un normal no se puede "pintar" de shiny.
         let plain = try unwrap(store.state.box.first { !$0.isShiny })
         store.toggleShinyDisplay(plain.id)
         expectFalse(try unwrap(store.state.box.first { $0.id == plain.id }).displaysShiny)

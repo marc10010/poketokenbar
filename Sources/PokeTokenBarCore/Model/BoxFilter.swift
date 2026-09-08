@@ -45,7 +45,7 @@ public struct BoxFilter: Hashable, Sendable {
     public var activeSummary: [String] {
         var parts: [String] = []
         if !types.isEmpty { parts.append(types.sorted().joined(separator: ", ")) }
-        if onlyShiny { parts.append("variocolor") }
+        if onlyShiny { parts.append("shiny") }
         if onlyEvolved { parts.append("evolucionados") }
         if onlyDuplicates { parts.append("repetidos") }
         if let generation { parts.append("gen \(generation)") }

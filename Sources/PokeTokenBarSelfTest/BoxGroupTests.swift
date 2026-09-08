@@ -7,7 +7,7 @@ enum BoxGroupTests: TestSuite {
 
     static let tests: [(String, () throws -> Void)] = [
         ("las capturas repetidas se apilan", testDuplicatesStack),
-        ("el variocolor va aparte", testShinyIsItsOwnGroup),
+        ("el shiny va aparte", testShinyIsItsOwnGroup),
         ("orden pokédex", testDexOrder),
         ("agrupa por especie capturada", testGroupsByCapturedSpecies),
         ("la caja no cambia con el histórico global", testBoxIgnoresGlobalHistory),

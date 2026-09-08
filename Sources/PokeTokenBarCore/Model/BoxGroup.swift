@@ -22,7 +22,7 @@ public struct BoxGroup: Identifiable, Hashable, Sendable {
     public let latestCapturedAt: Date
 
     public var id: String { "\(species.id)-\(stage.rawValue)-\(isShiny)" }
-    /// Con qué paleta se dibuja: un variocolor puede mostrarse en normal.
+    /// Con qué paleta se dibuja: un shiny puede mostrarse en normal.
     public var displaysShiny: Bool { representative.displaysShiny }
     public var hasEvolved: Bool { displayForm.id != species.id }
 
