@@ -17,6 +17,10 @@ public final class GameStore: ObservableObject {
     /// consulta: no se persiste.
     @Published public var selectedBoxGroupID: String?
     @Published public var selectedGymID: String?
+    /// Pokédex completa abierta, con su propio recorte de búsqueda.
+    @Published public var showingPokedex = false
+    @Published public var pokedexFilter = PokedexFilter()
+    @Published public var selectedDexSpeciesID: Int?
     @Published public var inspectingRival = false
 
     public let pokedex: Pokedex
@@ -37,6 +41,14 @@ public final class GameStore: ObservableObject {
     }
 
     private var groupCache: (key: GroupCacheKey, groups: [BoxGroup])?
+
+    private struct DexCacheKey: Equatable {
+        let captures: Int
+        let defeats: Int
+        let stage: Int
+    }
+
+    private var dexCache: (key: DexCacheKey, entries: [PokedexEntry])?
 
     public init(
         pokedex: Pokedex = .shared,
@@ -196,6 +208,27 @@ public final class GameStore: ObservableObject {
         boxFilter.apply(to: boxGroups)
     }
 
+    /// Los 251 huecos, con su estado. Memoizada por el mismo motivo que la
+    /// caja: la UI la pide en cada render.
+    public var pokedexEntries: [PokedexEntry] {
+        let key = DexCacheKey(captures: state.box.count, defeats: state.familyDefeats.count, stage: stage.rawValue)
+        if let cached = dexCache, cached.key == key { return cached.entries }
+        let entries = PokedexEntry.build(
+            pokedex: pokedex,
+            boxGroups: boxGroups,
+            familyDefeats: state.familyDefeats
+        )
+        dexCache = (key, entries)
+        return entries
+    }
+
+    public var filteredPokedexEntries: [PokedexEntry] {
+        pokedexFilter.apply(to: pokedexEntries)
+    }
+
+    public var pokedexCaptured: Int { pokedexEntries.filter(\.isCaptured).count }
+    public var pokedexSeen: Int { pokedexEntries.filter { $0.state != .unknown }.count }
+
     /// Tipos presentes en la caja, para no ofrecer filtros que no dan nada.
     public var typesInBox: [String] {
         Array(Set(boxGroups.flatMap(\.species.types))).sorted()
@@ -236,6 +269,7 @@ public final class GameStore: ObservableObject {
         guard let index = state.box.firstIndex(where: { $0.id == capturedID }), state.box[index].isShiny else { return }
         state.box[index].prefersShiny.toggle()
         groupCache = nil
+        dexCache = nil
         persist()
     }
 
@@ -247,6 +281,9 @@ public final class GameStore: ObservableObject {
     /// el consumo que ya se contabilizó podría volver a entrar como daño.
     public func resetGame() {
         selectedGymID = nil
+        selectedDexSpeciesID = nil
+        showingPokedex = false
+        pokedexFilter.reset()
         let settings = state.settings
         let processed = state.processedEventIDs
 
@@ -254,6 +291,7 @@ public final class GameStore: ObservableObject {
         state.settings = settings
         state.processedEventIDs = processed
         groupCache = nil
+        dexCache = nil
         lastCapture = nil
         lastMedal = nil
         selectedBoxGroupID = nil
