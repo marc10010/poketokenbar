@@ -21,6 +21,12 @@ public struct Pokemon: Codable, Hashable, Identifiable, Sendable {
 
     public var isBaseForm: Bool { stage == 0 }
     public var displayTypes: String { types.map(\.capitalized).joined(separator: " / ") }
+
+    /// Rango de entrenador que hace falta para que aparezca en libertad.
+    public var requiredRankLabel: String {
+        let rank = rarity.requiredRank
+        return rank == .novato ? "desde el principio" : "\(rank.label) (\(rank.requiredMedals) medallas)"
+    }
 }
 
 public struct PokedexFile: Codable, Sendable {

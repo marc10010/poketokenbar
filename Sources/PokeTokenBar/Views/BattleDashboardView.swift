@@ -43,8 +43,16 @@ struct BattleDashboardView: View {
             DisclosureGroup(isExpanded: $showBox) {
                 PCBoxView()
             } label: {
-                Label("Caja PC · \(store.speciesCaught)/251", systemImage: "archivebox")
-                    .font(.caption.weight(.semibold))
+                HStack(spacing: 6) {
+                    Label("Caja PC · \(store.speciesCaught)/251", systemImage: "archivebox")
+                        .font(.caption.weight(.semibold))
+                    Button("Ver Pokédex") {
+                        store.showingPokedex = true
+                        store.selectedDexSpeciesID = nil
+                    }
+                    .buttonStyle(.link)
+                    .font(.caption)
+                }
             }
 
             DisclosureGroup(isExpanded: $showMetrics) {

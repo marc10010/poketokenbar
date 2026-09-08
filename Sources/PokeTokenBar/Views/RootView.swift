@@ -9,10 +9,12 @@ struct RootView: View {
         // 1000 pt y no cabría en la pantalla de un portátil.
         ScrollView(.vertical) {
             VStack(spacing: 0) {
-                if store.state.hasStarter {
-                    BattleDashboardView()
-                } else {
+                if !store.state.hasStarter {
                     StarterPickerView()
+                } else if store.showingPokedex {
+                    PokedexView()
+                } else {
+                    BattleDashboardView()
                 }
             }
             .padding(.trailing, Layout.scrollGutter)

@@ -102,6 +102,17 @@ enum UISmokeTest {
         }
         print("  clic derecho: \(clickCases.count) casos comprobados")
 
+        // La Pokédex completa y la ficha de algo que no tienes.
+        store.showingPokedex = true
+        ok = layout("pokédex (\(store.pokedexCaptured)/251)") && ok
+        store.selectedDexSpeciesID = 150
+        ok = layout("ficha de un Mewtwo sin ver") && ok
+        store.selectedDexSpeciesID = nil
+        store.pokedexFilter.onlyMissing = true
+        ok = layout("pokédex solo los que faltan") && ok
+        store.pokedexFilter.reset()
+        store.showingPokedex = false
+
         // Ficha de un gimnasio, que es lo que abre un clic en su medalla.
         store.selectedGymID = store.gymCatalog.all.first?.id
         ok = layout("ficha de gimnasio") && ok
