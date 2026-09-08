@@ -79,6 +79,32 @@ struct RarityBadge: View {
     }
 }
 
+/// Multiplicador de tipos del combate actual. Neutro no se pinta: si no cambia
+/// nada, no merece espacio.
+struct MatchupBadge: View {
+    let matchup: TypeMatchup
+    var compact = false
+
+    private var tint: Color {
+        if matchup.isImmune { return .red }
+        if matchup.raw > 1 { return .green }
+        if matchup.raw < 1 { return .orange }
+        return .secondary
+    }
+
+    var body: some View {
+        if !matchup.isNeutral {
+            Text(compact ? matchup.badge : "\(matchup.badge) \(matchup.label)")
+                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(tint.opacity(0.18), in: Capsule())
+                .foregroundStyle(tint)
+                .help(matchup.attacking.map { "Atacando con \($0.capitalized): \(matchup.label)" } ?? matchup.label)
+        }
+    }
+}
+
 struct TypeChips: View {
     let types: [String]
 

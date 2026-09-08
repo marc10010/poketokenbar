@@ -106,6 +106,28 @@ al mismo sitio, aunque la cadena tenga cinco salidas.
 
 - Variocolor (shiny): 1 % en cualquier aparición, y se conserva al capturar.
 - Un tier bloqueado no "reintenta": su peso se reparte entre los disponibles.
+### Efectividad por tipos
+
+El daño se multiplica por el cruce de tipos entre tu compañero y el rival:
+agua contra fuego ×2, fuego contra agua ×0,5, roca contra fuego/volador ×4.
+
+- El compañero **ataca con su mejor tipo**: Bulbasaur (planta/veneno) contra
+  agua usa planta (×2), no veneno (×1).
+- Los tipos del defensor **multiplican** entre sí, así que el rango real va de
+  ×0,25 a ×4.
+- Una **inmunidad** (Normal contra Fantasma) no atasca el combate: cae al suelo
+  de ×0,25 en vez de a 0, para que ningún token quede sin efecto.
+- El **ledger sigue contando tokens reales**; lo que escala es el HP que
+  quitas. Son dos magnitudes distintas: 1.000 tokens con ×2 son 1.000 tokens
+  gastados y 2.000 HP de daño.
+- Al capturar en cadena, los tokens que sobran se re-escalan con el
+  multiplicador del **rival nuevo**, que puede ser otro tipo.
+- Se puede apagar desde el popover (vuelve a 1 token = 1 HP).
+
+La tabla se genera de PokeAPI (`tools/generate_typechart.mjs`) e incluye Hada:
+la Pokédex embebida trae los tipos actuales, así que Clefairy, Togepi o Marill
+son Hada aunque en Gen 1 y 2 no existiera ese tipo.
+
 - Los tiers salen de los datos de PokeAPI (legendario/mítico, `capture_rate` y
   mejor BST de la familia), no de una lista a mano. La regla está en
   `tools/generate_pokedex.mjs`.
@@ -260,7 +282,7 @@ tail -5 ~/Library/Application\ Support/PokeTokenBar/diagnostics.log
 ## 9. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 52 tests, ~13k comprobaciones
+swift run PokeTokenBarSelfTest     # 60 tests, ~19k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 
@@ -269,7 +291,9 @@ XCTest y swift-testing necesitan Xcode completo; así la suite corre con solo la
 Command Line Tools. Cubre gates de tier, ratios de aparición (200k muestras),
 rangos de HP, tasa de shiny, arrastre de daño, capturas en cadena, umbrales y
 ramas de evolución, idempotencia del ingest, persistencia entre reinicios,
-cuarentena de estado corrupto, el apilado de la caja PC (que es lo que impide
+cuarentena de estado corrupto, la tabla de tipos (incluido que ningún tipo del
+dex se quede sin fila y que el multiplicador esté acotado en los 18×18×18
+cruces), el apilado de la caja PC (que es lo que impide
 que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
 
 `--ui-smoke-test` monta el árbol de SwiftUI en las tres pantallas (selector de
@@ -307,7 +331,6 @@ node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
   se muestran de uno en uno.
 - La caja PC no permite liberar ni renombrar todavía (`nickname` ya está en el
   modelo).
-- Sin tipos ni efectividad en combate: el daño es plano, 1 token = 1 HP.
 - Los sprites son propiedad de Nintendo/Game Freak: **no van en el repo**, se
   bajan de PokeAPI en tiempo de ejecución. El código es MIT (ver `LICENSE`),
   los sprites no.

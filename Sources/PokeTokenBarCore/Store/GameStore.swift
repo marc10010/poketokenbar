@@ -10,6 +10,7 @@ public final class GameStore: ObservableObject {
     @Published public private(set) var lastCapture: CapturedPokemon?
 
     public let pokedex: Pokedex
+    public let typeChart: TypeChart
     private let file: StateFileStore
     private let battle: BattleEngine
     private let evolution: EvolutionService
@@ -25,10 +26,12 @@ public final class GameStore: ObservableObject {
 
     public init(
         pokedex: Pokedex = .shared,
+        typeChart: TypeChart = .shared,
         file: StateFileStore = StateFileStore(),
         rng: any RandomProvider = SystemRandomProvider()
     ) {
         self.pokedex = pokedex
+        self.typeChart = typeChart
         self.file = file
         self.rng = rng
         self.battle = BattleEngine(pokedex: pokedex)
@@ -52,6 +55,15 @@ public final class GameStore: ObservableObject {
     public var activeNextForm: Pokemon? {
         guard let companion = state.activeCompanion else { return nil }
         return evolution.nextForm(of: companion, totalTokens: totalTokens)
+    }
+
+    /// Cruce de tipos del compañero activo contra el rival actual.
+    public var currentMatchup: TypeMatchup {
+        guard state.settings.typeEffectivenessEnabled,
+              let attacker = activeForm,
+              let defender = rivalSpecies
+        else { return .neutral }
+        return typeChart.matchup(attacker: attacker.types, defender: defender.types)
     }
 
     public var rivalSpecies: Pokemon? {
@@ -136,10 +148,23 @@ public final class GameStore: ObservableObject {
             return nil
         }
 
+        // Se resuelve por rival dentro del motor: un evento grande puede
+        // encadenar capturas y cambiar el cruce de tipos a mitad.
+        let attackerTypes = activeForm?.types ?? []
+        let typesEnabled = state.settings.typeEffectivenessEnabled
+        let chart = typeChart
+        let pokedex = pokedex
+
         let result = battle.apply(
             damage: damage,
             to: state.encounter,
             totalTokensAfter: state.ledger.total,
+            multiplier: { encounter in
+                guard typesEnabled, !attackerTypes.isEmpty,
+                      let defender = pokedex[encounter.speciesID]
+                else { return 1 }
+                return chart.matchup(attacker: attackerTypes, defender: defender.types).multiplier
+            },
             using: &rng,
             now: event.timestamp
         )
@@ -172,6 +197,11 @@ public final class GameStore: ObservableObject {
                 NSLog("PokeTokenBar: no se pudo guardar el estado: \(error)")
             }
         }
+    }
+
+    /// Fija el rival. Solo para tests: en el juego lo sortea `SpawnService`.
+    public func debugSetEncounter(_ encounter: WildEncounter) {
+        state.encounter = encounter
     }
 
     public func flush() {
