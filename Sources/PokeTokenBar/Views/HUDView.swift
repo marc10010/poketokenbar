@@ -14,6 +14,10 @@ struct HUDView: View {
                 starterPicker
             } else if let celebration = store.lastMedal {
                 medalPanel(celebration)
+            } else if let active = store.activeMilestone {
+                bossPanel(border: .purple) {
+                    MilestoneCardView(milestone: active.milestone, battle: active.battle, compact: true)
+                }
             } else if let active = store.activeGym {
                 gymPanel(gym: active.gym, battle: active.battle)
             } else {
@@ -239,6 +243,39 @@ struct HUDView: View {
         }
         .buttonStyle(.plain)
         .help(expanded ? "Plegar" : "Desplegar la caja PC")
+    }
+
+    /// Marco de jefe, con el borde del color que lo distinga del combate normal.
+    private func bossPanel<Content: View>(
+        border: Color,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        GeometryReader { geometry in
+            VStack(alignment: .leading, spacing: 5) {
+                content()
+                if Self.showsMetrics(forHeight: geometry.size.height) {
+                    Divider()
+                    metricsStrip
+                }
+                if Self.showsBox(forHeight: geometry.size.height) {
+                    Divider()
+                    boxSection
+                }
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 7)
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(.regularMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(border.opacity(0.6), lineWidth: 1.5)
+                    )
+            )
+            .contextMenu { hudMenu }
+        }
+        .padding(4)
     }
 
     /// Marco propio para la medalla: borde dorado, para que se distinga de un

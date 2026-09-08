@@ -314,7 +314,37 @@ que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-## 10. Zonas de caza
+## 10. Hitos legendarios
+
+Los 11 legendarios **no aparecen en el sorteo**: tienen sitio y requisito, y se
+retan cuando quieras desde la sección *Legendarios*. Su 2 % de aparición se
+reparte entre los tiers que sí salen, así que el sorteo sigue sumando 1.
+
+El sitio de cada hito **es una zona del catálogo de zonas**, así que su requisito
+base es "esa zona está abierta" y no hay reglas de desbloqueo duplicadas. Encima
+puede pedir medallas extra (Ho-Oh, 10) o Pokédex (Mew, 200 especies).
+
+| Legendario | Sitio | Requisito |
+|---|---|---|
+| Raikou, Entei, Suicune | Torre Quemada | 8 medallas (su zona) |
+| Ho-Oh · Lugia | Torre Campana · Islas Remolino | 10 medallas |
+| Zapdos · Articuno · Moltres | Central Eléctrica · Islas Espuma · Calle Victoria | Kanto |
+| Celebi | Bosque Encinar | 16 medallas |
+| Mewtwo | Cueva Celeste | vencer a Red |
+| Mew | Isla Faraway | 200 especies en la Pokédex |
+
+Tres diferencias con un gimnasio:
+
+- **al vencerlo sí se captura**, que es la excepción a "un jefe no se queda":
+  el objetivo del juego es la Pokédex;
+- **se puede abandonar**: pierdes el progreso de ese legendario pero recuperas
+  tus salvajes. Un hito que te secuestra la partida hasta ganarlo sería una
+  trampa, no un reto;
+- **todos absorben 1,0 o más**, así que un cruce neutro no lo tumba nunca por
+  muchos tokens que gastes: hace falta ventaja de tipo o una etapa más. Hay un
+  test que lo fija para los once.
+
+## 11. Zonas de caza
 
 Una especie solo puede aparecer si alguna de sus **zonas** está abierta, y las
 zonas se abren con medallas y con la región. Con 4 medallas se abren las rutas
@@ -348,7 +378,7 @@ así que ninguna se vuelve incompletable por un hueco del reparto y un legendari
 no se abarata a raro. Y ningún tier se queda nunca sin candidatas: si el filtro
 vaciara uno, se usa el pool completo antes que dejar el combate sin rival.
 
-## 11. Pokédex completa
+## 12. Pokédex completa
 
 *Ver Pokédex* (en la sección de la caja) abre los **251 huecos**, no solo lo que
 tienes. Tres estados, y el del medio existe porque las líneas repetidas ya no se
@@ -370,14 +400,14 @@ rareza, **con qué rango aparece**, su línea evolutiva, cuántas veces le has
 ganado, y por qué todavía no lo tienes (le faltan medallas, o es una forma
 evolucionada que no aparece en libertad).
 
-## 12. Reiniciar partida
+## 13. Reiniciar partida
 
 *Reiniciar partida…* en el pie del popover borra caja, medallas, estadísticas e
 histórico de tokens. Se conservan dos cosas a propósito: los **ajustes**, que
 son preferencias y no progreso, y los **ids de eventos ya procesados**, porque
 si se borraran el consumo ya contabilizado podría volver a entrar como daño.
 
-## 13. Gimnasios y medallas
+## 14. Gimnasios y medallas
 
 `Resources/gyms.json` es el único dato **curado a mano** del proyecto: PokeAPI
 no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
@@ -419,7 +449,7 @@ siguiente— cuánto falta para que se abra.
 
 Diseño completo y decisiones: `docs/spec-gimnasios-medallas.md`.
 
-## 14. Regenerar el icono
+## 15. Regenerar el icono
 
 `assets/AppIcon.icns` está commiteado, pero se genera:
 
@@ -430,7 +460,7 @@ Diseño completo y decisiones: `docs/spec-gimnasios-medallas.md`.
 Dibuja una barra de HP pixelada con AppKit y la empaqueta con `iconutil`. No
 usa ningún recurso con dueño: es geometría, así que el repo puede llevarlo.
 
-## 15. Regenerar los datos
+## 16. Regenerar los datos
 
 ```bash
 node tools/generate_pokedex.mjs     # ~580 peticiones a PokeAPI, ~30 s
@@ -441,7 +471,7 @@ node tools/generate_zones.mjs       # 251 peticiones de encuentros, ~40 s
 `gyms.json` no se genera: es el único dato curado a mano, porque PokeAPI no
 tiene líderes de gimnasio.
 
-## 16. Límites conocidos del MVP
+## 17. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Las **fichas usan los

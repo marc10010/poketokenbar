@@ -26,6 +26,10 @@ public enum Rarity: String, Codable, CaseIterable, Sendable {
         }
     }
 
+    /// Si aparece en libertad. Los legendarios no: son hitos con sitio y
+    /// requisito, y dejarlos también en el sorteo los abarataría.
+    public var spawnsInTheWild: Bool { self != .legendary }
+
     /// Rango de entrenador que abre el tier: las medallas son el requisito,
     /// no el tiempo.
     public var requiredRank: TrainerRank {

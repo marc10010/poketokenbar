@@ -139,8 +139,9 @@ final class StatusItemController {
 
         let playerImage = playerForm.flatMap { sprites.image(speciesID: $0.id, shiny: playerShiny) }
         let gym = store.activeGym
-        let rivalSpeciesID = gym?.gym.signatureSpeciesID ?? encounter?.speciesID
-        let rivalShiny = gym == nil ? (encounter?.isShiny ?? false) : false
+        let boss = store.activeMilestone
+        let rivalSpeciesID = boss?.milestone.speciesID ?? gym?.gym.signatureSpeciesID ?? encounter?.speciesID
+        let rivalShiny = (boss == nil && gym == nil) ? (encounter?.isShiny ?? false) : false
         let rivalImage = rivalSpeciesID.flatMap { sprites.image(speciesID: $0, shiny: rivalShiny) }
         button.image = Self.composite(player: playerImage, rival: rivalImage)
 
@@ -154,6 +155,9 @@ final class StatusItemController {
            let speciesID = store.state.lastCaptureSpeciesID,
            let species = store.pokedex[speciesID] {
             button.title = " ¡\(species.localizedName) capturado!"
+        } else if let boss {
+            let blocked = store.isBlocked(against: boss.milestone)
+            button.title = " \(blocked ? "⚠︎ " : "✦ ")\(Fmt.compact(boss.battle.currentHP))/\(Fmt.compact(boss.battle.maxHP))"
         } else if let gym {
             let blocked = store.isBlocked(against: gym.gym)
             button.title = " \(blocked ? "⚠︎ " : "")\(Fmt.compact(gym.battle.currentHP))/\(Fmt.compact(gym.battle.maxHP))"
@@ -168,7 +172,11 @@ final class StatusItemController {
     private func tooltip() -> String {
         var lines: [String] = []
         if let form = store.activeForm { lines.append("Compañero: \(form.localizedName) (\(store.stage.label))") }
-        if let active = store.activeGym {
+        if let boss = store.activeMilestone {
+            let name = store.pokedex[boss.milestone.speciesID]?.localizedName ?? "Legendario"
+            lines.append("Hito: \(name) en \(boss.milestone.place)")
+            lines.append("\(Fmt.tokens(boss.battle.currentHP))/\(Fmt.tokens(boss.battle.maxHP)) HP · \(store.isBlocked(against: boss.milestone) ? "bloqueado: hace falta ventaja de tipo" : "\(Fmt.rate(store.damagePerToken(against: boss.milestone))) HP por token")")
+        } else if let active = store.activeGym {
             lines.append("Gimnasio: \(active.gym.leader) (\(active.gym.medal))")
             lines.append("\(Fmt.tokens(active.battle.currentHP))/\(Fmt.tokens(active.battle.maxHP)) HP · \(store.isBlocked(against: active.gym) ? "bloqueado: cambia de compañero" : "\(Fmt.rate(store.gymDamagePerToken(for: active.gym))) HP por token")")
         } else if let encounter = store.state.encounter, let rival = store.pokedex[encounter.speciesID] {
