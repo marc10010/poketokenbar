@@ -14,13 +14,23 @@ struct AnimatedSpriteView: View {
     /// cuadrícula.
     var scalable = true
 
-    private var displaySize: CGFloat { scalable ? size * sprites.scale : size }
+    private var displaySize: CGFloat { scalable ? size * sprites.detailScale : size }
 
     var body: some View {
         Group {
             if let image = sprites.image(speciesID: speciesID, shiny: shiny, animated: true) {
+                // Se dibuja a su tamaño nativo y se escala con `scaleEffect`,
+                // que es una transformación de capa y por tanto respeta el
+                // filtro de magnificación. Si se dejara escalar a NSImageView,
+                // el suavizado lo haría el dibujado y "pixel nítido" no
+                // tendría ningún efecto.
+                let native = max(image.size.width, image.size.height, 1)
                 GIFView(image: image, scaling: sprites.scaling)
-                    .scaleEffect(x: flipped ? -1 : 1, y: 1)
+                    .frame(width: image.size.width, height: image.size.height)
+                    .scaleEffect(
+                        x: (flipped ? -1 : 1) * displaySize / native,
+                        y: displaySize / native
+                    )
             } else {
                 // Mientras baja el animado, el estático ya cacheado.
                 SpriteView(speciesID: speciesID, shiny: shiny, size: displaySize, flipped: flipped)
@@ -56,7 +66,8 @@ private struct GIFView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> NSImageView {
         let view = NSImageView()
-        view.imageScaling = .scaleProportionallyUpOrDown
+        // A tamaño nativo: el escalado lo hace la capa, no el dibujado.
+        view.imageScaling = .scaleNone
         view.animates = true
         view.wantsLayer = true
         view.layer?.magnificationFilter = scaling.magnificationFilter

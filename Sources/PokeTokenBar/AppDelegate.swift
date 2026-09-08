@@ -19,12 +19,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         sources.start()
         sprites.scaling = store.state.settings.spriteScaling
         sprites.scale = store.state.settings.spriteScale
+        sprites.detailScale = store.state.settings.detailSpriteScale
         scalingObserver = store.$state
-            .map { ($0.settings.spriteScaling, $0.settings.spriteScale) }
+            .map { ($0.settings.spriteScaling, $0.settings.spriteScale, $0.settings.detailSpriteScale) }
             .removeDuplicates { $0 == $1 }
-            .sink { [weak self] scaling, scale in
+            .sink { [weak self] scaling, scale, detail in
                 self?.sprites.scaling = scaling
                 self?.sprites.scale = scale
+                self?.sprites.detailScale = detail
             }
         prefetchSprites()
     }

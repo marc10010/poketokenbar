@@ -121,30 +121,73 @@ enum UISmokeTest {
             print("  sprite animado: sin red o sin caché, no se puede comprobar")
         }
 
-        // Los ajustes de sprite: el multiplicador tiene que llegar al tamaño
-        // real de la ficha, y quedar acotado.
-        store.updateSettings { $0.spriteScale = 2 }
-        sprites.scale = store.state.settings.spriteScale
+        // Los dos multiplicadores: la ficha se mueve con el suyo y NO con el
+        // de las miniaturas, que es justo lo que se pidió separar.
         if let group = store.boxGroups.first {
-            store.selectedBoxGroupID = group.id
-            let big = NSHostingView(rootView: PokemonDetailView(group: group)
-                .environmentObject(store)
-                .environmentObject(sprites))
-            big.layoutSubtreeIfNeeded()
-            let bigHeight = big.fittingSize.height
-            store.updateSettings { $0.spriteScale = 0.75 }
-            sprites.scale = store.state.settings.spriteScale
-            let small = NSHostingView(rootView: PokemonDetailView(group: group)
-                .environmentObject(store)
-                .environmentObject(sprites))
-            small.layoutSubtreeIfNeeded()
-            let smallHeight = small.fittingSize.height
-            print("  tamaño de sprite: ×2 → \(Int(bigHeight)) pt de ficha · ×0,75 → \(Int(smallHeight)) pt")
-            ok = bigHeight > smallHeight && ok
-            store.selectedBoxGroupID = nil
+            func fichaHeight(detail: Double, thumbs: Double) -> CGFloat {
+                store.updateSettings {
+                    $0.detailSpriteScale = detail
+                    $0.spriteScale = thumbs
+                }
+                sprites.detailScale = detail
+                sprites.scale = thumbs
+                let view = NSHostingView(rootView: PokemonDetailView(group: group)
+                    .environmentObject(store)
+                    .environmentObject(sprites))
+                view.layoutSubtreeIfNeeded()
+                return view.fittingSize.height
+            }
+
+            let small = fichaHeight(detail: 0.75, thumbs: 1)
+            let big = fichaHeight(detail: 2, thumbs: 1)
+            let thumbsOnly = fichaHeight(detail: 0.75, thumbs: 2)
+            print("  ficha: ×0,75 → \(Int(small)) pt · ×2 → \(Int(big)) pt · miniaturas ×2 → \(Int(thumbsOnly)) pt")
+            ok = big > small && ok
+            ok = (abs(thumbsOnly - small) < 1) && ok
+
+            store.updateSettings { $0.detailSpriteScale = 1; $0.spriteScale = 1 }
+            sprites.detailScale = 1
+            sprites.scale = 1
         }
-        store.updateSettings { $0.spriteScale = 1 }
-        sprites.scale = 1
+
+        // Que "pixel nítido" llegue de verdad al GIF: el filtro es de capa, y
+        // si NSImageView escalara al dibujar no tendría ningún efecto.
+        if let group = store.boxGroups.first {
+            store.updateSettings { $0.spriteScaling = .pixel }
+            sprites.scaling = .pixel
+
+            // Sin el GIF cacheado, la vista cae al sprite estático y aquí no
+            // habría NSImageView que comprobar.
+            _ = sprites.image(speciesID: group.displayForm.id, shiny: group.displaysShiny, animated: true)
+            for _ in 0..<40 where sprites.frameCount(
+                speciesID: group.displayForm.id,
+                shiny: group.displaysShiny,
+                animated: true
+            ) == nil {
+                RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            }
+            let view = NSHostingView(rootView: PokemonDetailView(group: group)
+                .environmentObject(store)
+                .environmentObject(sprites))
+            view.frame = NSRect(x: 0, y: 0, width: 340, height: 700)
+            view.layoutSubtreeIfNeeded()
+            view.displayIfNeeded()
+
+            func imageViews(in root: NSView) -> [NSImageView] {
+                (root as? NSImageView).map { [$0] } ?? root.subviews.flatMap(imageViews)
+            }
+            let found = imageViews(in: view)
+            if let gif = found.first(where: { $0.image?.representations.count ?? 0 > 0 }) {
+                let nearest = gif.layer?.magnificationFilter == .nearest
+                let nativeDraw = gif.imageScaling == .scaleNone
+                print("  pixel nítido en la ficha: filtro=\(nearest) sinEscalarAlDibujar=\(nativeDraw)")
+                ok = nearest && nativeDraw && ok
+            } else {
+                print("  pixel nítido: sin sprite cargado, no se puede comprobar")
+            }
+            store.updateSettings { $0.spriteScaling = .medio }
+            sprites.scaling = .medio
+        }
 
         // Celebración de medalla: gana un gimnasio de verdad y mírala.
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)

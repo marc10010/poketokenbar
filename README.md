@@ -407,12 +407,17 @@ tiene líderes de gimnasio.
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Las **fichas usan los
   GIF animados de Gen 5**, con dos ajustes en el pie del popover: el filtro de
   escalado (pixel nítido / intermedio / suavizado — entre el pixel duro y el
-  suavizado hay grados y cuál gusta es cuestión de ojo) y un multiplicador de
-  tamaño de ×0,75 a ×2 que vale para **todos** los sprites: fichas, HUD y
-  rejillas, que reflowean solas. El panel plegado del HUD crece con él, o los
-  sprites grandes no cabrían en sus 268×104. Queda fuera la barra de menú, cuya
-  altura es la que es. El multiplicador se acota también al cargar, por si
-  alguien edita el `state.json` a mano. (~80 KB cada uno, frente a ~2 KB del PNG), así que la
+  suavizado hay grados y cuál gusta es cuestión de ojo) y **dos**
+  multiplicadores de tamaño (×0,75 a ×2) porque una miniatura y el sprite
+  protagonista de una ficha no quieren el mismo tamaño: *Miniaturas* mueve HUD,
+  caja, Pokédex y medallas, que reflowean solas, y *Ficha* mueve solo el sprite
+  grande del detalle. El panel plegado del HUD crece con el de
+  miniaturas, o los sprites grandes no cabrían en sus 268×104. Queda fuera la barra de menú, cuya
+  altura es la que es. Los dos se acotan también al cargar, por si alguien
+  edita el `state.json` a mano.
+- Los GIF de las fichas se dibujan a **tamaño nativo** y se escalan por
+  transformación de capa: si los escalara `NSImageView` al dibujar, el suavizado
+  lo haría el dibujado y «pixel nítido» no tendría ningún efecto. (~80 KB cada uno, frente a ~2 KB del PNG), así que la
   caché crece con el uso; las rejillas siguen con el estático porque animar 251
   celdas a la vez no compensa. Si una especie no tuviera animado, cae al
   estático sola. Sin red, la app

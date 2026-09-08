@@ -19,8 +19,10 @@ public final class SpriteStore: ObservableObject {
     /// Cómo se escala el pixel art. Lo pone el juego desde sus ajustes; vive
     /// aquí para que cualquier vista de sprite lo tenga sin acarrear el store.
     @Published var scaling: SpriteScaling = .medio
-    /// Multiplicador de tamaño para los sprites protagonistas.
+    /// Multiplicador de las miniaturas.
     @Published var scale: Double = 1
+    /// Multiplicador de la ficha.
+    @Published var detailScale: Double = 1
 
     private let cacheDirectory: URL
     private let session: URLSession

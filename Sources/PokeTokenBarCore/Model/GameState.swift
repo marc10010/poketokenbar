@@ -205,10 +205,12 @@ public struct GameSettings: Codable, Hashable, Sendable {
     /// Multiplicador de daño por tipos (agua > fuego y compañía).
     public var typeEffectivenessEnabled: Bool = true
     public var spriteScaling: SpriteScaling = .medio
-    /// Multiplicador del tamaño de los sprites en las fichas, donde el sprite
-    /// es el protagonista. Las rejillas no lo usan: ahí el tamaño lo manda la
-    /// cuadrícula.
+    /// Multiplicador de las miniaturas: HUD, rejillas de la caja, de la
+    /// Pokédex y de medallas.
     public var spriteScale: Double = 1
+    /// Multiplicador de la ficha, donde el sprite es el protagonista y se
+    /// quiere más grande que en una rejilla.
+    public var detailSpriteScale: Double = 1
 
     public init() {}
 
@@ -230,6 +232,8 @@ public struct GameSettings: Codable, Hashable, Sendable {
         spriteScaling = try container.decodeIfPresent(SpriteScaling.self, forKey: .spriteScaling) ?? .medio
         let scale = try container.decodeIfPresent(Double.self, forKey: .spriteScale) ?? 1
         spriteScale = min(max(scale, GameRules.minimumSpriteScale), GameRules.maximumSpriteScale)
+        let detail = try container.decodeIfPresent(Double.self, forKey: .detailSpriteScale) ?? 1
+        detailSpriteScale = min(max(detail, GameRules.minimumSpriteScale), GameRules.maximumSpriteScale)
     }
 }
 
