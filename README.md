@@ -309,7 +309,14 @@ que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-## 10. Gimnasios y medallas
+## 10. Reiniciar partida
+
+*Reiniciar partida…* en el pie del popover borra caja, medallas, estadísticas e
+histórico de tokens. Se conservan dos cosas a propósito: los **ajustes**, que
+son preferencias y no progreso, y los **ids de eventos ya procesados**, porque
+si se borraran el consumo ya contabilizado podría volver a entrar como daño.
+
+## 11. Gimnasios y medallas
 
 `Resources/gyms.json` es el único dato **curado a mano** del proyecto: PokeAPI
 no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
@@ -341,9 +348,13 @@ Si el cruce no basta, el HUD dice con qué Pokémon de tu caja sí entra y lo
 equipa en un clic; los tokens se gastan igual (cuentan para el ledger y para la
 evolución del compañero), simplemente no mueven la barra.
 
+La rejilla de 16 medallas es navegable: cada una abre la ficha de su gimnasio
+con el líder, su ciudad, el HP, la absorción, tu multiplicador y —si es el
+siguiente— cuánto falta para que se abra.
+
 Diseño completo y decisiones: `docs/spec-gimnasios-medallas.md`.
 
-## 11. Regenerar el icono
+## 12. Regenerar el icono
 
 `assets/AppIcon.icns` está commiteado, pero se genera:
 
@@ -360,7 +371,7 @@ usa ningún recurso con dueño: es geometría, así que el repo puede llevarlo.
 node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
 ```
 
-## 13. Límites conocidos del MVP
+## 14. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Sin red, la app
@@ -371,7 +382,11 @@ node tools/generate_pokedex.mjs   # ~580 peticiones a PokeAPI, ~30 s
   aunque tengas un Wartortle, pero al vencerlo no se queda: cuenta como
   victoria (`familyDefeats`) y nada más. La excepción es el variocolor, que sí
   entra aunque tengas la línea en normal, porque es otra cosa a la vista.
-- **Ficha grande al hacer clic**, en la caja y en el rival: sprite a tamaño,
+- **Clic izquierdo envía a luchar, clic derecho abre la ficha.** SwiftUI no
+  distingue botones del ratón (solo ofrece `contextMenu`, que abre un menú), así
+  que el clic derecho se captura en AppKit y el detector es invisible al
+  izquierdo para no robárselo al botón de debajo.
+- **Ficha grande**, en la caja, en el rival y en cada gimnasio: sprite a tamaño,
   tipos, etapa, progreso hacia la siguiente forma y sus números (combates
   ganados, gimnasios, veces vencido en libertad, cuándo se capturó). Desde ahí
   se envía a luchar, y un variocolor puede alternar a su paleta normal.

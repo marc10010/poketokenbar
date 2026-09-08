@@ -21,7 +21,11 @@ struct BattleDashboardView: View {
             Divider()
 
             DisclosureGroup(isExpanded: $showMedals) {
-                MedalsView()
+                if let selected = store.selectedGymID, let gym = store.gymCatalog[selected] {
+                    GymDetailView(gym: gym)
+                } else {
+                    MedalsView()
+                }
             } label: {
                 Label("Medallas · \(store.medals)/16", systemImage: "rosette")
                     .font(.caption.weight(.semibold))

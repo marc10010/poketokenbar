@@ -74,6 +74,53 @@ enum UISmokeTest {
         print("  HUD flotante: \(Int(hudSize.width))x\(Int(hudSize.height))")
         ok = hudSize.width > 0 && hudSize.height > 0 && ok
 
+        // El clic derecho: qué eventos intercepta el detector. Si esto se
+        // equivoca, o el clic izquierdo deja de equipar o el derecho no abre.
+        let clickCases: [(String, NSEvent.EventType, NSEvent.ModifierFlags, Bool)] = [
+            ("clic derecho", .rightMouseDown, [], true),
+            ("clic izquierdo", .leftMouseDown, [], false),
+            ("ctrl+clic izquierdo", .leftMouseDown, .control, true),
+            ("movimiento", .mouseMoved, [], false),
+        ]
+        for (name, type, flags, expected) in clickCases {
+            let event = NSEvent.mouseEvent(
+                with: type,
+                location: .zero,
+                modifierFlags: flags,
+                timestamp: 0,
+                windowNumber: 0,
+                context: nil,
+                eventNumber: 0,
+                clickCount: 1,
+                pressure: 1
+            )
+            let intercepts = RightClickCatcher.CatcherView.shouldIntercept(event)
+            if intercepts != expected {
+                print("  ✗ \(name): intercepta=\(intercepts), se esperaba \(expected)")
+                ok = false
+            }
+        }
+        print("  clic derecho: \(clickCases.count) casos comprobados")
+
+        // Ficha de un gimnasio, que es lo que abre un clic en su medalla.
+        store.selectedGymID = store.gymCatalog.all.first?.id
+        ok = layout("ficha de gimnasio") && ok
+        store.selectedGymID = nil
+
+        // Reinicio: deja el juego como recién instalado y conserva ajustes.
+        let settingsBefore = store.state.settings
+        store.resetGame()
+        if store.state.box.isEmpty, store.totalTokens == 0, store.medals == 0,
+           store.state.settings == settingsBefore {
+            print("  reinicio: caja vacía, 0 tokens, ajustes intactos")
+        } else {
+            print("  ✗ el reinicio no dejó el estado limpio")
+            ok = false
+        }
+        ok = layout("tras reiniciar (selector de inicial)") && ok
+        store.chooseStarter(speciesID: 155)
+        store.ingest(UsageEvent(id: "post-reset", inputTokens: 5_000, outputTokens: 0))
+
         // Ficha de un Pokémon de la caja, que es lo que abre un clic.
         if let group = store.boxGroups.first {
             store.selectedBoxGroupID = group.id
