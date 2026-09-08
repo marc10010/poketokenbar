@@ -4,9 +4,11 @@ import Foundation
 /// especie dentro del tier, luego HP y shiny.
 public struct SpawnService {
     private let pokedex: Pokedex
+    private let zones: ZoneCatalog
 
-    public init(pokedex: Pokedex = .shared) {
+    public init(pokedex: Pokedex = .shared, zones: ZoneCatalog = .shared) {
         self.pokedex = pokedex
+        self.zones = zones
     }
 
     /// Tiers disponibles según el rango. Acumular tokens no desbloquea nada:
@@ -29,9 +31,41 @@ public struct SpawnService {
         return tiers[tiers.count - 1]
     }
 
-    public func spawn<R: RandomProvider>(rank: TrainerRank, using rng: inout R, now: Date = Date()) -> WildEncounter {
+    /// Tier en el que se ofrece una especie sin zona: el más difícil entre
+    /// "raro" y el suyo. `sortIndex` es menor cuanto más raro, así que el más
+    /// difícil es el de índice más bajo.
+    public func fallbackTier(for species: Pokemon) -> Rarity {
+        species.rarity.sortIndex <= Rarity.rare.sortIndex ? species.rarity : .rare
+    }
+
+    /// Candidatas de un tier con las zonas abiertas de por medio.
+    ///
+    /// Una especie sin zona (sin encuentro salvaje en Gen 1/2) entra en el tier
+    /// más difícil entre "raro" y el suyo: así ninguna se vuelve incompletable
+    /// por un hueco del reparto, pero un legendario no se abarata a raro.
+    public func candidates(rarity: Rarity, access: ZoneAccess) -> [Pokemon] {
+        let tierPool = pokedex.spawnCandidates(rarity: rarity)
+        var available = tierPool.filter { zones.isAvailable($0.id, access) }
+
+        for id in zones.unassigned {
+            guard let species = pokedex[id], species.isBaseForm else { continue }
+            guard fallbackTier(for: species) == rarity else { continue }
+            if !available.contains(where: { $0.id == id }) { available.append(species) }
+        }
+
+        // Nunca dejar un tier sin candidatas: el combate no puede quedarse sin
+        // rival por un hueco de datos.
+        return available.isEmpty ? tierPool : available.sorted { $0.id < $1.id }
+    }
+
+    public func spawn<R: RandomProvider>(
+        rank: TrainerRank,
+        access: ZoneAccess = ZoneAccess(medals: 0, kantoOpen: false, isChampion: false),
+        using rng: inout R,
+        now: Date = Date()
+    ) -> WildEncounter {
         let tier = rollTier(rank: rank, using: &rng)
-        let pool = pokedex.spawnCandidates(rarity: tier)
+        let pool = candidates(rarity: tier, access: access)
         let species = pool[rng.nextInt(in: 0...(pool.count - 1))]
         let hp = rng.nextInt(in: tier.hpRange)
         let shiny = rng.nextUnit() < GameRules.shinyProbability

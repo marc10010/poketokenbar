@@ -5,6 +5,7 @@ struct BattleDashboardView: View {
     @EnvironmentObject private var store: GameStore
     @State private var showBox = false
     @State private var showMedals = true
+    @State private var showZones = false
     @State private var showMetrics = true
 
     var body: some View {
@@ -58,6 +59,13 @@ struct BattleDashboardView: View {
                     .buttonStyle(.link)
                     .font(.caption)
                 }
+            }
+
+            DisclosureGroup(isExpanded: $showZones) {
+                ZonesView()
+            } label: {
+                Label("Zonas · \(store.unlockedZones.count)/\(store.zoneCatalog.all.count)", systemImage: "map")
+                    .font(.caption.weight(.semibold))
             }
 
             DisclosureGroup(isExpanded: $showMetrics) {

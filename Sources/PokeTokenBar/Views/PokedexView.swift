@@ -175,6 +175,7 @@ struct PokedexView: View {
             VStack(alignment: .leading, spacing: 3) {
                 row("Veces vencido", Fmt.tokens(entry.defeats))
                 row("Aparece con rango", entry.species.requiredRankLabel)
+                zonesRow(entry)
                 if entry.species.stage > 0, let base = store.pokedex[entry.species.baseFormID] {
                     row("Evoluciona de", base.localizedName)
                 }
@@ -190,12 +191,45 @@ struct PokedexView: View {
         }
     }
 
+    /// Dónde vive y si esa zona está abierta: es la respuesta a "¿por qué no
+    /// me sale?" que antes no estaba en ninguna parte.
+    @ViewBuilder
+    private func zonesRow(_ entry: PokedexEntry) -> some View {
+        let zonas = store.zones(for: entry.species.id)
+        if zonas.isEmpty {
+            row("Dónde aparece", "sin ruta conocida")
+        } else {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Dónde aparece")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ForEach(zonas, id: \.zone.id) { entrada in
+                    HStack(spacing: 4) {
+                        Image(systemName: entrada.open ? "lock.open" : "lock")
+                            .font(.system(size: 9))
+                            .foregroundStyle(entrada.open ? .green : .secondary)
+                        Text(entrada.zone.name)
+                            .font(.system(size: 10))
+                        if !entrada.open {
+                            Text("· \(entrada.zone.unlock.label(kantoOpen: store.zoneAccess.kantoOpen))")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private func hint(_ entry: PokedexEntry) -> String {
         if entry.species.stage > 0 {
             return "Las formas evolucionadas no aparecen en libertad: consigue su forma base y hazla evolucionar llevándola equipada."
         }
         if store.rank < entry.species.rarity.requiredRank {
             return "Todavía no puede aparecer: hacen falta \(entry.species.rarity.requiredRank.requiredMedals) medallas."
+        }
+        if !store.isAvailableInTheWild(entry.species.id) {
+            return "Sus zonas están cerradas: no puede aparecer hasta que abras alguna."
         }
         return entry.defeats > 0
             ? "Le has ganado \(entry.defeats) veces pero no se quedó. Vuelve a aparecer."

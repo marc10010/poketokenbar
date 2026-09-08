@@ -27,8 +27,13 @@ public struct BattleEngine {
         self.spawner = spawner ?? SpawnService(pokedex: pokedex)
     }
 
-    public func freshEncounter<R: RandomProvider>(rank: TrainerRank, using rng: inout R, now: Date = Date()) -> WildEncounter {
-        spawner.spawn(rank: rank, using: &rng, now: now)
+    public func freshEncounter<R: RandomProvider>(
+        rank: TrainerRank,
+        access: ZoneAccess = ZoneAccess(medals: 0, kantoOpen: false, isChampion: false),
+        using rng: inout R,
+        now: Date = Date()
+    ) -> WildEncounter {
+        spawner.spawn(rank: rank, access: access, using: &rng, now: now)
     }
 
     /// - Parameters:
@@ -47,13 +52,14 @@ public struct BattleEngine {
         to encounter: WildEncounter?,
         totalTokensAfter: Int,
         rank: TrainerRank = .campeon,
+        access: ZoneAccess = ZoneAccess(medals: 16, kantoOpen: true, isChampion: true),
         multiplier: (WildEncounter) -> Double = { _ in 1 },
         openGymAfterCapture: (Int) -> Bool = { _ in false },
         using rng: inout R,
         now: Date = Date()
     ) -> BattleResult {
         var result = BattleResult()
-        var current = encounter ?? freshEncounter(rank: rank, using: &rng, now: now)
+        var current = encounter ?? freshEncounter(rank: rank, access: access, using: &rng, now: now)
         var remainingTokens = max(0, damage)
 
         while remainingTokens > 0 {
@@ -85,7 +91,7 @@ public struct BattleEngine {
                 result.encounter = nil
                 return result
             }
-            current = freshEncounter(rank: rank, using: &rng, now: now)
+            current = freshEncounter(rank: rank, access: access, using: &rng, now: now)
         }
 
         result.encounter = current

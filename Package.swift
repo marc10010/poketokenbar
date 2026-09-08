@@ -13,7 +13,8 @@ let package = Package(
         .target(
             name: "PokeTokenBarCore",
             resources: [.process("Resources/pokedex.json"), .process("Resources/typechart.json"),
-                .process("Resources/gyms.json")]
+                .process("Resources/gyms.json"),
+                .process("Resources/zones.json")]
         ),
         .executableTarget(
             name: "PokeTokenBar",

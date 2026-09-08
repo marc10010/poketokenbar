@@ -214,6 +214,17 @@ enum UISmokeTest {
             ok = false
         }
 
+        // Las zonas: la lista y la ficha de algo cuya zona está cerrada.
+        print("  zonas abiertas: \(store.unlockedZones.count)/\(store.zoneCatalog.all.count) · \(store.zoneCatalog.availableSpecies(store.zoneAccess).count) especies disponibles")
+        ok = layout("lista de zonas") && ok
+        store.showingPokedex = true
+        // Zapdos (#145) vive en la Central Eléctrica, que pide Kanto abierta.
+        store.selectedDexSpeciesID = 145
+        ok = layout("ficha con zona cerrada") && ok
+        ok = !store.isAvailableInTheWild(145) && ok
+        store.selectedDexSpeciesID = nil
+        store.showingPokedex = false
+
         // La Pokédex completa y la ficha de algo que no tienes.
         store.showingPokedex = true
         ok = layout("pokédex (\(store.pokedexCaptured)/251)") && ok

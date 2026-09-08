@@ -26,6 +26,7 @@ public final class GameStore: ObservableObject {
     public let pokedex: Pokedex
     public let typeChart: TypeChart
     public let gymCatalog: GymCatalog
+    public let zoneCatalog: ZoneCatalog
     private let file: StateFileStore
     private let battle: BattleEngine
     private let evolution: EvolutionService
@@ -55,12 +56,14 @@ public final class GameStore: ObservableObject {
         pokedex: Pokedex = .shared,
         typeChart: TypeChart = .shared,
         gymCatalog: GymCatalog = .shared,
+        zoneCatalog: ZoneCatalog = .shared,
         file: StateFileStore = StateFileStore(),
         rng: any RandomProvider = SystemRandomProvider()
     ) {
         self.pokedex = pokedex
         self.typeChart = typeChart
         self.gymCatalog = gymCatalog
+        self.zoneCatalog = zoneCatalog
         self.file = file
         self.rng = rng
         self.battle = BattleEngine(pokedex: pokedex)
@@ -98,6 +101,24 @@ public final class GameStore: ObservableObject {
     // MARK: - Gimnasios
 
     public var medals: Int { state.gyms.medals }
+
+    /// Qué zonas están abiertas. `kantoOpen` y `isChampion` se derivan de las
+    /// medallas **provisionalmente**: cuando exista la Liga (fase 3 de la spec)
+    /// pasarán a depender de haberla ganado, que es lo que dice el diseño.
+    public var zoneAccess: ZoneAccess {
+        ZoneAccess(medals: medals, kantoOpen: medals >= 8, isChampion: medals >= 16)
+    }
+
+    public var unlockedZones: [Zone] { zoneCatalog.unlocked(zoneAccess) }
+
+    /// Zonas donde vive una especie, con su estado de apertura.
+    public func zones(for speciesID: Int) -> [(zone: Zone, open: Bool)] {
+        zoneCatalog.zones(for: speciesID).map { ($0, zoneAccess.opens($0)) }
+    }
+
+    public func isAvailableInTheWild(_ speciesID: Int) -> Bool {
+        zoneCatalog.isAvailable(speciesID, zoneAccess) || zoneCatalog.unassigned.contains(speciesID)
+    }
     public var rank: TrainerRank { state.gyms.rank }
 
     /// Gimnasio abierto ahora mismo, si lo hay.
@@ -313,7 +334,7 @@ public final class GameStore: ObservableObject {
         // Con gimnasio abierto no hay salvaje: el líder ocupa ese hueco.
         guard state.gyms.current == nil else { return nil }
         if state.encounter == nil || state.encounter?.isFainted == true {
-            state.encounter = battle.freshEncounter(rank: rank, using: &rng)
+            state.encounter = battle.freshEncounter(rank: rank, access: zoneAccess, using: &rng)
         }
         return state.encounter
     }
@@ -362,6 +383,7 @@ public final class GameStore: ObservableObject {
             to: state.encounter,
             totalTokensAfter: state.ledger.total,
             rank: rank,
+            access: zoneAccess,
             multiplier: { encounter in
                 guard typesEnabled, !attackerTypes.isEmpty,
                       let defender = pokedex[encounter.speciesID]
