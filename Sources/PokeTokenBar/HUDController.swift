@@ -15,6 +15,7 @@ import SwiftUI
 final class HUDController {
     private static let battleSize = NSSize(width: 208, height: 76)
     private static let pickerSize = NSSize(width: 268, height: 92)
+    private static let maxSize = NSSize(width: 520, height: 620)
     private static let margin: CGFloat = 12
 
     private let store: GameStore
@@ -44,6 +45,12 @@ final class HUDController {
             .publisher(for: NSWindow.didMoveNotification)
             .compactMap { $0.object as? NSPanel }
             .sink { [weak self] panel in self?.panelDidMove(panel) }
+            .store(in: &cancellables)
+
+        NotificationCenter.default
+            .publisher(for: NSWindow.didResizeNotification)
+            .compactMap { $0.object as? NSPanel }
+            .sink { [weak self] panel in self?.panelDidResize(panel) }
             .store(in: &cancellables)
 
         sync()
@@ -100,10 +107,22 @@ final class HUDController {
         store.updateSettings { $0.hudFreeOrigin = HUDOrigin(x: origin.x, y: origin.y) }
     }
 
+    /// Guarda el tamaño tras redimensionar, para que el despliegue persista.
+    private func panelDidResize(_ panel: NSPanel) {
+        guard !isRepositioning, panels.contains(panel), store.state.hasStarter else { return }
+        let size = panel.frame.size
+        let compact = abs(size.width - Self.battleSize.width) < 2 && abs(size.height - Self.battleSize.height) < 2
+        store.updateSettings {
+            $0.hudSize = compact ? nil : HUDSize(width: size.width, height: size.height)
+        }
+    }
+
     private func makePanel() -> NSPanel {
         let panel = NSPanel(
             contentRect: NSRect(origin: .zero, size: Self.pickerSize),
-            styleMask: [.borderless, .nonactivatingPanel],
+            // .resizable en una ventana sin marco: los bordes arrastran aunque
+            // no se dibuje ningún tirador.
+            styleMask: [.borderless, .nonactivatingPanel, .resizable],
             backing: .buffered,
             defer: false
         )
@@ -115,6 +134,8 @@ final class HUDController {
         panel.hidesOnDeactivate = false
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
+        panel.contentMinSize = Self.battleSize
+        panel.contentMaxSize = Self.maxSize
         panel.contentView = NSHostingView(
             rootView: HUDView()
                 .environmentObject(store)
@@ -124,7 +145,12 @@ final class HUDController {
     }
 
     private func size(_ state: GameState) -> NSSize {
-        interactive(state) ? Self.pickerSize : Self.battleSize
+        guard !interactive(state) else { return Self.pickerSize }
+        guard let stored = state.settings.hudSize else { return Self.battleSize }
+        return NSSize(
+            width: min(max(stored.width, Self.battleSize.width), Self.maxSize.width),
+            height: min(max(stored.height, Self.battleSize.height), Self.maxSize.height)
+        )
     }
 
     /// Una posición si está arrastrado a mano; una por pantalla si está anclado.

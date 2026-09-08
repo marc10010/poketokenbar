@@ -130,6 +130,13 @@ Colocación:
   sola ventana. Si desconectas ese monitor, vuelve al anclaje por esquina en
   vez de quedarse en el limbo.
 
+Tamaño:
+- compacto (208×76): solo el combate;
+- arrastrando cualquier borde crece, y al pasar de 168 px de alto aparece
+  dentro la **caja PC** (rejilla adaptativa: más ancho = más columnas). El botón
+  de la esquina despliega/pliega a 320×340 sin buscar el borde, que en una
+  ventana sin marco no se ve. Acotado a 520×620 y persistido.
+
 Estados de ratón:
 - desbloqueado (por defecto): se arrastra y su **menú contextual** (clic
   derecho) permite cambiar de compañero, recolocarlo, bloquearlo, ocultarlo o

@@ -7,6 +7,20 @@ import SwiftUI
 /// Sirve de humo en CI, donde no hay nadie para abrir el popover.
 @MainActor
 enum UISmokeTest {
+    /// Un tamaño absurdo debe quedar acotado por `contentMaxSize`, no crecer
+    /// hasta tapar la pantalla.
+    private static func expectCompact(
+        _ ok: inout Bool,
+        store: GameStore,
+        panelsProvider: () -> [NSPanel]
+    ) {
+        store.updateSettings { $0.hudSize = HUDSize(width: 9_000, height: 9_000) }
+        let clamped = panelsProvider().first?.frame.size ?? .zero
+        let bounded = clamped.width <= 520 && clamped.height <= 620
+        print("  tamaño absurdo acotado a \(Int(clamped.width))x\(Int(clamped.height)) ok=\(bounded)")
+        ok = bounded && ok
+    }
+
     static func run() -> Int32 {
         let directory = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("poketokenbar-ui-smoke/\(UUID().uuidString)")
@@ -95,8 +109,22 @@ enum UISmokeTest {
         print("  origen imposible: \(panels.count) panel(es) recuperado=\(recovered)")
         ok = recovered && ok
 
+        // Desplegado: el panel crece y a esa altura toca mostrar la caja PC.
         store.updateSettings {
             $0.hudFreeOrigin = nil
+            $0.hudLocked = false
+            $0.hudSize = HUDSize(width: 320, height: 340)
+        }
+        panels = NSApp.windows.compactMap { $0 as? NSPanel }.filter { $0.isVisible }
+        let expanded = panels.first?.frame.size ?? .zero
+        let resizable = panels.allSatisfy { $0.styleMask.contains(.resizable) }
+        let showsBox = HUDView.showsBox(forHeight: expanded.height)
+        print("  desplegado: \(Int(expanded.width))x\(Int(expanded.height)) redimensionable=\(resizable) cajaPC=\(showsBox)")
+        ok = expanded == NSSize(width: 320, height: 340) && resizable && showsBox && ok
+        expectCompact(&ok, store: store, panelsProvider: { NSApp.windows.compactMap { $0 as? NSPanel }.filter { $0.isVisible } })
+
+        store.updateSettings {
+            $0.hudSize = nil
             $0.hudLocked = false
         }
         hudController = nil

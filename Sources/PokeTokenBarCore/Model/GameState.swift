@@ -112,6 +112,17 @@ public struct HUDOrigin: Codable, Hashable, Sendable {
     }
 }
 
+/// Tamaño del HUD cuando el usuario lo ha redimensionado a mano.
+public struct HUDSize: Codable, Hashable, Sendable {
+    public var width: Double
+    public var height: Double
+
+    public init(width: Double, height: Double) {
+        self.width = width
+        self.height = height
+    }
+}
+
 public struct GameSettings: Codable, Hashable, Sendable {
     public var countCacheTokens: Bool = false
     public var watchClaudeCodeTranscripts: Bool = true
@@ -124,6 +135,8 @@ public struct GameSettings: Codable, Hashable, Sendable {
     public var hudLocked: Bool = false
     /// `nil` = anclado a `hudCorner` y replicado en todas las pantallas.
     public var hudFreeOrigin: HUDOrigin?
+    /// `nil` = tamaño compacto (solo el combate).
+    public var hudSize: HUDSize?
 
     public init() {}
 
@@ -140,6 +153,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
         hudOpacity = try container.decodeIfPresent(Double.self, forKey: .hudOpacity) ?? 0.9
         hudLocked = try container.decodeIfPresent(Bool.self, forKey: .hudLocked) ?? false
         hudFreeOrigin = try container.decodeIfPresent(HUDOrigin.self, forKey: .hudFreeOrigin)
+        hudSize = try container.decodeIfPresent(HUDSize.self, forKey: .hudSize)
     }
 }
 

@@ -16,7 +16,6 @@ struct HUDView: View {
                 starterPicker
             }
         }
-        .frame(maxWidth: .infinity, alignment: horizontalAlignment)
     }
 
     private var starterPicker: some View {
@@ -55,51 +54,100 @@ struct HUDView: View {
         .padding(4)
     }
 
+    /// Altura a partir de la cual el HUD deja sitio para la caja PC.
+    static let boxThreshold: CGFloat = 168
+
+    static func showsBox(forHeight height: CGFloat) -> Bool { height >= boxThreshold }
+
     @ViewBuilder
     private var battle: some View {
         if let encounter = store.state.encounter,
            let rival = store.pokedex[encounter.speciesID],
            let companion = store.state.activeCompanion,
            let form = store.activeForm {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    SpriteView(speciesID: form.id, shiny: companion.isShiny, size: 30)
-                    Text("vs")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.secondary)
-                    SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 30, flipped: true)
-                    VStack(alignment: .leading, spacing: 1) {
-                        HStack(spacing: 3) {
-                            Text(rival.localizedName)
-                                .font(.system(size: 10, weight: .semibold))
-                                .lineLimit(1)
-                            if encounter.isShiny {
-                                Text("✦").font(.system(size: 8)).foregroundStyle(.yellow)
-                            }
+            GeometryReader { geometry in
+                let showsBox = Self.showsBox(forHeight: geometry.size.height)
+                VStack(alignment: .leading, spacing: 5) {
+                    battleHeader(encounter: encounter, rival: rival, companion: companion, form: form, expanded: showsBox)
+                    if showsBox {
+                        Divider()
+                        if store.state.box.isEmpty {
+                            Text("Caja vacía todavía.")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        } else {
+                            BoxGridView(cellSize: 36)
                         }
-                        Text(encounter.rarity.badge)
-                            .font(.system(size: 8))
-                            .foregroundStyle(.secondary)
                     }
                 }
-                HPBar(fraction: encounter.hpFraction, height: 5)
-                Text("\(Fmt.compact(encounter.currentHP)) / \(Fmt.compact(encounter.maxHP))")
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 7)
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(.regularMaterial)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(Color.secondary.opacity(0.25), lineWidth: 1)
+                        )
+                )
+                .contextMenu { hudMenu }
             }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 7)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.regularMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(Color.secondary.opacity(0.25), lineWidth: 1)
-                    )
-            )
             .padding(4)
-            .contextMenu { hudMenu }
         }
+    }
+
+    private func battleHeader(
+        encounter: WildEncounter,
+        rival: Pokemon,
+        companion: CapturedPokemon,
+        form: Pokemon,
+        expanded: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                SpriteView(speciesID: form.id, shiny: companion.isShiny, size: 30)
+                Text("vs")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.secondary)
+                SpriteView(speciesID: rival.id, shiny: encounter.isShiny, size: 30, flipped: true)
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 3) {
+                        Text(rival.localizedName)
+                            .font(.system(size: 10, weight: .semibold))
+                            .lineLimit(1)
+                        if encounter.isShiny {
+                            Text("✦").font(.system(size: 8)).foregroundStyle(.yellow)
+                        }
+                    }
+                    Text(encounter.rarity.badge)
+                        .font(.system(size: 8))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 2)
+                resizeButton(expanded: expanded)
+            }
+            HPBar(fraction: encounter.hpFraction, height: 5)
+            Text("\(Fmt.compact(encounter.currentHP)) / \(Fmt.compact(encounter.maxHP))")
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Además de arrastrar los bordes, un botón para plegar y desplegar: el
+    /// borde de una ventana sin marco no se ve, y nadie lo encuentra solo.
+    private func resizeButton(expanded: Bool) -> some View {
+        Button {
+            store.updateSettings { settings in
+                settings.hudSize = expanded ? nil : HUDSize(width: 320, height: 340)
+            }
+        } label: {
+            Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .help(expanded ? "Plegar" : "Desplegar la caja PC")
     }
 
     /// Menú contextual del HUD: cambiar compañero y colocación sin pasar por
@@ -142,10 +190,4 @@ struct HUDView: View {
         Button("Salir de PokeTokenBar") { NSApplication.shared.terminate(nil) }
     }
 
-    private var horizontalAlignment: Alignment {
-        switch store.state.settings.hudCorner {
-        case .topRight, .bottomRight: return .trailing
-        case .topLeft, .bottomLeft: return .leading
-        }
-    }
 }
