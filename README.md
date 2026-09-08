@@ -404,7 +404,11 @@ tiene líderes de gimnasio.
 ## 15. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
-  vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Sin red, la app
+  vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Las **fichas usan los
+  GIF animados de Gen 5** (~80 KB cada uno, frente a ~2 KB del PNG), así que la
+  caché crece con el uso; las rejillas siguen con el estático porque animar 251
+  celdas a la vez no compensa. Si una especie no tuviera animado, cae al
+  estático sola. Sin red, la app
   funciona y muestra el número de Pokédex como placeholder.
 - No hay notificaciones del sistema en las capturas (evita pedir permisos): la
   barra muestra "¡X capturado!" durante 6 segundos.

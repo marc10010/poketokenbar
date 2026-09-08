@@ -26,7 +26,7 @@ struct GymDetailView: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
-            SpriteView(speciesID: gym.signatureSpeciesID, shiny: false, size: 84, flipped: true)
+            AnimatedSpriteView(speciesID: gym.signatureSpeciesID, shiny: false, size: 116, flipped: true)
                 .opacity(won || isNext ? 1 : 0.45)
                 .grayscale(won || isNext ? 0 : 0.8)
             VStack(alignment: .leading, spacing: 3) {

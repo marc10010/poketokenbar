@@ -150,7 +150,7 @@ struct PokedexView: View {
     private func unseenDetail(_ entry: PokedexEntry) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 12) {
-                SpriteView(speciesID: entry.species.id, shiny: false, size: 84)
+                AnimatedSpriteView(speciesID: entry.species.id, shiny: false, size: 116)
                     .opacity(opacity(entry.state))
                     .grayscale(1)
                 VStack(alignment: .leading, spacing: 3) {

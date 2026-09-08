@@ -24,7 +24,7 @@ struct PokemonDetailView: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
-            SpriteView(speciesID: group.displayForm.id, shiny: group.displaysShiny, size: 96)
+            AnimatedSpriteView(speciesID: group.displayForm.id, shiny: group.displaysShiny, size: 132)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 5) {
                     Text(group.displayForm.localizedName)
@@ -135,7 +135,7 @@ struct RivalDetailView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 12) {
-                SpriteView(speciesID: species.id, shiny: encounter.isShiny, size: 96, flipped: true)
+                AnimatedSpriteView(speciesID: species.id, shiny: encounter.isShiny, size: 132, flipped: true)
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 5) {
                         Text(species.localizedName).font(.title3.weight(.semibold))

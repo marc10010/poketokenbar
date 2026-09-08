@@ -27,10 +27,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// arranque con placeholders.
     private func prefetchSprites() {
         if let form = store.activeForm {
-            _ = sprites.image(speciesID: form.id, shiny: store.state.activeCompanion?.isShiny ?? false)
+            let shiny = store.state.activeCompanion?.displaysShiny ?? false
+            _ = sprites.image(speciesID: form.id, shiny: shiny)
+            // También el animado: su ficha se abre con un clic derecho y así no
+            // aparece primero el estático y salta.
+            _ = sprites.image(speciesID: form.id, shiny: shiny, animated: true)
         }
         if let encounter = store.state.encounter {
             _ = sprites.image(speciesID: encounter.speciesID, shiny: encounter.isShiny)
+            _ = sprites.image(speciesID: encounter.speciesID, shiny: encounter.isShiny, animated: true)
         }
         for starter in store.pokedex.starters {
             _ = sprites.image(speciesID: starter.id, shiny: false)

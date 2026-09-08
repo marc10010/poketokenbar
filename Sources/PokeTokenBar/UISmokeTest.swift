@@ -102,6 +102,25 @@ enum UISmokeTest {
         }
         print("  clic derecho: \(clickCases.count) casos comprobados")
 
+        // Los sprites animados: que la URL exista no prueba que animen, así
+        // que se comprueban los fotogramas de lo que se ha cargado.
+        _ = sprites.image(speciesID: 7, shiny: false, animated: true)
+        var frames: Int?
+        for _ in 0..<40 {
+            frames = sprites.frameCount(speciesID: 7, shiny: false, animated: true)
+            if frames != nil { break }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+        }
+        switch frames {
+        case .some(let count) where count > 1:
+            print("  sprite animado: \(count) fotogramas")
+        case .some(let count):
+            print("  ✗ el sprite animado trae \(count) fotograma(s): no animaría")
+            ok = false
+        case nil:
+            print("  sprite animado: sin red o sin caché, no se puede comprobar")
+        }
+
         // Celebración de medalla: gana un gimnasio de verdad y mírala.
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
