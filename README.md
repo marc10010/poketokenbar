@@ -192,7 +192,9 @@ Estados de ratón:
   derecho) lleva a la caja PC para cambiar de compañero, cierra la caja, y
   permite recolocarlo, bloquearlo, ocultarlo o salir — sin depender del ítem de
   la barra de menú. El menú **no enumera Pokémon**: listaba los 8 últimos, y con
-  la caja llena eso ni cabe ni se busca;
+  la caja llena eso ni cabe ni se busca. "Ocultar el HUD" dice de dónde vuelve
+  (Ajustes), porque el menú vive en el propio HUD y su única vuelta está en otra
+  pantalla;
 - bloqueado: click-through, se ve pero no recibe clics.
 
 Mientras no haya compañero elegido el HUD muestra el selector de inicial y

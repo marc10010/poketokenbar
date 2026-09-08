@@ -403,7 +403,9 @@ struct HUDView: View {
         Button(store.state.settings.hudLocked ? "Desbloquear (poder moverlo)" : "Bloquear en su sitio") {
             store.updateSettings { $0.hudLocked.toggle() }
         }
-        Button("Ocultar el HUD") {
+        // Con el nombre del sitio del que vuelve: este menú vive en el HUD, así
+        // que ocultarlo deja la única forma de recuperarlo en otra pantalla.
+        Button("Ocultar el HUD (vuelve desde Ajustes)") {
             store.updateSettings { $0.hudEnabled = false }
         }
         Divider()
