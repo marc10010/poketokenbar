@@ -38,7 +38,7 @@ struct BoxGridView: View {
             VStack(spacing: 0) {
                 SpriteView(speciesID: group.displayForm.id, shiny: group.isShiny, size: cellSize)
                 Text(group.displayForm.localizedName)
-                    .font(.system(size: 8))
+                    .font(.system(size: 10))
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
