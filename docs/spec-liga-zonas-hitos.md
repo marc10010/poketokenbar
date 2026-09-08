@@ -13,6 +13,9 @@ Los gimnasios dieron hitos y un gate real, pero dejaron tres agujeros:
 3. **No hay agencia sobre qué cazas.** El sorteo es puro RNG dentro del tier, así
    que si te falta un tipo Lucha para Whitney no puedes hacer nada: solo esperar.
    Y desde que completar la Pokédex es la meta, eso es el hueco más grande.
+4. **La dificultad es una pendiente sin escalones.** Los 16 gimnasios suben la
+   absorción de 0,25 a 1,5 de forma continua y nada marca que hayas cambiado de
+   liga. No hay "he terminado una región".
 
 ## 2. La pieza que ya existe
 
@@ -35,30 +38,101 @@ ScriptedEncounter
 —los gimnasios se abren solos, la Liga y los hitos se **eligen**— y la
 recompensa.
 
-## 3. Las tres mecánicas
+## 3. Estructura por regiones
 
-### A. Liga Pokémon (el final)
+En vez de una escalera plana de 16 gimnasios y una liga al final, el contenido
+se parte en **dos regiones con puerta entre ellas**, al estilo de PokéClicker:
+terminas una y la siguiente se abre, más dura.
 
-Alto Mando (4) + Campeón, en cadena y **sin salvajes entre medias**: es un
-gauntlet, no cinco gimnasios sueltos. Requisito: 16 medallas. Absorción por
-encima de la del último gimnasio (1,5), así que exige ×4 o etapa 2.
+Los 16 gimnasios que ya existen se dividen solos, porque ya están en ese orden:
+los ocho de Johto y luego los de Kanto.
 
-Lo que hay que resolver es la recompensa (D2): al llegar ahí ya no queda tier
-por desbloquear, así que "subir de rango" no significa nada.
+```
+Johto: 8 gimnasios ─▶ Alto Mando de Johto ─▶ Campeón Lance
+                                                  │
+                                        abre la región de Kanto
+                                                  ▼
+Kanto: 8 gimnasios ─▶ Monte Plateado: Red (el final de verdad)
+```
+
+**Esto es lo canónico de Gen 2** y además resuelve dos cosas: le da a la primera
+liga una recompensa que significa algo (abrir Kanto) y mete un clímax a mitad,
+donde hoy solo hay una pendiente.
+
+### La escalera de desbloqueo
+
+| Medallas | Qué se abre |
+|---|---|
+| 0 | Ruta 1 (sin sesgo) · gimnasios de Johto |
+| 1 | zona Bosque Verde |
+| 2 | **tier raro** en el sorteo · zona Monte Moon |
+| 4 | zona Ruinas Alfa |
+| 6 | zona Zona Safari |
+| 8 | **Alto Mando de Johto** · hitos de Johto (perros de la Torre Quemada) |
+| Liga de Johto ganada | **región de Kanto**: sus 8 gimnasios y sus zonas |
+| 10 | hitos de Johto: Torre Campana (Ho-Oh), Islas Remolino (Lugia) |
+| 12 | zona Central Eléctrica · hitos de Kanto (Zapdos, Articuno, Moltres) |
+| 16 | **Monte Plateado: Red** |
+| Red vencido | Cueva Celeste (Mewtwo) · título de Campeón |
+
+La progresión deja de ser "cuántos tokens llevas" y pasa a ser una lista de
+puertas, que es lo que hace que se note avanzar.
+
+### Cómo sube la dificultad entre regiones
+
+Ya sube dentro de la escalera de absorción actual (0,25 → 1,5). Lo que falta es
+el **escalón** al cambiar de región: los gimnasios de Kanto arrancan en la
+absorción donde terminó Johto, así que el primero de Kanto ya pide cruce eficaz
+donde el primero de Johto se ganaba con neutro. Eso ya lo cumple el catálogo
+actual; lo que añade esta spec es que **no puedas llegar a ellos** sin pasar por
+la liga.
+
+## 4. Las tres mecánicas
+
+### A. Las dos ligas
+
+Canónicamente en Gen 2 hay **un solo Alto Mando** (el Plateau Añil) pero **dos
+plantillas**: la de Gen 1 y la de Gen 2. Y tras los gimnasios de Kanto queda
+Red en Monte Plateado, que es el reto final de verdad. Así que dos hitos:
+
+**Alto Mando de Johto** (8 medallas): Will, Koga, Bruno, Karen y Campeón Lance,
+en cadena y **sin salvajes entre medias** — es un gauntlet, no cinco gimnasios
+sueltos. Cada miembro con su Pokémon estrella para el sprite:
+
+| Miembro | Estrella | Tipo |
+|---|---|---|
+| Will | Xatu (#178) | psíquico/volador |
+| Koga | Crobat (#169) | veneno/volador |
+| Bruno | Machamp (#68) | lucha |
+| Karen | Umbreon (#197) | siniestro |
+| Campeón Lance | Dragonite (#149) | dragón/volador |
+
+Detalle bonito y gratis: **Koga es líder de gimnasio en Kanto y Alto Mando en
+Johto**, así que aparece dos veces con sprites distintos (Weezing y Crobat).
+
+**Monte Plateado** (16 medallas): Red, con Pikachu (#25) como estrella. Es el
+final: absorción por encima de todo lo anterior, así que exige ×4 o etapa 2.
+
+## Recompensas
+
+- Liga de Johto → **abre la región de Kanto**. Esto contesta a D2: la primera
+  liga no necesita inventarse un premio, su premio es el contenido siguiente.
+- Red → **Cueva Celeste (Mewtwo)** y el título de Campeón.
 
 ### B. Zonas de caza (la más valiosa)
 
 No son combates: **cambian la distribución del sorteo**. Eliges dónde cazas y
 eso decide qué aparece.
 
-| Zona | Sesga hacia | Se abre con |
-|---|---|---|
-| Ruta 1 (por defecto) | sin sesgo, como hoy | siempre |
-| Bosque Verde | bicho, planta | 1 medalla |
-| Central Eléctrica | eléctrico, acero | 4 medallas |
-| Zona Safari | poco comunes y raros de varias líneas | 6 medallas |
-| Monte Moon | roca, tierra, veneno | 2 medallas |
-| Ruinas Alfa | psíquico | 8 medallas |
+| Región | Zona | Sesga hacia | Se abre con |
+|---|---|---|---|
+| — | Ruta 1 (por defecto) | sin sesgo, como hoy | siempre |
+| Johto | Bosque Verde | bicho, planta | 1 medalla |
+| Johto | Monte Moon | roca, tierra, veneno | 2 medallas |
+| Johto | Ruinas Alfa | psíquico | 4 medallas |
+| Johto | Zona Safari | poco comunes y raros variados | 6 medallas |
+| Kanto | Central Eléctrica | eléctrico, acero | Kanto abierta + 12 |
+| Kanto | Cueva Celeste | psíquico y raros de Kanto | Red vencido |
 
 Esto es lo que convierte "me falta un Lucha para Whitney" en una decisión en vez
 de en esperar. El sesgo se aplica **dentro** del tier que ya sortea
@@ -72,15 +146,15 @@ rápido y más dirigida. Es exactamente el punto.
 Los legendarios **salen del sorteo aleatorio** y pasan a ser encuentros con
 sitio y requisito:
 
-| Hito | Legendario | Requisito |
-|---|---|---|
-| Central Eléctrica | Zapdos | 4 medallas |
-| Islas Espuma | Articuno | 6 medallas |
-| Monte Ascuas | Moltres | 6 medallas |
-| Torre Quemada | Raikou, Entei, Suicune | 8 medallas |
-| Torre Campana | Ho-Oh | 12 medallas |
-| Islas Remolino | Lugia | 12 medallas |
-| Cueva Celeste | Mewtwo | Liga superada |
+| Región | Hito | Legendario | Requisito |
+|---|---|---|---|
+| Johto | Torre Quemada | Raikou, Entei, Suicune | 8 medallas |
+| Johto | Torre Campana | Ho-Oh | 10 medallas |
+| Johto | Islas Remolino | Lugia | 10 medallas |
+| Kanto | Central Eléctrica | Zapdos | Kanto abierta + 12 |
+| Kanto | Islas Espuma | Articuno | Kanto abierta + 12 |
+| Kanto | Monte Ascuas | Moltres | Kanto abierta + 12 |
+| Kanto | Cueva Celeste | Mewtwo | Red vencido |
 
 Se afrontan cuando tú quieras (una vez cumplido el requisito), con HP de
 legendario y absorción alta. Al vencerlos **sí se capturan**: son la única
@@ -106,11 +180,18 @@ pierde su cuarto nivel en el spawn (D5).
 de tipo. Tres ficheros repetirían el 80 % del esquema y la UI tendría que
 unirlos igual.
 
-**D2 — ¿Qué da ganar la Liga?** No queda tier por desbloquear. Opciones: título
-de Campeón (solo cosmético), **doblar la probabilidad de shiny** (1 % → 2 %),
-desbloquear Cueva Celeste (Mewtwo) —que es lo canónico—, o abrir revanchas de
-gimnasio con absorción subida. Propuesta: **Mewtwo + título**, y las revanchas
-como contenido posterior.
+**D2 — ¿Qué da ganar cada liga? RESUELTA por la estructura de regiones.** La de
+Johto **abre Kanto**, así que su premio es el contenido siguiente y no hay que
+inventar nada. Red da **Mewtwo y el título de Campeón**. Las revanchas de
+gimnasio con absorción subida quedan como contenido posterior si hiciera falta
+alargar el final.
+
+**D8 — ¿La puerta entre regiones bloquea de verdad?** Es el cambio con más
+consecuencias: hoy los 16 gimnasios se abren solos en orden, y con la puerta el
+noveno **no aparece** hasta ganar la Liga de Johto. Propuesta: **sí bloquea**,
+porque sin puerta la región es solo una etiqueta. Efecto secundario a aceptar: el
+gate de aparición de legendarios (8 medallas) se queda corto si los legendarios
+pasan a ser hitos, así que los dos sistemas hay que mirarlos juntos (ver D5).
 
 **D3 — ¿La zona se elige a mano o rota?** Propuesta: **a mano**, persistida, con
 una zona por defecto sin sesgo. Rotarla sola quitaría justo la agencia que se
@@ -141,5 +222,7 @@ pierde para siempre castiga por no mirar la app.
    entero con el arnés (distribuciones con RNG sembrado).
 2. **Hitos legendarios.** Generalizar el encuentro guionizado y sacar el tier
    legendario del sorteo.
-3. **Liga Pokémon.** El gauntlet y la recompensa, encima de la generalización de
-   la fase 2.
+3. **Regiones y ligas.** La puerta entre Johto y Kanto, el gauntlet del Alto
+   Mando y Red, encima de la generalización de la fase 2. La escalera de
+   desbloqueo pasa a ser una pantalla: sin ella, el jugador no ve la
+   progresión que esto añade.
