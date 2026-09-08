@@ -19,6 +19,7 @@ enum GameStoreTests: TestSuite {
         ("corrupt state file is quarantined not crashing", testCorruptStateFileIsQuarantinedNotCrashing),
         ("legacy settings decode with defaults", testLegacySettingsDecodeWithDefaults),
         ("species count ignores duplicates", testSpeciesCountIgnoresDuplicates),
+        ("el multiplicador de tipos escala el daño real", testTypeMultiplierScalesDamage),
     ]
 
     private static func temporaryStateURL() -> URL {
@@ -78,6 +79,8 @@ enum GameStoreTests: TestSuite {
     static func testDamageIsAppliedToTheRivalAndCaptureFillsTheBox() {
         let store = makeStore()
         store.chooseStarter(speciesID: 1)
+        // Sin multiplicador de tipos para que 1 token siga siendo 1 HP exacto.
+        store.updateSettings { $0.typeEffectivenessEnabled = false }
         let rivalHP = try! unwrap(store.state.encounter).maxHP
         store.ingest(event("kill", input: rivalHP, output: 0))
         expectEqual(store.state.box.count, 2, "inicial + capturado")
@@ -125,6 +128,7 @@ enum GameStoreTests: TestSuite {
     static func testSwitchingActiveCompanionOnlyAcceptsOwnedPokemon() {
         let store = makeStore()
         store.chooseStarter(speciesID: 1)
+        store.updateSettings { $0.typeEffectivenessEnabled = false }
         let rivalHP = try! unwrap(store.state.encounter).maxHP
         store.ingest(event("kill", input: rivalHP, output: 0))
         let captured = try! unwrap(store.state.box.last)
@@ -188,5 +192,33 @@ enum GameStoreTests: TestSuite {
         expectTrue(store.boxGroups.count <= store.state.box.count)
         expectEqual(store.boxGroups.reduce(0) { $0 + $1.count }, store.state.box.count, "no se pierde ninguna")
         expectTrue(store.speciesCaught <= 251)
+    }
+
+    /// El ledger cuenta tokens reales; el HP baja escalado por tipos. Son dos
+    /// magnitudes distintas y no deben confundirse.
+    static func testTypeMultiplierScalesDamage() throws {
+        // Squirtle (agua) contra un rival de fuego: x2.
+        let store = makeStore(seed: 77)
+        store.chooseStarter(speciesID: 7)
+        let fire = WildEncounter(speciesID: 4, isShiny: false, rarity: .common, maxHP: 40_000)
+        store.debugSetEncounter(fire)
+        expectEqual(store.currentMatchup.multiplier, 2, accuracy: 0.001)
+
+        store.ingest(event("x2", input: 1_000, output: 0))
+        expectEqual(store.totalTokens, 1_000, "el ledger cuenta tokens, no daño")
+        expectEqual(store.state.encounter?.currentHP, 38_000, "1.000 tokens x2 = 2.000 HP")
+
+        // Contra planta el agua es poco eficaz: x0,5.
+        let grass = WildEncounter(speciesID: 1, isShiny: false, rarity: .common, maxHP: 40_000)
+        store.debugSetEncounter(grass)
+        expectEqual(store.currentMatchup.multiplier, 0.5, accuracy: 0.001)
+        store.ingest(event("half", input: 1_000, output: 0))
+        expectEqual(store.state.encounter?.currentHP, 39_500, "1.000 tokens x0,5 = 500 HP")
+
+        // Con el interruptor apagado vuelve a ser 1 a 1.
+        store.updateSettings { $0.typeEffectivenessEnabled = false }
+        expectEqual(store.currentMatchup.multiplier, 1, accuracy: 0.001)
+        store.ingest(event("plain", input: 500, output: 0))
+        expectEqual(store.state.encounter?.currentHP, 39_000)
     }
 }

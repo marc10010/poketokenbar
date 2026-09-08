@@ -117,6 +117,7 @@ private struct EncounterCard: View {
                             }
                             RarityBadge(rarity: encounter.rarity)
                         }
+                        MatchupBadge(matchup: store.currentMatchup)
                         HPBar(fraction: encounter.hpFraction)
                         HStack {
                             Text("\(Fmt.tokens(encounter.currentHP)) / \(Fmt.tokens(encounter.maxHP)) HP")
@@ -148,6 +149,7 @@ private struct MetricsView: View {
         VStack(alignment: .leading, spacing: 6) {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
+            metric("Daño por token", store.currentMatchup.isNeutral ? "×1" : "\(store.currentMatchup.badge) \(store.currentMatchup.label)")
             metric("Eventos registrados", Fmt.tokens(store.state.ledger.eventCount))
             metric("Especies conseguidas", "\(store.speciesCaught) / 251")
             metric("Capturas totales", Fmt.tokens(store.state.box.count))

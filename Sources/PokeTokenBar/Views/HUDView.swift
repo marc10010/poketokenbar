@@ -116,6 +116,7 @@ struct HUDView: View {
         VStack(alignment: .leading, spacing: 2) {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
+            metric("Daño por token", store.currentMatchup.isNeutral ? "×1" : "\(store.currentMatchup.badge) · \(store.currentMatchup.label)")
             metric("Especies", "\(store.speciesCaught) / 251")
             metric("Capturas", Fmt.tokens(store.state.box.count))
             if let next = store.activeNextForm, let remaining = store.stage.tokensToNext(from: store.totalTokens) {

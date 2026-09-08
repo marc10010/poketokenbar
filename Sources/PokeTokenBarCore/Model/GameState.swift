@@ -137,6 +137,8 @@ public struct GameSettings: Codable, Hashable, Sendable {
     public var hudFreeOrigin: HUDOrigin?
     /// `nil` = tamaño compacto (solo el combate).
     public var hudSize: HUDSize?
+    /// Multiplicador de daño por tipos (agua > fuego y compañía).
+    public var typeEffectivenessEnabled: Bool = true
 
     public init() {}
 
@@ -154,6 +156,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
         hudLocked = try container.decodeIfPresent(Bool.self, forKey: .hudLocked) ?? false
         hudFreeOrigin = try container.decodeIfPresent(HUDOrigin.self, forKey: .hudFreeOrigin)
         hudSize = try container.decodeIfPresent(HUDSize.self, forKey: .hudSize)
+        typeEffectivenessEnabled = try container.decodeIfPresent(Bool.self, forKey: .typeEffectivenessEnabled) ?? true
     }
 }
 

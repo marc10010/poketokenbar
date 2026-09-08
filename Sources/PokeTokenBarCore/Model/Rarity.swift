@@ -63,4 +63,9 @@ public enum GameRules {
     public static let stageTwoThreshold = 1_000_001
     /// Cuántos IDs de evento guardamos para idempotencia entre reinicios.
     public static let processedEventWindow = 20_000
+    /// Suelo del multiplicador de tipos: una inmunidad (Normal contra Fantasma)
+    /// dejaría el combate atascado y los tokens sin efecto, así que pega igual
+    /// pero flojísimo.
+    public static let minimumDamageMultiplier = 0.25
+    public static let maximumDamageMultiplier = 4.0
 }
