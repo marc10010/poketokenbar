@@ -156,26 +156,6 @@ public final class GameStore: ObservableObject {
         return .available
     }
 
-    public func matchup(against member: LeagueMember) -> TypeMatchup {
-        guard state.settings.typeEffectivenessEnabled,
-              let attacker = activeForm,
-              let defender = pokedex[member.signatureSpeciesID]
-        else { return .neutral }
-        return typeChart.matchup(attacker: attacker.types, defender: defender.types)
-    }
-
-    public func damagePerToken(against member: LeagueMember) -> Double {
-        gymCombat.damagePerToken(
-            matchup: matchup(against: member).multiplier,
-            absorption: member.absorption,
-            stage: stage
-        )
-    }
-
-    public func isBlocked(against member: LeagueMember) -> Bool {
-        damagePerToken(against: member) <= 0
-    }
-
     @discardableResult
     public func startLeague(_ id: String) -> Bool {
         guard let league = leagueCatalog[id],
@@ -222,26 +202,6 @@ public final class GameStore: ObservableObject {
     }
 
     /// Cruce del compañero contra el legendario del hito.
-    public func matchup(against milestone: Milestone) -> TypeMatchup {
-        guard state.settings.typeEffectivenessEnabled,
-              let attacker = activeForm,
-              let defender = pokedex[milestone.speciesID]
-        else { return .neutral }
-        return typeChart.matchup(attacker: attacker.types, defender: defender.types)
-    }
-
-    public func damagePerToken(against milestone: Milestone) -> Double {
-        gymCombat.damagePerToken(
-            matchup: matchup(against: milestone).multiplier,
-            absorption: milestone.absorption,
-            stage: stage
-        )
-    }
-
-    public func isBlocked(against milestone: Milestone) -> Bool {
-        damagePerToken(against: milestone) <= 0
-    }
-
     /// Abre el hito. Solo uno a la vez, y nunca con un gimnasio en curso.
     @discardableResult
     public func startMilestone(_ id: String) -> Bool {
@@ -290,25 +250,43 @@ public final class GameStore: ObservableObject {
 
     /// Cruce del compañero contra el Pokémon estrella del líder: son sus tipos
     /// reales, no el tema del gimnasio.
-    public func matchup(against gym: Gym) -> TypeMatchup {
+    // MARK: - Jefes
+
+    /// Cruce de tipos contra cualquier jefe. Una sola implementación para las
+    /// tres mecánicas: ver `BossOpponent`.
+    public func matchup(against boss: some BossOpponent) -> TypeMatchup {
         guard state.settings.typeEffectivenessEnabled,
               let attacker = activeForm,
-              let defender = pokedex[gym.signatureSpeciesID]
+              let defender = pokedex[boss.opponentSpeciesID]
         else { return .neutral }
         return typeChart.matchup(attacker: attacker.types, defender: defender.types)
     }
 
-    /// HP que le quita cada token al líder. Cero = bloqueado: hace falta otro
+    /// HP que le quita cada token. Cero = bloqueado: hace falta otro
     /// compañero, no más tokens.
-    public func gymDamagePerToken(for gym: Gym) -> Double {
+    public func damagePerToken(against boss: some BossOpponent) -> Double {
         gymCombat.damagePerToken(
-            matchup: matchup(against: gym).multiplier,
-            absorption: gym.absorption,
+            matchup: matchup(against: boss).multiplier,
+            absorption: boss.absorption,
             stage: stage
         )
     }
 
-    public func isBlocked(against gym: Gym) -> Bool { gymDamagePerToken(for: gym) <= 0 }
+    public func isBlocked(against boss: some BossOpponent) -> Bool {
+        damagePerToken(against: boss) <= 0
+    }
+
+    /// Qué le hace un evento entero a un jefe. Lo comparten los tres combates:
+    /// lo que cambia entre ellos es qué pasa **cuando cae**, no la aritmética.
+    private func hit(_ boss: some BossOpponent, hp: Int, tokens: Int) -> BossHit {
+        gymCombat.apply(
+            tokens: tokens,
+            toHP: hp,
+            matchup: matchup(against: boss).multiplier,
+            absorption: boss.absorption,
+            stage: stage
+        )
+    }
 
     /// Qué falta para que se abra el próximo gimnasio. Se cumple con lo que
     /// llegue antes de las dos condiciones.
@@ -333,8 +311,8 @@ public final class GameStore: ObservableObject {
 
     /// Mejor compañero de la caja contra este líder, distinto del equipado. Es
     /// la información que convierte un bloqueo en una acción de un clic.
-    public func bestCompanion(against gym: Gym) -> (group: BoxGroup, rate: Double)? {
-        guard let defender = pokedex[gym.signatureSpeciesID] else { return nil }
+    public func bestCompanion(against boss: some BossOpponent) -> (group: BoxGroup, rate: Double)? {
+        guard let defender = pokedex[boss.opponentSpeciesID] else { return nil }
         let typesEnabled = state.settings.typeEffectivenessEnabled
         let candidates = boxGroups.filter { $0.id != activeGroupID }
         let scored = candidates.map { group -> (group: BoxGroup, rate: Double) in
@@ -343,7 +321,7 @@ public final class GameStore: ObservableObject {
                 : 1
             return (
                 group,
-                gymCombat.damagePerToken(matchup: multiplier, absorption: gym.absorption, stage: group.stage)
+                gymCombat.damagePerToken(matchup: multiplier, absorption: boss.absorption, stage: group.stage)
             )
         }
         guard let best = scored.max(by: { $0.rate < $1.rate }), best.rate > 0 else { return nil }
@@ -423,7 +401,7 @@ public final class GameStore: ObservableObject {
         if let active = activeGym {
             return CurrentTarget(
                 label: active.gym.leader,
-                rate: gymDamagePerToken(for: active.gym),
+                rate: damagePerToken(against: active.gym),
                 matchup: matchup(against: active.gym),
                 isBoss: true
             )
@@ -811,31 +789,20 @@ public final class GameStore: ObservableObject {
                   let member = league.member(at: run.memberIndex)
             else { return remaining }
 
-            let matchup = matchup(against: member).multiplier
-            guard damagePerToken(against: member) > 0 else {
+            let needed: Int
+            switch hit(member, hp: run.currentHP, tokens: remaining) {
+            case .blocked:
+                // El HP no se mueve, los tokens se gastan igual: es la regla.
                 run.tokensSpent += remaining
                 state.leagues.current = run
                 return 0
-            }
-
-            let needed = gymCombat.tokensNeeded(
-                for: run.currentHP,
-                matchup: matchup,
-                absorption: member.absorption,
-                stage: stage
-            ) ?? remaining
-
-            guard remaining >= needed else {
-                let hit = gymCombat.damage(
-                    tokens: remaining,
-                    matchup: matchup,
-                    absorption: member.absorption,
-                    stage: stage
-                )
-                run.currentHP -= min(run.currentHP, hit)
+            case .survived(let hp):
+                run.currentHP = hp
                 run.tokensSpent += remaining
                 state.leagues.current = run
                 return 0
+            case .fell(let spent):
+                needed = spent
             }
 
             remaining -= needed
@@ -873,32 +840,19 @@ public final class GameStore: ObservableObject {
               let milestone = milestoneCatalog[battleState.milestoneID]
         else { return tokens }
 
-        let matchup = matchup(against: milestone).multiplier
-        let rate = damagePerToken(against: milestone)
-        guard rate > 0 else {
+        let needed: Int
+        switch hit(milestone, hp: battleState.currentHP, tokens: tokens) {
+        case .blocked:
             battleState.tokensSpent += tokens
             state.milestones.current = battleState
             return 0
-        }
-
-        let needed = gymCombat.tokensNeeded(
-            for: battleState.currentHP,
-            matchup: matchup,
-            absorption: milestone.absorption,
-            stage: stage
-        ) ?? tokens
-
-        guard tokens >= needed else {
-            let hit = gymCombat.damage(
-                tokens: tokens,
-                matchup: matchup,
-                absorption: milestone.absorption,
-                stage: stage
-            )
-            battleState.currentHP -= min(battleState.currentHP, hit)
+        case .survived(let hp):
+            battleState.currentHP = hp
             battleState.tokensSpent += tokens
             state.milestones.current = battleState
             return 0
+        case .fell(let spent):
+            needed = spent
         }
 
         state.milestones.current = nil
@@ -938,33 +892,19 @@ public final class GameStore: ObservableObject {
     private func resolveGymBattle(tokens: Int, now: Date) -> Int {
         guard var battleState = state.gyms.current, let gym = gymCatalog[battleState.gymID] else { return tokens }
 
-        let rate = gymDamagePerToken(for: gym)
-        guard rate > 0 else {
+        let needed: Int
+        switch hit(gym, hp: battleState.currentHP, tokens: tokens) {
+        case .blocked:
             battleState.tokensSpent += tokens
             state.gyms.current = battleState
             return 0
-        }
-
-        let needed = gymCombat.tokensNeeded(
-            for: battleState.currentHP,
-            matchup: matchup(against: gym).multiplier,
-            absorption: gym.absorption,
-            stage: stage
-        ) ?? tokens
-
-        guard tokens >= needed else {
-            battleState.currentHP -= min(
-                battleState.currentHP,
-                gymCombat.damage(
-                    tokens: tokens,
-                    matchup: matchup(against: gym).multiplier,
-                    absorption: gym.absorption,
-                    stage: stage
-                )
-            )
+        case .survived(let hp):
+            battleState.currentHP = hp
             battleState.tokensSpent += tokens
             state.gyms.current = battleState
             return 0
+        case .fell(let spent):
+            needed = spent
         }
 
         // Cae el líder: medalla, sin captura, y contadores a cero.

@@ -62,7 +62,7 @@ struct GymDetailView: View {
 
     @ViewBuilder
     private var matchup: some View {
-        let rate = store.gymDamagePerToken(for: gym)
+        let rate = store.damagePerToken(against: gym)
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 Text("Tu compañero")

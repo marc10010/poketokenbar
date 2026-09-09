@@ -42,26 +42,14 @@ struct MilestoneCardView: View {
             }
             .padding(.trailing, headerInset)
 
-            HPBar(fraction: battle.hpFraction, height: compact ? 8 : 12)
-            HStack(spacing: 6) {
-                Text("\(Fmt.tokens(battle.currentHP)) / \(Fmt.tokens(battle.maxHP)) HP")
-                    .font(.system(size: compact ? 10 : 11, design: .monospaced))
-                Spacer(minLength: 0)
-                Text(blocked ? "0 HP/token" : "\(Fmt.rate(rate)) HP/token")
-                    .font(.system(size: compact ? 10 : 11, design: .monospaced))
-                    .foregroundStyle(blocked ? Color.red : .secondary)
-            }
+            BossHPRow(currentHP: battle.currentHP, maxHP: battle.maxHP, rate: rate, compact: compact)
 
             if blocked {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Tu compañero no le hace nada.")
-                        .font(.system(size: compact ? 9 : 11, weight: .semibold))
-                        .foregroundStyle(.red)
-                    Text("Un legendario absorbe \(Fmt.rate(milestone.absorption)): hace falta ventaja de tipo o una etapa más.")
-                        .font(.system(size: compact ? 9 : 10))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                BossBlockedNotice(
+                    boss: milestone,
+                    reason: "Un legendario absorbe \(Fmt.rate(milestone.absorption)): hace falta ventaja de tipo o una etapa más.",
+                    compact: compact
+                )
             }
 
             Button("Abandonar") { store.abandonMilestone() }

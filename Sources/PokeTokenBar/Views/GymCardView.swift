@@ -13,7 +13,7 @@ struct GymCardView: View {
     /// aprovecha todo el ancho.
     var headerInset: CGFloat = 0
 
-    private var rate: Double { store.gymDamagePerToken(for: gym) }
+    private var rate: Double { store.damagePerToken(against: gym) }
     private var blocked: Bool { rate <= 0 }
 
     var body: some View {
@@ -45,18 +45,14 @@ struct GymCardView: View {
             }
             .padding(.trailing, headerInset)
 
-            HPBar(fraction: battle.hpFraction, height: compact ? 8 : 12)
-            HStack(spacing: 6) {
-                Text("\(Fmt.tokens(battle.currentHP)) / \(Fmt.tokens(battle.maxHP)) HP")
-                    .font(.system(size: compact ? 10 : 11, design: .monospaced))
-                Spacer(minLength: 0)
-                Text(blocked ? "0 HP/token" : "\(Fmt.rate(rate)) HP/token")
-                    .font(.system(size: compact ? 10 : 11, design: .monospaced))
-                    .foregroundStyle(blocked ? .red : .secondary)
-            }
+            BossHPRow(currentHP: battle.currentHP, maxHP: battle.maxHP, rate: rate, compact: compact)
 
             if blocked {
-                blockedNotice
+                BossBlockedNotice(
+                    boss: gym,
+                    reason: "\(gym.leader) absorbe \(Fmt.rate(gym.absorption)): hace falta ventaja de tipo o una etapa más.",
+                    compact: compact
+                )
             } else if let needed = store.gymTokensNeeded(for: gym, battle: battle) {
                 Text("Le quedan \(Fmt.tokens(needed)) tokens tuyos")
                     .font(.system(size: compact ? 9 : 10))
@@ -65,27 +61,6 @@ struct GymCardView: View {
         }
     }
 
-    /// Un bloqueo sin salida es un bug de diseño: siempre se dice qué hacer.
-    private var blockedNotice: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("Tu compañero no le hace nada.")
-                .font(.system(size: compact ? 9 : 11, weight: .semibold))
-                .foregroundStyle(.red)
-            if let best = store.bestCompanion(against: gym) {
-                Button {
-                    store.setActiveCompanion(best.group.representative.id)
-                } label: {
-                    Text("Cambiar a \(best.group.displayForm.localizedName) (\(Fmt.rate(best.rate)) HP/token)")
-                        .font(.system(size: compact ? 9 : 10))
-                }
-                .buttonStyle(.link)
-            } else {
-                Text("Ninguno de tu caja le entra: captura algo de un tipo eficaz.")
-                    .font(.system(size: compact ? 9 : 10))
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
 }
 
 /// Rejilla de las 16 medallas: las conseguidas en color.

@@ -188,7 +188,7 @@ final class StatusItemController {
             lines.append("\(Fmt.tokens(boss.battle.currentHP))/\(Fmt.tokens(boss.battle.maxHP)) HP · \(store.isBlocked(against: boss.milestone) ? "bloqueado: hace falta ventaja de tipo" : "\(Fmt.rate(store.damagePerToken(against: boss.milestone))) HP por token")")
         } else if let active = store.activeGym {
             lines.append("Gimnasio: \(active.gym.leader) (\(active.gym.medal))")
-            lines.append("\(Fmt.tokens(active.battle.currentHP))/\(Fmt.tokens(active.battle.maxHP)) HP · \(store.isBlocked(against: active.gym) ? "bloqueado: cambia de compañero" : "\(Fmt.rate(store.gymDamagePerToken(for: active.gym))) HP por token")")
+            lines.append("\(Fmt.tokens(active.battle.currentHP))/\(Fmt.tokens(active.battle.maxHP)) HP · \(store.isBlocked(against: active.gym) ? "bloqueado: cambia de compañero" : "\(Fmt.rate(store.damagePerToken(against: active.gym))) HP por token")")
         } else if let encounter = store.state.encounter, let rival = store.pokedex[encounter.speciesID] {
             lines.append("Rival: \(rival.localizedName) [\(encounter.rarity.label)] \(Fmt.tokens(encounter.currentHP))/\(Fmt.tokens(encounter.maxHP)) HP")
         }

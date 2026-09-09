@@ -18,6 +18,7 @@ enum GymBattleTests: TestSuite {
         ("la medalla se celebra y dice qué desbloquea", testMedalCelebration),
         ("el ritmo es el que muestra la UI, sin evolucionar a mitad", testRateDoesNotChangeMidEvent),
         ("la métrica de daño apunta al líder, no al salvaje que no hay", testCurrentTargetIsTheBoss),
+        ("las tres mecánicas de jefe comparten la fórmula", testEveryBossSharesTheFormula),
     ]
 
     private static let catalog = GymCatalog.shared
@@ -170,7 +171,7 @@ enum GymBattleTests: TestSuite {
 
         // Rhydon es tierra/roca. Squirtle (agua) le hace ×4: 4 - 1,5 = 2,5.
         expectFalse(store.isBlocked(against: giovanni))
-        expectEqual(store.gymDamagePerToken(for: giovanni), 2.5, accuracy: 0.001)
+        expectEqual(store.damagePerToken(against: giovanni), 2.5, accuracy: 0.001)
 
         // Con un compañero de tipo eléctrico, tierra es inmune: cae al suelo de
         // ×0,25 y contra absorción 1,5 el progreso es cero.
@@ -178,7 +179,7 @@ enum GymBattleTests: TestSuite {
         let pikachu = try unwrap(store.state.box.last)
         store.setActiveCompanion(pikachu.id)
         expectTrue(store.isBlocked(against: giovanni), "eléctrico no le hace nada a tierra")
-        expectEqual(store.gymDamagePerToken(for: giovanni), 0, accuracy: 0.001)
+        expectEqual(store.damagePerToken(against: giovanni), 0, accuracy: 0.001)
 
         // Volver al Squirtle desbloquea sin tocar el daño ya hecho.
         let squirtle = try unwrap(store.state.box.first)
@@ -245,8 +246,36 @@ enum GymBattleTests: TestSuite {
         let target = try unwrap(store.currentTarget)
         expectTrue(target.isBoss)
         expectEqual(target.label, gym.leader)
-        expectEqual(target.rate, store.gymDamagePerToken(for: gym), accuracy: 0.0001)
+        expectEqual(target.rate, store.damagePerToken(against: gym), accuracy: 0.0001)
         expectTrue(target.rate > 0, "y la tasa del líder no es cero")
+    }
+
+    /// Gimnasio, liga y hito pasan por la **misma** aritmética. Tenían tres
+    /// copias de `matchup`, `damagePerToken` e `isBlocked`, y arreglar la
+    /// fórmula era acordarse de los tres sitios. Si alguien vuelve a darle a
+    /// una mecánica su propia cuenta, esto se pone rojo.
+    static func testEveryBossSharesTheFormula() throws {
+        let store = primed()
+        store.updateSettings { $0.typeEffectivenessEnabled = true }
+        let combat = GymCombat()
+
+        let gym = try unwrap(GymCatalog.shared.all.first)
+        let member = try unwrap(LeagueCatalog.shared.all.first?.members.first)
+        let milestone = try unwrap(MilestoneCatalog.shared.all.first)
+
+        func check(_ boss: some BossOpponent, _ name: String) {
+            let expected = combat.damagePerToken(
+                matchup: store.matchup(against: boss).multiplier,
+                absorption: boss.absorption,
+                stage: store.stage
+            )
+            expectEqual(store.damagePerToken(against: boss), expected, accuracy: 0.0001, name)
+            expectEqual(store.isBlocked(against: boss), expected <= 0, "\(name): bloqueado y tasa no coinciden")
+        }
+
+        check(gym, "gimnasio")
+        check(member, "liga")
+        check(milestone, "hito")
     }
 
     static func testGymTokensStillCount() throws {
@@ -267,7 +296,7 @@ enum GymBattleTests: TestSuite {
         let store = primed(wildHP: 10)
         store.ingest(event("abre", tokens: 10))
         let active = try unwrap(store.activeGym)
-        let rateShown = store.gymDamagePerToken(for: active.gym)
+        let rateShown = store.damagePerToken(against: active.gym)
         expectEqual(rateShown, 0.75, accuracy: 0.001, "etapa base: 1 − 0,25 de absorción")
 
         // Un evento que evoluciona al compañero de sobra (>200k) pero no llega
@@ -283,7 +312,7 @@ enum GymBattleTests: TestSuite {
         )
         expectEqual(store.stage, EvolutionStage.one, "y aun así el compañero evolucionó")
         expectEqual(
-            store.gymDamagePerToken(for: active.gym),
+            store.damagePerToken(against: active.gym),
             1.0,
             accuracy: 0.001,
             "a partir de ahora sí pega con el bonus de etapa"

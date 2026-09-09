@@ -115,78 +115,57 @@ struct HUDView: View {
            let rival = store.pokedex[encounter.speciesID],
            let companion = store.state.activeCompanion,
            let form = store.activeForm {
-            GeometryReader { geometry in
-                let showsMetrics = Self.showsMetrics(forHeight: geometry.size.height)
-                let showsBox = Self.showsBox(forHeight: geometry.size.height)
-                VStack(alignment: .leading, spacing: 5) {
-                    battleHeader(
-                        encounter: encounter,
-                        rival: rival,
-                        companion: companion,
-                        form: form,
-                        panelHeight: geometry.size.height
-                    )
-                    if showsMetrics {
-                        Divider()
-                        metricsStrip
-                    }
-                    if showsBox {
-                        Divider()
-                        boxSection
-                    }
-                }
-                .padding(.horizontal, 9)
-                .padding(.vertical, 7)
-                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
-                .overlay(alignment: .topTrailing) {
-                    resizeHandle(expanded: showsMetrics || showsBox)
-                }
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(.regularMaterial)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .strokeBorder(Color.secondary.opacity(0.25), lineWidth: 1)
-                        )
+            panel { height in
+                battleHeader(
+                    encounter: encounter,
+                    rival: rival,
+                    companion: companion,
+                    form: form,
+                    panelHeight: height
                 )
-                .contextMenu { hudMenu }
-            }
-            .padding(4)
-        }
-    }
-
-    /// Métricas de consumo en el HUD desplegado, en el mismo orden que el
-    /// popover para que no haya dos verdades distintas.
-    private var metricsStrip: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            metric("Tokens totales", Fmt.tokens(store.totalTokens))
-            metric("Este mes", Fmt.tokens(store.monthTokens))
-            metric("Medallas", "\(store.medals)/16 · \(store.rank.label)")
-            if let target = store.currentTarget {
-                metric("Daño por token", "\(Fmt.rate(target.rate)) a \(target.label)")
-            } else {
-                metric("Daño por token", "sin rival")
-            }
-            metric("Bonus de colección", "+\(Fmt.rate(store.collectionBonus)) · \(store.pokedexCaptured)/251")
-            metric("Especies", "\(store.speciesCaught) / 251")
-            metric("Capturas", Fmt.tokens(store.state.box.count))
-            if let next = store.activeNextForm, let remaining = store.stage.tokensToNext(from: store.activeTokensEarned) {
-                metric("\(next.localizedName) en", Fmt.tokens(remaining))
-            } else {
-                metric("Evolución", store.stage.label)
             }
         }
     }
 
-    private func metric(_ label: String, _ value: String) -> some View {
-        HStack(spacing: 6) {
-            Text(label)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-            Spacer(minLength: 4)
-            Text(value)
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
+    /// El marco del HUD: la cabecera que le toque arriba y, según la altura,
+    /// las métricas y la caja PC debajo. Los tres paneles de combate lo tenían
+    /// copiado —mismo padding, mismo marco, mismo menú, mismo mando— y solo se
+    /// diferenciaban en el borde y en qué tarjeta iba arriba.
+    private func panel<Header: View>(
+        border: Color = Color.secondary.opacity(0.25),
+        lineWidth: CGFloat = 1,
+        @ViewBuilder header: @escaping (CGFloat) -> Header
+    ) -> some View {
+        GeometryReader { geometry in
+            let height = geometry.size.height
+            VStack(alignment: .leading, spacing: 5) {
+                header(height)
+                if Self.showsMetrics(forHeight: height) {
+                    Divider()
+                    MetricsList(style: .hud)
+                }
+                if Self.showsBox(forHeight: height) {
+                    Divider()
+                    boxSection
+                }
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 7)
+            .frame(width: geometry.size.width, height: height, alignment: .topLeading)
+            .overlay(alignment: .topTrailing) {
+                resizeHandle(expanded: expandedFor(height: height))
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(.regularMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(border, lineWidth: lineWidth)
+                    )
+            )
+            .contextMenu { hudMenu }
         }
+        .padding(4)
     }
 
     /// Dónde cabe la ficha que pide un clic en un sprite.
@@ -318,35 +297,7 @@ struct HUDView: View {
         border: Color,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        GeometryReader { geometry in
-            VStack(alignment: .leading, spacing: 5) {
-                content()
-                if Self.showsMetrics(forHeight: geometry.size.height) {
-                    Divider()
-                    metricsStrip
-                }
-                if Self.showsBox(forHeight: geometry.size.height) {
-                    Divider()
-                    boxSection
-                }
-            }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 7)
-            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
-            .overlay(alignment: .topTrailing) {
-                resizeHandle(expanded: expandedFor(height: geometry.size.height))
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.regularMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(border.opacity(0.6), lineWidth: 1.5)
-                    )
-            )
-            .contextMenu { hudMenu }
-        }
-        .padding(4)
+        panel(border: border.opacity(0.6), lineWidth: 1.5) { _ in content() }
     }
 
     /// Marco propio para la medalla: borde dorado, para que se distinga de un
@@ -372,35 +323,9 @@ struct HUDView: View {
 
     /// Mismo marco que el combate normal, con la tarjeta de gimnasio dentro.
     private func gymPanel(gym: Gym, battle: ActiveGymBattle) -> some View {
-        GeometryReader { geometry in
-            VStack(alignment: .leading, spacing: 5) {
-                GymCardView(gym: gym, battle: battle, compact: true, headerInset: Self.headerInset)
-                if Self.showsMetrics(forHeight: geometry.size.height) {
-                    Divider()
-                    metricsStrip
-                }
-                if Self.showsBox(forHeight: geometry.size.height) {
-                    Divider()
-                    boxSection
-                }
-            }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 7)
-            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
-            .overlay(alignment: .topTrailing) {
-                resizeHandle(expanded: expandedFor(height: geometry.size.height))
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.regularMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(Color.orange.opacity(0.55), lineWidth: 1.5)
-                    )
-            )
-            .contextMenu { hudMenu }
+        panel(border: Color.orange.opacity(0.55), lineWidth: 1.5) { _ in
+            GymCardView(gym: gym, battle: battle, compact: true, headerInset: Self.headerInset)
         }
-        .padding(4)
     }
 
     /// Menú contextual del HUD: cambiar compañero y colocación sin pasar por

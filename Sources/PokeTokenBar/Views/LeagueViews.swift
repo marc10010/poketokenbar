@@ -46,21 +46,14 @@ struct LeagueCardView: View {
             }
             .padding(.trailing, headerInset)
 
-            HPBar(fraction: run.hpFraction, height: compact ? 8 : 12)
-            HStack(spacing: 6) {
-                Text("\(Fmt.tokens(run.currentHP)) / \(Fmt.tokens(run.maxHP)) HP")
-                    .font(.system(size: compact ? 10 : 11, design: .monospaced))
-                Spacer(minLength: 0)
-                Text(blocked ? "0 HP/token" : "\(Fmt.rate(rate)) HP/token")
-                    .font(.system(size: compact ? 10 : 11, design: .monospaced))
-                    .foregroundStyle(blocked ? Color.red : .secondary)
-            }
+            BossHPRow(currentHP: run.currentHP, maxHP: run.maxHP, rate: rate, compact: compact)
 
             if blocked {
-                Text("Absorbe \(Fmt.rate(member.absorption)): hace falta ventaja de tipo o una etapa más.")
-                    .font(.system(size: compact ? 9 : 10))
-                    .foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
+                BossBlockedNotice(
+                    boss: member,
+                    reason: "\(member.name) absorbe \(Fmt.rate(member.absorption)): hace falta ventaja de tipo o una etapa más.",
+                    compact: compact
+                )
             }
 
             Button("Abandonar la liga") { store.abandonLeague() }
