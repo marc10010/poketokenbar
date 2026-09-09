@@ -20,12 +20,18 @@ struct HUDView: View {
                         league: active.league,
                         member: active.member,
                         run: active.run,
-                        compact: true
+                        compact: true,
+                        headerInset: Self.headerInset
                     )
                 }
             } else if let active = store.activeMilestone {
                 bossPanel(border: .purple) {
-                    MilestoneCardView(milestone: active.milestone, battle: active.battle, compact: true)
+                    MilestoneCardView(
+                        milestone: active.milestone,
+                        battle: active.battle,
+                        compact: true,
+                        headerInset: Self.headerInset
+                    )
                 }
             } else if let active = store.activeGym {
                 gymPanel(gym: active.gym, battle: active.battle)
@@ -93,7 +99,9 @@ struct HUDView: View {
         } else if let selected = store.selectedBoxGroupID,
                   let group = store.boxGroups.first(where: { $0.id == selected }) {
             ScrollView {
-                PokemonDetailView(group: group)
+                // Compacta: en un panel de 200 pt la ficha entera no cabe, y
+                // aquí sí sustituye a la rejilla porque no hay sitio para las dos.
+                PokemonDetailView(group: group, compact: true)
                     .padding(.trailing, Layout.scrollGutter)
             }
         } else {
@@ -116,7 +124,6 @@ struct HUDView: View {
                         rival: rival,
                         companion: companion,
                         form: form,
-                        expanded: showsMetrics || showsBox,
                         panelHeight: geometry.size.height
                     )
                     if showsMetrics {
@@ -131,6 +138,9 @@ struct HUDView: View {
                 .padding(.horizontal, 9)
                 .padding(.vertical, 7)
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+                .overlay(alignment: .topTrailing) {
+                    resizeHandle(expanded: showsMetrics || showsBox)
+                }
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(.regularMaterial)
@@ -175,13 +185,32 @@ struct HUDView: View {
         }
     }
 
-    /// Abre una ficha y, si el panel está plegado, lo despliega: si no, el clic
-    /// dejaría estado abierto que no se ve en ninguna parte.
+    /// Dónde cabe la ficha que pide un clic en un sprite.
+    enum DetailTarget: Equatable {
+        /// En el propio panel, que ya está desplegado.
+        case hud
+        /// En el popover: el panel no se agranda solo, eso lo decide el botón.
+        case popover
+    }
+
+    static func detailTarget(forHeight height: CGFloat) -> DetailTarget {
+        showsBox(forHeight: height) ? .hud : .popover
+    }
+
+    /// Abre la ficha donde haya sitio. El panel no crece por un clic: crecer
+    /// es cosa del botón de la esquina.
     private func openDetail(rival: Bool, panelHeight: CGFloat) {
         store.inspectingRival = rival
         store.selectedBoxGroupID = rival ? nil : store.activeGroupID
-        guard !Self.showsBox(forHeight: panelHeight) else { return }
-        store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
+        guard Self.detailTarget(forHeight: panelHeight) == .popover else { return }
+        store.selectedTab = rival ? "combate" : "caja"
+        NotificationCenter.default.post(name: .poketokenbarShowPopover, object: nil)
+    }
+
+    private func detailHelp(_ name: String, panelHeight: CGFloat) -> String {
+        Self.detailTarget(forHeight: panelHeight) == .hud
+            ? "Ver la ficha de \(name)"
+            : "Abrir la ficha de \(name) (el panel no se agranda solo: usa el botón de la esquina)"
     }
 
     private func battleHeader(
@@ -189,7 +218,6 @@ struct HUDView: View {
         rival: Pokemon,
         companion: CapturedPokemon,
         form: Pokemon,
-        expanded: Bool,
         panelHeight: CGFloat
     ) -> some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -201,7 +229,7 @@ struct HUDView: View {
                 }
                 .buttonStyle(.plain)
                 .onRightClick { openDetail(rival: false, panelHeight: panelHeight) }
-                .help("Ver la ficha de \(form.localizedName)")
+                .help(detailHelp(form.localizedName, panelHeight: panelHeight))
                 Text("vs")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.secondary)
@@ -212,7 +240,7 @@ struct HUDView: View {
                 }
                 .buttonStyle(.plain)
                 .onRightClick { openDetail(rival: true, panelHeight: panelHeight) }
-                .help("Ver la ficha de \(rival.localizedName)")
+                .help(detailHelp(rival.localizedName, panelHeight: panelHeight))
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 3) {
                         Text(rival.localizedName)
@@ -229,8 +257,7 @@ struct HUDView: View {
                         MatchupBadge(matchup: store.currentMatchup, compact: true)
                     }
                 }
-                Spacer(minLength: 2)
-                resizeButton(expanded: expanded)
+                Spacer(minLength: Self.headerInset)
             }
             HPBar(fraction: encounter.hpFraction, height: 8)
             Text("\(Fmt.tokens(encounter.currentHP)) / \(Fmt.tokens(encounter.maxHP)) HP")
@@ -239,20 +266,47 @@ struct HUDView: View {
         }
     }
 
-    /// Además de arrastrar los bordes, un botón para plegar y desplegar: el
-    /// borde de una ventana sin marco no se ve, y nadie lo encuentra solo.
-    private func resizeButton(expanded: Bool) -> some View {
+    private func expandedFor(height: CGFloat) -> Bool {
+        Self.showsMetrics(forHeight: height) || Self.showsBox(forHeight: height)
+    }
+
+    /// El mando de plegar y desplegar: en la esquina de arriba a la derecha de
+    /// los cuatro paneles, encima del contenido en vez de en una columna
+    /// propia, que le robaba 28 px de ancho a la barra de HP, a las métricas y
+    /// a la rejilla. El hueco lo reserva solo la primera fila.
+    ///
+    /// Mide lo mismo plegado que desplegado: es el mismo mando en el mismo
+    /// sitio, y solo cambia hacia dónde apuntan las flechas.
+    private static let handleSide: CGFloat = 22
+    /// Lo que la primera fila deja libre para el mando.
+    static let headerInset: CGFloat = handleSide + 4
+
+    private func resizeHandle(expanded: Bool) -> some View {
+        handleButton(expanded: expanded)
+            .padding(.top, 7)
+            .padding(.trailing, 9)
+    }
+
+    private func handleButton(expanded: Bool) -> some View {
         Button {
-            store.updateSettings { settings in
-                settings.hudSize = expanded ? nil : HUDSize(width: 380, height: 460)
+            if expanded {
+                store.collapseHUD()
+            } else {
+                store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
             }
         } label: {
             Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(.secondary)
+                .frame(width: Self.handleSide, height: Self.handleSide)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.secondary.opacity(0.16))
+                )
         }
         .buttonStyle(.plain)
-        .help(expanded ? "Plegar" : "Desplegar la caja PC")
+        .frame(width: Self.handleSide, height: Self.handleSide)
+        .help(expanded ? "Plegar y cerrar la caja PC" : "Desplegar: métricas y caja PC")
     }
 
     /// Marco de jefe, con el borde del color que lo distinga del combate normal.
@@ -275,6 +329,9 @@ struct HUDView: View {
             .padding(.horizontal, 9)
             .padding(.vertical, 7)
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+            .overlay(alignment: .topTrailing) {
+                resizeHandle(expanded: expandedFor(height: geometry.size.height))
+            }
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(.regularMaterial)
@@ -313,7 +370,7 @@ struct HUDView: View {
     private func gymPanel(gym: Gym, battle: ActiveGymBattle) -> some View {
         GeometryReader { geometry in
             VStack(alignment: .leading, spacing: 5) {
-                GymCardView(gym: gym, battle: battle, compact: true)
+                GymCardView(gym: gym, battle: battle, compact: true, headerInset: Self.headerInset)
                 if Self.showsMetrics(forHeight: geometry.size.height) {
                     Divider()
                     metricsStrip
@@ -326,6 +383,9 @@ struct HUDView: View {
             .padding(.horizontal, 9)
             .padding(.vertical, 7)
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+            .overlay(alignment: .topTrailing) {
+                resizeHandle(expanded: expandedFor(height: geometry.size.height))
+            }
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(.regularMaterial)
@@ -343,27 +403,24 @@ struct HUDView: View {
     /// el ítem de la barra de menú.
     @ViewBuilder
     private var hudMenu: some View {
-        // Solo los últimos grupos: el menú no puede crecer con las capturas.
-        let recent = store.boxGroups
-            .sorted { $0.latestCapturedAt > $1.latestCapturedAt }
-            .prefix(8)
+        // Sin lista de Pokémon: enumeraba los últimos 8 en el menú y con la
+        // caja llena eso ni cabe ni se busca. La caja tiene búsqueda, filtros,
+        // tramos y teclado; el menú solo tiene que llevar hasta ella.
         if store.boxGroups.count > 1 {
-            Text("Compañero")
-            ForEach(Array(recent)) { group in
-                Button {
-                    store.setActiveCompanion(group.representative.id)
-                } label: {
-                    Text(group.displayForm.localizedName + (group.isShiny ? " ✦" : "")
-                        + (group.count > 1 ? " ×\(group.count)" : "")
-                        + (store.activeGroupID == group.id ? "  ✓" : ""))
-                }
-            }
-            Button("Caja PC completa (\(store.speciesCaught)/251)…") {
+            Button("Cambiar de compañero en la caja PC (\(store.speciesCaught)/251)…") {
                 store.selectedTab = "caja"
-                store.selectedBoxGroupID = nil
+                store.selectedBoxGroupID = store.activeGroupID
                 NotificationCenter.default.post(name: .poketokenbarShowPopover, object: nil)
             }
             Divider()
+        }
+
+        if store.state.settings.hudSize == nil {
+            Button("Desplegar el HUD (métricas y caja PC)") {
+                store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
+            }
+        } else {
+            Button("Plegar el HUD (cerrar la caja PC)") { store.collapseHUD() }
         }
 
         if store.state.settings.hudFreeOrigin != nil {
@@ -374,7 +431,9 @@ struct HUDView: View {
         Button(store.state.settings.hudLocked ? "Desbloquear (poder moverlo)" : "Bloquear en su sitio") {
             store.updateSettings { $0.hudLocked.toggle() }
         }
-        Button("Ocultar el HUD") {
+        // Con el nombre del sitio del que vuelve: este menú vive en el HUD, así
+        // que ocultarlo deja la única forma de recuperarlo en otra pantalla.
+        Button("Ocultar el HUD (vuelve desde Ajustes)") {
             store.updateSettings { $0.hudEnabled = false }
         }
         Divider()

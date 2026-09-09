@@ -11,6 +11,7 @@ struct SelfTestRunner {
             EvolutionServiceTests.self,
             BoxGroupTests.self,
             BoxFilterTests.self,
+            BoxSectionTests.self,
             PokedexEntryTests.self,
             CollectionTests.self,
             TypeChartTests.self,

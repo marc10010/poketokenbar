@@ -417,7 +417,14 @@ public final class GameStore: ObservableObject {
 
     /// Caja tras aplicar búsqueda y filtros.
     public var filteredBoxGroups: [BoxGroup] {
-        boxFilter.apply(to: boxGroups)
+        boxFilter.apply(to: boxGroups) { [weak self] in self?.timesDefeated(familyOf: $0) ?? 0 }
+    }
+
+    /// La caja partida en tramos con cabecera según el orden activo.
+    public var boxSections: [BoxSection] {
+        BoxSection.build(filteredBoxGroups, sort: boxFilter.sort) { [weak self] in
+            self?.timesDefeated(familyOf: $0) ?? 0
+        }
     }
 
     /// Los 251 huecos, con su estado. Memoizada por el mismo motivo que la
@@ -477,6 +484,25 @@ public final class GameStore: ObservableObject {
 
     /// Alterna entre la paleta shiny y la normal. Solo tiene efecto en un
     /// shiny de verdad: no se puede "pintar" uno normal.
+    /// Mueve la selección de la caja con el teclado. Devuelve el hueco nuevo
+    /// para que la vista pueda hacerle scroll.
+    @discardableResult
+    public func moveBoxSelection(_ direction: BoxMove, columns: Int) -> String? {
+        let next = BoxSection.move(direction, from: selectedBoxGroupID, in: boxSections, columns: columns)
+        if let next { selectedBoxGroupID = next }
+        return next
+    }
+
+    /// Equipa el hueco seleccionado. Es lo que hace Intro en la caja.
+    @discardableResult
+    public func sendSelectedToBattle() -> Bool {
+        guard let id = selectedBoxGroupID,
+              let group = boxGroups.first(where: { $0.id == id })
+        else { return false }
+        setActiveCompanion(group.representative.id)
+        return true
+    }
+
     public func toggleShinyDisplay(_ capturedID: UUID) {
         guard let index = state.box.firstIndex(where: { $0.id == capturedID }), state.box[index].isShiny else { return }
         state.box[index].prefersShiny.toggle()
@@ -511,6 +537,35 @@ public final class GameStore: ObservableObject {
         inspectingRival = false
         boxFilter.reset()
         flush()
+    }
+
+    /// Cierra la ficha abierta. El tamaño del HUD no se toca: lo decide el
+    /// botón de plegar, no un clic en un sprite.
+    public func closeDetail() {
+        selectedBoxGroupID = nil
+        inspectingRival = false
+    }
+
+    /// Pliega o despliega una sección del popover.
+    public func toggleSection(_ id: String) {
+        updateSettings { settings in
+            if settings.collapsedSections.contains(id) {
+                settings.collapsedSections.remove(id)
+            } else {
+                settings.collapsedSections.insert(id)
+            }
+        }
+    }
+
+    public func isCollapsed(_ id: String) -> Bool {
+        state.settings.collapsedSections.contains(id)
+    }
+
+    /// Pliega el HUD a su tira de combate, que es lo que cierra la caja PC.
+    public func collapseHUD() {
+        selectedBoxGroupID = nil
+        inspectingRival = false
+        updateSettings { $0.hudSize = nil }
     }
 
     public func updateSettings(_ transform: (inout GameSettings) -> Void) {

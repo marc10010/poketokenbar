@@ -23,6 +23,16 @@ enum AppTab: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Si la pestaña se encarga ella del scroll. Las rejillas grandes lo
+    /// necesitan: así la búsqueda y las cabeceras se quedan fijas y no hay dos
+    /// scrolls verticales metidos uno dentro del otro.
+    var scrollsItself: Bool {
+        switch self {
+        case .caja, .pokedex: return true
+        case .combate, .progreso, .ajustes: return false
+        }
+    }
+
     var icon: String {
         switch self {
         case .combate: return "bolt.fill"

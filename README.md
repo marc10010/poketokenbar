@@ -178,12 +178,30 @@ Tamaño:
   especies, capturas y lo que falta para la siguiente evolución) y a partir de
   200 px la **caja PC** (rejilla adaptativa: más ancho = más columnas). El botón
   de la esquina despliega/pliega a 320×380 sin buscar el borde, que en una
-  ventana sin marco no se ve. Acotado a 520×620 y persistido.
+  ventana sin marco no se ve, y al plegar cierra la ficha y la caja. Acotado a
+  520×620 y persistido.
+
+**El panel no se agranda solo:** crecer y plegarse es cosa del botón, no de un
+clic. El botón va **encima de la esquina de arriba a la derecha**, mide 22×22
+tanto plegado como desplegado, y lo único que cambia son las flechas (hacia
+fuera para desplegar, juntándose para plegar). El hueco lo reserva **solo la
+primera fila**: la barra de HP, las métricas y la rejilla van a todo el ancho.
+Está en los cuatro paneles (combate, gimnasio, hito y liga); antes era un icono
+dentro de la cabecera del combate salvaje, así que en los paneles de jefe no
+había ninguno y en el compacto competía por el ancho con el nombre del rival.
+También está en el menú contextual. Con el HUD plegado, un clic en un sprite abre la ficha en el popover, que
+es donde hay sitio. El botón de plegar está ahora en los cuatro paneles —
+combate, gimnasio, hito y liga: en los tres últimos no había ninguno, así que
+durante una liga o un hito no había manera visible de desplegar el HUD.
 
 Estados de ratón:
 - desbloqueado (por defecto): se arrastra y su **menú contextual** (clic
-  derecho) permite cambiar de compañero, recolocarlo, bloquearlo, ocultarlo o
-  salir — sin depender del ítem de la barra de menú;
+  derecho) lleva a la caja PC para cambiar de compañero, cierra la caja, y
+  permite recolocarlo, bloquearlo, ocultarlo o salir — sin depender del ítem de
+  la barra de menú. El menú **no enumera Pokémon**: listaba los 8 últimos, y con
+  la caja llena eso ni cabe ni se busca. "Ocultar el HUD" dice de dónde vuelve
+  (Ajustes), porque el menú vive en el propio HUD y su única vuelta está en otra
+  pantalla;
 - bloqueado: click-through, se ve pero no recibe clics.
 
 Mientras no haya compañero elegido el HUD muestra el selector de inicial y
@@ -329,11 +347,17 @@ ramas de evolución, idempotencia del ingest, persistencia entre reinicios,
 cuarentena de estado corrupto, la tabla de tipos (incluido que ningún tipo del
 dex se quede sin fila y que el multiplicador esté acotado en los 18×18×18
 cruces), el apilado de la caja PC (que es lo que impide
-que la lista crezca sin límite) y el parseo de transcripts y del payload HTTP.
+que la lista crezca sin límite), los tramos y el recorrido con flechas de la
+caja, y el parseo de transcripts y del payload HTTP.
 
 `--ui-smoke-test` monta el árbol de SwiftUI en las tres pantallas (selector de
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
+
+`--render-ui <carpeta>` pinta las superficies a PNG (HUD plegado, desplegado,
+de gimnasio, y el popover) sin abrir ventanas ni capturar la pantalla. El smoke
+test mide tamaños pero no dice **dónde** cae cada cosa; con esto se mira. Útil
+sobre todo donde no hay permiso de captura de pantalla.
 
 ## 11. Regiones y ligas
 
@@ -549,23 +573,37 @@ tiene líderes de gimnasio.
   aunque tengas un Wartortle, pero al vencerlo no se queda: cuenta como
   victoria (`familyDefeats`) y nada más. La excepción es el variocolor, que sí
   entra aunque tengas la línea en normal, porque es otra cosa a la vista.
-- **Clic izquierdo envía a luchar, clic derecho abre la ficha.** SwiftUI no
-  distingue botones del ratón (solo ofrece `contextMenu`, que abre un menú), así
-  que el clic derecho se captura en AppKit y el detector es invisible al
-  izquierdo para no robárselo al botón de debajo.
+- **Clic abre la ficha, doble clic envía a luchar.** Antes era al revés, con la
+  ficha escondida en el clic derecho: mirar es lo que se hace todo el rato y
+  cambiar de compañero cambia el daño por token, así que lo barato va en el
+  gesto barato. El clic derecho sigue abriendo la ficha, y se captura en AppKit
+  porque SwiftUI no distingue botones del ratón (solo ofrece `contextMenu`, que
+  abre un menú); el detector es invisible al izquierdo para no robárselo.
+- Las secciones del popover (Consumo, Rango, Ligas, Legendarios, Zonas y la
+  escalera) se **pliegan tocando su cabecera**, y queda recordado: plegar algo es
+  decir "esto no me interesa ahora", y reabrir la app no lo cambia.
 - **Ficha grande**, en la caja, en el rival y en cada gimnasio: sprite a tamaño,
   tipos, etapa, progreso hacia la siguiente forma y sus números (combates
   ganados, gimnasios, veces vencido en libertad, cuándo se capturó). Desde ahí
   se envía a luchar, y un variocolor puede alternar a su paleta normal.
-- La caja PC apila por especie + variante + etapa alcanzada, así que la rejilla
-  tiene techo (251 × 2 × 3), y se puede buscar y filtrar (nombre en español o
-  inglés, nº de Pokédex, tipo, generación, shiny, evolucionados; y cuatro
-  órdenes). El contador de la celda son las **victorias contra esa línea**: el
-  `×N` de repetidos se retiró porque desde que no se capturan líneas repetidas
-  no podía crecer por muchas capturas que acumules; el menú
-  del HUD lista solo los 8 grupos más recientes y enlaza a la caja completa.
-  Los registros individuales sí se guardan todos (~178 bytes cada uno), pero no
-  se muestran de uno en uno.
+- La caja PC apila por especie + variante + etapa alcanzada, y como no se
+  repiten líneas evolutivas su techo real son **258 huecos** (129 líneas × normal
+  y shiny). A ese tamaño una rejilla plana no se navega, así que la caja tiene:
+  búsqueda y filtros (nombre en español o inglés, nº de Pokédex, tipo,
+  generación, shiny, evolucionados), **cuatro órdenes que además parten la caja
+  en tramos con cabecera pegajosa** (generación, rareza, mes de captura o banda
+  de victorias), **modo lista** con los números de cada hueco a la vista, y
+  **flechas** para moverse hueco a hueco (la selección respeta el filtro: nunca
+  cae en algo que no se ve). La ficha va **fijada encima de la rejilla**, que se
+  queda donde estaba: antes la sustituía y mirar dos Pokémon seguidos era perder
+  el sitio dos veces. La búsqueda y las cabeceras quedan fuera del scroll, y la
+  pestaña hace el scroll ella para no anidar dos en el mismo eje.
+  El contador de la celda son las **victorias contra esa línea**: el `×N` de
+  repetidos se retiró porque desde que no se capturan líneas repetidas no podía
+  crecer, y por lo mismo el orden "más repetidos" pasó a ser por victorias.
+  El menú del HUD lista solo los 8 grupos más recientes y enlaza a la caja
+  completa. Los registros individuales sí se guardan todos (~178 bytes cada
+  uno), pero no se muestran de uno en uno.
 - La caja PC no permite liberar ni renombrar todavía (`nickname` ya está en el
   modelo).
 - Los sprites son propiedad de Nintendo/Game Freak: **no van en el repo**, se

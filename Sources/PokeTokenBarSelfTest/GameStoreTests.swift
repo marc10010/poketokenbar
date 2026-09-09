@@ -25,7 +25,59 @@ enum GameStoreTests: TestSuite {
         ("la migración acredita al equipado", testMigrationCreditsTheEquippedCompanion),
         ("el multiplicador de tipos escala el daño real", testTypeMultiplierScalesDamage),
         ("la colección suma daño solo a los salvajes", testCollectionBonus),
+        ("las secciones plegadas se recuerdan", testCollapsedSectionsPersist),
+        ("abrir una ficha no cambia el tamaño del HUD", testOpeningDetailNeverResizesTheHUD),
+        ("plegar el HUD cierra la ficha y la caja", testCollapsingTheHUDClosesEverything),
     ]
+
+    static func testCollapsedSectionsPersist() {
+        let url = temporaryStateURL()
+        let store = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 1))
+        store.chooseStarter(speciesID: 7)
+        expectTrue(!store.isCollapsed("Zonas"), "por defecto todo abierto")
+        store.toggleSection("Zonas")
+        expectTrue(store.isCollapsed("Zonas"))
+        store.flush()
+
+        let reopened = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 1))
+        expectTrue(reopened.isCollapsed("Zonas"), "plegar es una preferencia, no estado de sesión")
+        reopened.toggleSection("Zonas")
+        expectTrue(!reopened.isCollapsed("Zonas"), "y se puede volver a abrir")
+    }
+
+    /// El tamaño del HUD es del botón de plegar, no de los clics: abrir y
+    /// cerrar fichas no puede moverlo ni plegado ni desplegado.
+    static func testOpeningDetailNeverResizesTheHUD() {
+        let store = makeStore()
+        store.chooseStarter(speciesID: 7)
+
+        for size in [nil, HUDSize(width: 420, height: 520)] {
+            store.updateSettings { $0.hudSize = size }
+            store.selectedBoxGroupID = store.activeGroupID
+            expectEqual(store.state.settings.hudSize, size, "abrir la ficha movió el panel")
+            store.closeDetail()
+            expectEqual(store.state.settings.hudSize, size, "cerrarla también")
+            expectEqual(store.selectedBoxGroupID, nil)
+            expectTrue(!store.inspectingRival)
+        }
+    }
+
+    static func testCollapsingTheHUDClosesEverything() {
+        let store = makeStore()
+        store.chooseStarter(speciesID: 7)
+        let big = HUDSize(width: 380, height: 460)
+        store.updateSettings { $0.hudSize = big }
+        store.selectedBoxGroupID = store.activeGroupID
+        store.closeDetail()
+        expectEqual(store.state.settings.hudSize, big, "no lo agrandó la ficha")
+
+        store.selectedBoxGroupID = store.activeGroupID
+        store.inspectingRival = true
+        store.collapseHUD()
+        expectEqual(store.state.settings.hudSize, nil)
+        expectEqual(store.selectedBoxGroupID, nil)
+        expectTrue(!store.inspectingRival)
+    }
 
     private static func temporaryStateURL() -> URL {
         TemporaryFiles.uniqueDirectory().appendingPathComponent("state.json")

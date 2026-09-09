@@ -73,13 +73,19 @@ enum UISmokeTest {
         store.ingest(UsageEvent(id: "smoke-2", inputTokens: rivalHP, outputTokens: 0))
         ok = layout("tras captura") && ok
 
+        // Con el marco real: la raíz del HUD es un GeometryReader y no tiene
+        // tamaño intrínseco, así que medir su fittingSize no dice nada del panel.
+        let compactFrame = NSSize(width: 268, height: 104)
         let hud = NSHostingView(
-            rootView: HUDView().environmentObject(store).environmentObject(sprites)
+            rootView: HUDView()
+                .environmentObject(store)
+                .environmentObject(sprites)
+                .frame(width: compactFrame.width, height: compactFrame.height)
         )
         hud.layoutSubtreeIfNeeded()
         let hudSize = hud.fittingSize
-        print("  HUD flotante: \(Int(hudSize.width))x\(Int(hudSize.height))")
-        ok = hudSize.width > 0 && hudSize.height > 0 && ok
+        print("  HUD plegado: \(Int(hudSize.width))x\(Int(hudSize.height))")
+        ok = hudSize == compactFrame && ok
 
         // El clic derecho: qué eventos intercepta el detector. Si esto se
         // equivoca, o el clic izquierdo deja de equipar o el derecho no abre.
@@ -229,6 +235,35 @@ enum UISmokeTest {
         }
         store.selectedTab = "combate"
 
+        // Plegar y desplegar secciones: plegadas ocupan menos y se recuerda.
+        store.selectedTab = "progreso"
+        let progressOpen = { () -> CGFloat in
+            controller.view.layoutSubtreeIfNeeded()
+            return controller.view.fittingSize.height
+        }
+        _ = progressOpen()
+        let sections = ["Rango", "Ligas", "Legendarios", "Zonas", "Escalera de desbloqueo"]
+        for section in sections {
+            store.toggleSection(section)
+            ok = store.isCollapsed(section) && ok
+        }
+        ok = layout("progreso con todo plegado") && ok
+        let folded = NSHostingView(rootView: ProgressTabView()
+            .environmentObject(store)
+            .environmentObject(sprites)
+            .frame(width: 360))
+        folded.layoutSubtreeIfNeeded()
+        let foldedHeight = folded.fittingSize.height
+        for section in sections { store.toggleSection(section) }
+        let unfolded = NSHostingView(rootView: ProgressTabView()
+            .environmentObject(store)
+            .environmentObject(sprites)
+            .frame(width: 360))
+        unfolded.layoutSubtreeIfNeeded()
+        print("  progreso: plegado \(Int(foldedHeight)) pt · desplegado \(Int(unfolded.fittingSize.height)) pt")
+        ok = foldedHeight < unfolded.fittingSize.height && ok
+        store.selectedTab = "combate"
+
         // Las zonas: la lista y la ficha de algo cuya zona está cerrada.
         print("  zonas abiertas: \(store.unlockedZones.count)/\(store.zoneCatalog.all.count) · \(store.zoneCatalog.availableSpecies(store.zoneAccess).count) especies disponibles")
         ok = layout("lista de zonas") && ok
@@ -352,6 +387,71 @@ enum UISmokeTest {
             print("  ✗ no se pudo abrir gimnasio")
             ok = false
         }
+        // La caja con volumen: es donde se notan los tramos, la lista y que la
+        // ficha ya no sustituye a la rejilla.
+        for species in [1, 4, 10, 16, 25, 41, 43, 63, 74, 129, 133, 147, 152, 158, 161, 172, 179, 187, 194, 220] {
+            store.debugCapture(speciesID: species)
+        }
+        store.selectedTab = "caja"
+        let boxTab = { () -> CGFloat in
+            controller.view.layoutSubtreeIfNeeded()
+            return controller.view.fittingSize.height
+        }()
+        // Antes la rejilla vivía en un cajón de 190 pt dentro de una pestaña de
+        // 620: el techo era del cajón, no de la pantalla.
+        print("  pestaña Caja con \(store.boxGroups.count) huecos: \(Int(boxTab)) pt")
+        ok = boxTab >= 600 && ok
+
+        for sort in BoxFilter.Sort.allCases {
+            store.boxFilter.sort = sort
+            let sections = store.boxSections
+            let covered = sections.reduce(0) { $0 + $1.groups.count }
+            print("    \(sort.label): \(sections.count) tramo(s), \(covered) huecos · \(sections.map(\.title).joined(separator: " | "))")
+            ok = covered == store.filteredBoxGroups.count && !sections.isEmpty && ok
+        }
+        store.boxFilter.sort = .dex
+
+        func boxHeight() -> CGFloat {
+            let view = NSHostingView(rootView: PCBoxView()
+                .environmentObject(store)
+                .environmentObject(sprites)
+                .frame(width: 360))
+            view.layoutSubtreeIfNeeded()
+            return view.fittingSize.height
+        }
+
+        // La ficha fijada tiene que **sumar** altura. Con veinte huecos la
+        // rejilla mide bastante más que la ficha compacta, así que si la ficha
+        // sustituyera a la rejilla la medida bajaría en vez de subir.
+        let withoutCard = boxHeight()
+        store.selectedBoxGroupID = store.boxGroups.first?.id
+        let withCard = boxHeight()
+        print("  caja: sin ficha \(Int(withoutCard)) pt · con ficha fijada \(Int(withCard)) pt")
+        ok = withCard > withoutCard && ok
+        store.selectedBoxGroupID = nil
+
+        // Lista: los números de cada hueco caben, así que una fila por hueco
+        // ocupa más que la rejilla.
+        store.updateSettings { $0.boxDensity = .lista }
+        let asList = boxHeight()
+        store.updateSettings { $0.boxDensity = .rejilla }
+        print("  densidad: rejilla \(Int(withoutCard)) pt · lista \(Int(asList)) pt")
+        ok = asList > withoutCard && ok
+
+        // Las flechas recorren la caja entera sin salirse de lo filtrado.
+        store.boxFilter.generation = 2
+        let visible = Set(store.filteredBoxGroups.map(\.id))
+        store.selectedBoxGroupID = nil
+        var swept: Set<String> = []
+        for _ in 0..<(visible.count + 4) {
+            if let moved = store.moveBoxSelection(.right, columns: 4) { swept.insert(moved) }
+        }
+        print("  flechas: \(swept.count)/\(visible.count) huecos visibles alcanzados")
+        ok = swept == visible && ok
+        store.boxFilter.reset()
+        store.selectedBoxGroupID = nil
+        store.selectedTab = "combate"
+
         // Con búsqueda que no casa: hay que renderizar el estado vacío, no romper.
         store.boxFilter.query = "no-existe-nada-asi"
         ok = layout("caja filtrada sin resultados") && ok
@@ -368,6 +468,23 @@ enum UISmokeTest {
         print("  HUD plegado: ×1 → \(Int(compactAtOne.width))x\(Int(compactAtOne.height)) · ×2 → \(Int(compactAtTwo.width))x\(Int(compactAtTwo.height))")
         ok = compactAtTwo.width > compactAtOne.width && compactAtTwo.height > compactAtOne.height && ok
         store.updateSettings { $0.spriteScale = 1 }
+
+        // El panel no se agranda por un clic: con el HUD plegado la ficha se
+        // abre en el popover, y el tamaño solo lo mueve el botón.
+        store.updateSettings { $0.hudSize = nil }
+        let collapsed = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        store.selectedBoxGroupID = store.activeGroupID
+        let afterClick = NSApp.windows.compactMap { $0 as? NSPanel }.first?.frame.size ?? .zero
+        print("  ficha con el HUD plegado: \(Int(collapsed.height)) pt → \(Int(afterClick.height)) pt · destino=\(HUDView.detailTarget(forHeight: collapsed.height))")
+        ok = afterClick == collapsed && ok
+        ok = HUDView.detailTarget(forHeight: collapsed.height) == .popover && ok
+        ok = HUDView.detailTarget(forHeight: 460) == .hud && ok
+
+        // Y plegar cierra la caja PC de una vez, que es lo que hace el botón
+        // de la esquina y la entrada del menú.
+        store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
+        store.collapseHUD()
+        ok = store.state.settings.hudSize == nil && store.selectedBoxGroupID == nil && ok
 
         // Desbloqueado (por defecto): recibe clics y hay un panel por pantalla.
         var panels = NSApp.windows.compactMap { $0 as? NSPanel }

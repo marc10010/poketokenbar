@@ -88,17 +88,43 @@ struct PokedexView: View {
         }
     }
 
+    /// Los 251 partidos por generación, con la cabecera pegajosa: es el único
+    /// punto de referencia que tiene una rejilla de este tamaño.
+    private var generations: [(generation: Int, entries: [PokedexEntry])] {
+        Dictionary(grouping: store.filteredPokedexEntries) { $0.species.generation }
+            .sorted { $0.key < $1.key }
+            .map { (generation: $0.key, entries: $0.value.sorted { $0.species.id < $1.species.id }) }
+    }
+
     private var grid: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 6) {
-                ForEach(store.filteredPokedexEntries) { entry in
-                    cell(entry)
+            LazyVStack(alignment: .leading, spacing: 8, pinnedViews: [.sectionHeaders]) {
+                ForEach(generations, id: \.generation) { section in
+                    Section {
+                        LazyVGrid(columns: columns, spacing: 6) {
+                            ForEach(section.entries) { entry in
+                                cell(entry)
+                            }
+                        }
+                    } header: {
+                        HStack(spacing: 5) {
+                            Text("Generación \(section.generation)")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                            Text("\(section.entries.filter(\.isCaptured).count)/\(section.entries.count)")
+                                .font(.system(size: 9, design: .monospaced))
+                                .foregroundStyle(.tertiary)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.vertical, 3)
+                        .padding(.horizontal, 2)
+                        .background(.regularMaterial)
+                    }
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 2)
             .padding(.trailing, Layout.scrollGutter)
         }
-        .frame(maxHeight: 420)
     }
 
     private func cell(_ entry: PokedexEntry) -> some View {

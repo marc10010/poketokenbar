@@ -15,17 +15,28 @@ struct RootView: View {
             } else {
                 TabBar()
                 Divider().padding(.top, 6)
-                // Acotado y con scroll: una ficha abierta pasa de 1000 pt y no
-                // cabría en la pantalla de un portátil.
-                ScrollView(.vertical) {
+                if tab.scrollsItself {
+                    // Rejillas de cientos de huecos: hacen su propio scroll
+                    // para poder fijar la búsqueda y las cabeceras, y para no
+                    // anidar dos scrolls en el mismo eje.
                     content
                         .padding(14)
-                        .padding(.trailing, Layout.scrollGutter)
+                        .frame(maxHeight: .infinity, alignment: .top)
+                } else {
+                    // Acotado y con scroll: una ficha abierta pasa de 1000 pt y
+                    // no cabría en la pantalla de un portátil.
+                    ScrollView(.vertical) {
+                        content
+                            .padding(14)
+                            .padding(.trailing, Layout.scrollGutter)
+                    }
                 }
             }
         }
         .frame(width: 370 + Layout.scrollGutter)
-        .frame(maxHeight: 620)
+        // Fija, no máxima: el popover mide 620 y las pestañas que hacen su
+        // propio scroll necesitan saber cuánto sitio tienen.
+        .frame(height: 620)
     }
 
     @ViewBuilder
@@ -71,57 +82,44 @@ struct CombatTabView: View {
             }
 
             Divider()
-            MetricsView()
+            SectionCard(title: "Consumo", collapsible: true) {
+                MetricsView()
+            }
         }
     }
 }
 
 /// Progreso: la escalera de desbloqueo, y debajo el detalle de cada sistema.
 struct ProgressTabView: View {
-    @EnvironmentObject private var store: GameStore
-    @State private var showLadder = true
-
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionCard(title: "Rango") {
+            SectionCard(title: "Rango", collapsible: true) {
                 MedalsView()
             }
             Divider()
-            SectionCard(title: "Ligas") {
+            SectionCard(title: "Ligas", collapsible: true) {
                 LeaguesView()
             }
             Divider()
-            SectionCard(title: "Legendarios") {
+            SectionCard(title: "Legendarios", collapsible: true) {
                 MilestonesView()
             }
             Divider()
-            SectionCard(title: "Zonas") {
+            SectionCard(title: "Zonas", collapsible: true) {
                 ZonesView()
             }
             Divider()
-            DisclosureGroup(isExpanded: $showLadder) {
-                LadderView().padding(.top, 4)
-            } label: {
-                Label("Escalera de desbloqueo", systemImage: "list.number")
-                    .font(.caption.weight(.semibold))
+            SectionCard(title: "Escalera de desbloqueo", collapsible: true) {
+                LadderView()
             }
         }
     }
 }
 
-/// Caja: la ficha si hay una abierta, la rejilla si no.
+/// Caja: ficha fijada y rejilla, las dos a la vez.
 struct BoxTabView: View {
-    @EnvironmentObject private var store: GameStore
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let selected = store.selectedBoxGroupID,
-               let group = store.boxGroups.first(where: { $0.id == selected }) {
-                PokemonDetailView(group: group)
-            } else {
-                PCBoxView()
-            }
-        }
+        PCBoxView()
     }
 }
 

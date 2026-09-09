@@ -7,14 +7,14 @@ public struct BoxFilter: Hashable, Sendable {
     public enum Sort: String, CaseIterable, Hashable, Sendable {
         case dex
         case recent
-        case count
+        case wins
         case rarity
 
         public var label: String {
             switch self {
             case .dex: return "Nº de Pokédex"
             case .recent: return "Captura más reciente"
-            case .count: return "Más repetidos"
+            case .wins: return "Victorias contra su línea"
             case .rarity: return "Rareza"
             }
         }
@@ -53,7 +53,10 @@ public struct BoxFilter: Hashable, Sendable {
         self = BoxFilter()
     }
 
-    public func apply(to groups: [BoxGroup]) -> [BoxGroup] {
+    /// `wins` son las victorias contra la línea de una especie, que es el
+    /// único número de un hueco que crece: desde que no se capturan líneas
+    /// repetidas, `count` es siempre 1 y ordenar por él no movía nada.
+    public func apply(to groups: [BoxGroup], wins: (Int) -> Int = { _ in 0 }) -> [BoxGroup] {
         let needle = Self.normalize(query)
         let matching = groups.filter { group in
             if !types.isEmpty, types.isDisjoint(with: Set(group.species.types + group.displayForm.types)) {
@@ -64,7 +67,7 @@ public struct BoxFilter: Hashable, Sendable {
             if let generation, group.species.generation != generation { return false }
             return needle.isEmpty || Self.matches(group, needle: needle)
         }
-        return sorted(matching)
+        return sorted(matching, wins: wins)
     }
 
     /// Busca por nombre (en español o inglés, con o sin acentos), por la forma
@@ -90,7 +93,7 @@ public struct BoxFilter: Hashable, Sendable {
             .folding(options: [.diacriticInsensitive, .caseInsensitive, .widthInsensitive], locale: Locale(identifier: "es_ES"))
     }
 
-    private func sorted(_ groups: [BoxGroup]) -> [BoxGroup] {
+    private func sorted(_ groups: [BoxGroup], wins: (Int) -> Int) -> [BoxGroup] {
         switch sort {
         case .dex:
             return groups.sorted {
@@ -99,8 +102,10 @@ public struct BoxFilter: Hashable, Sendable {
             }
         case .recent:
             return groups.sorted { $0.latestCapturedAt > $1.latestCapturedAt }
-        case .count:
-            return groups.sorted { ($0.count, -$0.species.id) > ($1.count, -$1.species.id) }
+        case .wins:
+            return groups.sorted {
+                (wins($0.species.id), -$0.species.id) > (wins($1.species.id), -$1.species.id)
+            }
         case .rarity:
             return groups.sorted {
                 ($0.species.rarity.sortIndex, $0.species.id) < ($1.species.rarity.sortIndex, $1.species.id)
