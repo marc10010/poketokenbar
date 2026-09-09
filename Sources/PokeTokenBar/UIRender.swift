@@ -93,6 +93,19 @@ enum UIRender {
         store.selectedTab = "progreso"
         write("popover-progreso", hosted(RootView(), size: popoverSize))
 
+        // Con una zona enfocada: es lo que hace visible el tamaño del bombo.
+        if let small = store.unlockedZones.min(by: { store.focusSummary($0).pool < store.focusSummary($1).pool }) {
+            store.focus(zoneID: small.id)
+            store.toggleSection("Rango")
+            store.toggleSection("Ligas")
+            store.toggleSection("Legendarios")
+            write("popover-zonas", hosted(RootView(), size: popoverSize))
+            store.toggleSection("Rango")
+            store.toggleSection("Ligas")
+            store.toggleSection("Legendarios")
+            store.focus(zoneID: nil)
+        }
+
         // Clic en el compañero y clic en el rival, desde la pestaña de combate.
         store.selectedTab = "combate"
         store.selectedBoxGroupID = store.activeGroupID

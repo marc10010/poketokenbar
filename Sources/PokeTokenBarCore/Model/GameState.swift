@@ -218,6 +218,9 @@ public struct GameSettings: Codable, Hashable, Sendable {
     /// Secciones plegadas del popover, por título. Se persiste: plegar algo es
     /// decir "esto no me interesa ahora", y volver a abrir la app no lo cambia.
     public var collapsedSections: Set<String> = []
+    /// Zona enfocada, si hay alguna: mientras esté puesta, el rival sale de
+    /// ella. Se persiste porque cazar algo concreto lleva sesiones.
+    public var focusedZoneID: String?
 
     public init() {}
 
@@ -243,6 +246,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
         detailSpriteScale = min(max(detail, GameRules.minimumSpriteScale), GameRules.maximumSpriteScale)
         boxDensity = try container.decodeIfPresent(BoxDensity.self, forKey: .boxDensity) ?? .rejilla
         collapsedSections = try container.decodeIfPresent(Set<String>.self, forKey: .collapsedSections) ?? []
+        focusedZoneID = try container.decodeIfPresent(String.self, forKey: .focusedZoneID)
     }
 }
 

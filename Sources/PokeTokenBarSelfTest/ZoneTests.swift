@@ -14,6 +14,10 @@ enum ZoneTests: TestSuite {
         ("solo Mew se queda sin ruta ni precursor", testOnlyMewIsOrphan),
         ("lo que no tiene zona se ofrece en el tier más difícil", testFallbackTier),
         ("ningún tier se queda sin candidatas", testNoTierEverStarves),
+        ("la zona enfocada saca todo lo suyo a partes iguales", testFocusIsUniformOverTheZone),
+        ("enfocar no cuela legendarios ni formas evolucionadas", testFocusExcludesWhatNeverSpawns),
+        ("una zona cerrada no se puede enfocar", testFocusNeedsAnOpenZone),
+        ("el enfoque se persiste y se puede quitar", testFocusPersists),
     ]
 
     private static let catalog = ZoneCatalog.shared
@@ -22,6 +26,107 @@ enum ZoneTests: TestSuite {
 
     private static func access(_ medals: Int, kanto: Bool = false, champion: Bool = false) -> ZoneAccess {
         ZoneAccess(medals: medals, kantoOpen: kanto, isChampion: champion)
+    }
+
+    private static func store(medals: Int = 16, kanto: Bool = true, champion: Bool = true) -> GameStore {
+        let store = GameStore(
+            file: StateFileStore(url: TemporaryFiles.uniqueDirectory().appendingPathComponent("state.json")),
+            rng: SeededRandomProvider(seed: 21)
+        )
+        store.chooseStarter(speciesID: 7)
+        store.debugDefeatGyms(upTo: min(medals, 8))
+        if kanto { store.debugWinLeague("johto") }
+        store.debugDefeatGyms(upTo: medals)
+        if champion { store.debugWinLeague("kanto") }
+        return store
+    }
+
+    /// Lo que hace que la mecánica no tenga constantes que ajustar: la
+    /// probabilidad de una especie concreta **es** el tamaño de la zona.
+    static func testFocusIsUniformOverTheZone() throws {
+        let zone = try unwrap(catalog["guarida-dragon"] ?? catalog.all.first { spawner.focusPool($0).count == 2 })
+        let pool = spawner.focusPool(zone)
+        expectGreaterThan(pool.count, 1)
+
+        var rng = SeededRandomProvider(seed: 99)
+        var counts: [Int: Int] = [:]
+        let rolls = 20_000
+        for _ in 0..<rolls {
+            let wild = spawner.spawn(
+                rank: .campeon,
+                access: access(16, kanto: true, champion: true),
+                focus: zone,
+                using: &rng
+            )
+            counts[wild.speciesID, default: 0] += 1
+        }
+        expectEqual(Set(counts.keys), Set(pool.map(\.id)), "solo salen las de la zona")
+        let expected = Double(rolls) / Double(pool.count)
+        for (id, count) in counts {
+            let drift = abs(Double(count) - expected) / expected
+            expectTrue(drift < 0.1, "#\(id) salió \(count) veces, se esperaba ~\(Int(expected))")
+        }
+
+        // Y el HP sale de la rareza de la especie, no del tier sorteado.
+        for (id, _) in counts {
+            let species = dex.require(id)
+            var local = SeededRandomProvider(seed: 5)
+            let wild = spawner.spawn(rank: .novato, access: access(16, kanto: true, champion: true), focus: zone, using: &local)
+            if wild.speciesID == id {
+                expectTrue(species.rarity.hpRange.contains(wild.maxHP), "HP fuera del rango de \(species.name)")
+            }
+        }
+    }
+
+    /// Enfocar no filtra por tipo ni por rareza —sale todo lo de la zona— pero
+    /// lo que **nunca** aparece en libertad sigue sin aparecer: los legendarios
+    /// son hitos, y un salvaje arranca su línea evolutiva.
+    static func testFocusExcludesWhatNeverSpawns() throws {
+        let electrica = try unwrap(catalog.all.first { $0.species.contains(145) })
+        let pool = spawner.focusPool(electrica)
+        expectTrue(!pool.contains { $0.id == 145 }, "Zapdos es un hito, no un salvaje")
+        expectTrue(pool.allSatisfy { $0.isBaseForm }, "solo formas base")
+        expectTrue(pool.allSatisfy { $0.rarity.spawnsInTheWild })
+
+        // Pero sin filtro de rango: una zona con raras las da igual de novato.
+        let withRare = try unwrap(catalog.all.first { zone in
+            spawner.focusPool(zone).contains { $0.rarity == .rare } && spawner.focusPool(zone).count <= 3
+        })
+        var rng = SeededRandomProvider(seed: 4)
+        var sawRare = false
+        for _ in 0..<200 {
+            let wild = spawner.spawn(rank: .novato, access: access(16, kanto: true, champion: true), focus: withRare, using: &rng)
+            if wild.rarity == .rare { sawRare = true }
+        }
+        expectTrue(sawRare, "enfocar no filtra por rareza: el rango no gatea la zona")
+    }
+
+    static func testFocusNeedsAnOpenZone() throws {
+        let store = store(medals: 0, kanto: false, champion: false)
+        let closed = try unwrap(store.zoneCatalog.all.first { !store.zoneAccess.opens($0) })
+        store.focus(zoneID: closed.id)
+        expectEqual(store.focusedZone, nil, "no se enfoca lo que no está abierto")
+
+        let open = try unwrap(store.unlockedZones.first)
+        store.focus(zoneID: open.id)
+        expectEqual(store.focusedZone?.id, open.id)
+
+        store.focus(zoneID: "no-existe")
+        expectEqual(store.focusedZone?.id, open.id, "un id inventado no cambia nada")
+    }
+
+    static func testFocusPersists() throws {
+        let url = TemporaryFiles.uniqueDirectory().appendingPathComponent("state.json")
+        let first = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 8))
+        first.chooseStarter(speciesID: 7)
+        let zone = try unwrap(first.unlockedZones.first)
+        first.focus(zoneID: zone.id)
+        first.flush()
+
+        let reopened = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 8))
+        expectEqual(reopened.focusedZone?.id, zone.id, "cazar algo concreto lleva sesiones")
+        reopened.focus(zoneID: nil)
+        expectEqual(reopened.focusedZone, nil)
     }
 
     static func testCoverage() {

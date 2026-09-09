@@ -511,6 +511,42 @@ así que ninguna se vuelve incompletable por un hueco del reparto y un legendari
 no se abarata a raro. Y ningún tier se queda nunca sin candidatas: si el filtro
 vaciara uno, se usa el pool completo antes que dejar el combate sin rival.
 
+### Zona enfocada: cómo se caza algo concreto
+
+Con las zonas como desbloqueo puro, el bombo solo crece: con todas abiertas, ver
+una especie **concreta** cuesta ~59 apariciones si es común, ~118 si es rara y
+**~245 si es poco común** (unos 25M de tokens). Los últimos huecos de la Pokédex
+eran una lotería, y peor cuanto más avanzas.
+
+Así que una zona abierta se puede **enfocar**: mientras lo esté, el rival sale
+de ella y **sale cualquiera de sus especies, a partes iguales**. Sin sortear
+tier, sin filtrar por tipo ni por rareza, sin porcentajes que ajustar: la
+probabilidad de la que buscas **es el tamaño de la zona**.
+
+| Zona enfocada | Especies | Apariciones para una concreta |
+|---|---|---|
+| Guarida Dragón | 2 | 2 |
+| Torre Quemada | 3 | 3 |
+| mediana de las 33 | ~7 | ~7 |
+| Rutas del sur de Johto | 46 | 46 |
+
+Por eso la lista de zonas enseña **"te faltan N de M"**: se ve solo que enfocar
+la Guarida Dragón es un láser y enfocar las Rutas del sur no sirve de nada, sin
+que nadie lo explique.
+
+Lo que el enfoque **no** hace:
+
+- no cuela legendarios (son hitos, no salvajes) ni formas evolucionadas (un
+  salvaje arranca su línea), que es lo que nunca aparece en libertad;
+- no toca el disparador del gimnasio, que cuenta **victorias** de cualquier
+  sitio: volver a una zona vieja a por lo que falta nunca frena el progreso;
+- no filtra por rango. Enfocar una zona con raras las da siendo Novato, y es a
+  propósito: la zona ya está cerrada hasta sus medallas, así que el gate está
+  antes. Con 0 medallas la única zona con raras son las Rutas del sur, y sus
+  tres raras son **los iniciales**.
+
+Se persiste: cazar algo concreto lleva sesiones.
+
 ## 14. Pokédex completa
 
 <p align="center">
