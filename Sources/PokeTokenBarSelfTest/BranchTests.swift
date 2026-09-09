@@ -12,10 +12,10 @@ enum BranchTests: TestSuite {
         ("una línea recta nunca acepta un segundo ejemplar", testLinearLinesStillRejectDuplicates),
         ("la migración conserva la forma que ya se veía", testMigrationKeepsTheVisibleForm),
         ("las cinco ramas de Eevee acaban registradas", testAllFiveEeveeBranchesEndUpRegistered),
-        ("un bebé de Johto no crece hasta abrir Kanto", testCrossRegionEvolutionWaitsForTheRegion),
-        ("una línea de Kanto sí evoluciona en Johto", testSameRegionLinesAreNeverBlocked),
-        ("Tyrogue toma la rama que su región permite", testTyrogueTakesTheReachableBranch),
-        ("solo ocho evoluciones cruzan a una región cerrada", testExactlyEightEdgesCross),
+        ("Onix no puede ser Steelix hasta abrir Johto", testCrossRegionEvolutionWaitsForTheRegion),
+        ("una línea de la región que juegas sí evoluciona", testSameRegionLinesAreNeverBlocked),
+        ("Eevee espera por las ramas de la región 2", testEeveeWaitsForTheBranchesOfTheSecondRegion),
+        ("once evoluciones cruzan a la región cerrada", testExactlyElevenEdgesCross),
     ]
 
     private static let dex = Pokedex.shared
@@ -44,6 +44,9 @@ enum BranchTests: TestSuite {
         let store = makeStore()
         store.chooseStarter(speciesID: 7)
         store.updateSettings { $0.typeEffectivenessEnabled = false }
+        // Espeon y Umbreon son de Johto: sin la región 2 abierta, esas dos
+        // ramas esperarían y este test va de las condiciones, no de la puerta.
+        store.debugGrandfatherRegion("johto")
         store.debugCapture(speciesID: 133)
         let eevee = try unwrap(store.state.box.last)
         store.setActiveCompanion(eevee.id)
@@ -65,54 +68,55 @@ enum BranchTests: TestSuite {
         return store
     }
 
-    /// Pikachu vive en Kanto, así que un Pichu de Johto se queda Pichu hasta
-    /// que salga el barco. Es la regla que se pidió, con el ejemplo invertido
-    /// respecto a Onix → Steelix: Steelix es de Johto y por tanto nunca espera.
+    /// **Onix → Steelix**: Steelix es de Gen 2, o sea de Johto, que es la
+    /// región 2. Un Onix con tokens de sobra se queda Onix hasta que salga el
+    /// barco, que es el caso que se pedía y el que el orden de juego hace
+    /// posible.
     static func testCrossRegionEvolutionWaitsForTheRegion() throws {
-        let store = try primed(species: 172, rival: 19, hour: 12)   // Pichu
+        let store = try primed(species: 95, rival: 19, hour: 12)    // Onix
         store.ingest(UsageEvent(id: "crece", inputTokens: 260_000, outputTokens: 0, timestamp: at(12)))
-        expectEqual(activeForm(store), 172, "sigue siendo Pichu")
-        expectEqual(store.blockedRegion(for: try unwrap(store.state.activeCompanion)), "Kanto")
+        expectEqual(activeForm(store), 95, "sigue siendo Onix")
+        expectEqual(store.blockedRegion(for: try unwrap(store.state.activeCompanion)), "Johto")
 
-        store.debugOpenRegion("kanto")
+        store.debugOpenRegion("johto")
         expectEqual(store.blockedRegion(for: try unwrap(store.state.activeCompanion)), nil)
         store.ingest(UsageEvent(id: "ahora-si", inputTokens: 10, outputTokens: 0, timestamp: at(12)))
-        expectEqual(activeForm(store), 25, "con Kanto abierta, Pikachu")
+        expectEqual(activeForm(store), 208, "con Johto abierta, Steelix")
     }
 
-    /// La regla solo bloquea cuando **cruza** de región. Las rutas de Johto
-    /// están llenas de especies de Kanto y congelarlas sería un muro, no una
-    /// regla: 50 de las líneas capturables antes del barco son de Kanto.
+    /// La regla solo bloquea cuando **cruza** de región: una línea de la región
+    /// que estás jugando evoluciona sin pedir permiso.
     static func testSameRegionLinesAreNeverBlocked() throws {
         let store = try primed(species: 19, rival: 19, hour: 12)    // Rattata
-        expectTrue(!store.zoneAccess.kantoOpen, "y sin Kanto abierta")
+        expectTrue(!store.openRegions.contains("johto"), "y sin Johto abierta")
         store.ingest(UsageEvent(id: "crece", inputTokens: 260_000, outputTokens: 0, timestamp: at(12)))
         expectEqual(activeForm(store), 20, "Raticate, que es de su misma región")
     }
 
-    /// Hitmontop es de Johto y los otros dos de Kanto, así que antes del barco
-    /// solo la rama de la noche está disponible — y no se cae a otra: por la
-    /// mañana espera.
-    static func testTyrogueTakesTheReachableBranch() throws {
-        let deNoche = try primed(species: 236, rival: 19, hour: 23)
+    /// Eevee es de Kanto y sus cinco ramas se reparten entre las dos regiones:
+    /// Vaporeon, Jolteon y Flareon son de Kanto, y Espeon y Umbreon de Johto.
+    /// Antes del barco, de noche —cuando la condición pide Umbreon— **espera**
+    /// en vez de caer a otra rama, que sería dar la que no se pidió.
+    static func testEeveeWaitsForTheBranchesOfTheSecondRegion() throws {
+        let deNoche = try primed(species: 133, rival: 19, hour: 23)
         deNoche.ingest(UsageEvent(id: "noche", inputTokens: 260_000, outputTokens: 0, timestamp: at(23)))
-        expectEqual(activeForm(deNoche), 237, "Hitmontop, de Johto")
-
-        let porLaManana = try primed(species: 236, rival: 19, hour: 9)
-        porLaManana.ingest(UsageEvent(id: "manana", inputTokens: 260_000, outputTokens: 0, timestamp: at(9)))
-        expectEqual(activeForm(porLaManana), 236, "Hitmonlee es de Kanto: espera")
+        expectEqual(activeForm(deNoche), 133, "Umbreon es de Johto: espera")
         expectEqual(
-            porLaManana.blockedRegion(for: try unwrap(porLaManana.state.activeCompanion)),
-            "Kanto",
+            deNoche.blockedRegion(for: try unwrap(deNoche.state.activeCompanion)),
+            "Johto",
             "y la ficha puede decir por qué"
         )
+
+        // Con un rival de agua sí, porque Vaporeon es de Kanto.
+        deNoche.debugSetEncounter(WildEncounter(speciesID: 129, isShiny: false, rarity: .common, maxHP: 10))
+        deNoche.ingest(UsageEvent(id: "agua", inputTokens: 20, outputTokens: 0, timestamp: at(23)))
+        expectEqual(activeForm(deNoche), 134, "Vaporeon, que no cruza de región")
     }
 
     /// Cuántos casos toca la regla, contados sobre los datos: si un cambio de
     /// zonas o de orden de regiones los mueve, este test lo dice.
-    static func testExactlyEightEdgesCross() {
-        let johtoFirst = GymCatalog.shared.regions.first == "johto"
-        expectTrue(johtoFirst, "el orden de regiones es Johto y luego Kanto")
+    static func testExactlyElevenEdgesCross() {
+        expectEqual(GymCatalog.shared.regions, ["kanto", "johto"], "el orden de juego")
 
         let crossing = dex.all.flatMap { species in
             species.evolvesInto.compactMap { id -> (Pokemon, Pokemon)? in
@@ -121,12 +125,15 @@ enum BranchTests: TestSuite {
             }
         }
         expectEqual(crossing.count, 19, "evoluciones que cruzan de región")
-        let intoKanto = crossing.filter { $0.1.homeRegion == "Kanto" }
-        expectEqual(intoKanto.count, 8, "las que esperan al barco")
+        let intoSecond = crossing.filter { $0.1.homeRegion == "Johto" }
+        expectEqual(intoSecond.count, 11, "las que esperan al barco")
         expectEqual(
-            Set(intoKanto.map { $0.0.name }),
-            ["Pichu", "Cleffa", "Igglybuff", "Tyrogue", "Smoochum", "Elekid", "Magby"],
-            "los bebés de Johto"
+            Set(intoSecond.map { $0.1.name }),
+            [
+                "Steelix", "Crobat", "Blissey", "Scizor", "Kingdra", "Politoed",
+                "Bellossom", "Slowking", "Porygon2", "Espeon", "Umbreon",
+            ],
+            "las evoluciones que en el canon no existían hasta Gen 2"
         )
     }
 
@@ -212,6 +219,7 @@ enum BranchTests: TestSuite {
         let store = makeStore()
         store.chooseStarter(speciesID: 7)
         store.updateSettings { $0.typeEffectivenessEnabled = false }
+        store.debugGrandfatherRegion("johto")   // Espeon y Umbreon viven allí
 
         let plan: [(rival: Int, hour: Int, expected: Int)] = [
             (129, 23, 134),   // Magikarp, agua -> Vaporeon
