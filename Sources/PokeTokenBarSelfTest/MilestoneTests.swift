@@ -33,11 +33,24 @@ enum MilestoneTests: TestSuite {
         UsageEvent(id: id, inputTokens: tokens, outputTokens: 0)
     }
 
-    /// Jugador con las 8 medallas de Johto, que es lo que abre la Torre Quemada.
-    private static func withJohtoDone(seed: UInt64 = 6) -> GameStore {
+    /// Jugador con las 8 medallas de la región 1, que es lo que abre los
+    /// primeros hitos: los tres pájaros de Kanto (Central Eléctrica, Islas
+    /// Espuma y Calle Victoria) piden 8 medallas por encima de sus zonas.
+    private static func withRegionOneDone(seed: UInt64 = 6) -> GameStore {
         let store = makeStore(seed: seed)
         store.chooseStarter(speciesID: 7)
         store.debugDefeatGyms(upTo: 8)
+        return store
+    }
+
+    /// Y con la región 2 abierta y sus 16 medallas, que es lo que abre los de
+    /// Johto (Torre Quemada, Torre Campana, Islas Remolino).
+    private static func withEverythingButChampion(seed: UInt64 = 6) -> GameStore {
+        let store = makeStore(seed: seed)
+        store.chooseStarter(speciesID: 7)
+        store.debugDefeatGyms(upTo: 8)
+        store.debugOpenRegion("johto")
+        store.debugDefeatGyms(upTo: 16)
         return store
     }
 
@@ -61,7 +74,7 @@ enum MilestoneTests: TestSuite {
 
     static func testLegendariesDoNotSpawn() {
         let spawner = SpawnService()
-        let access = ZoneAccess(medals: 16, kantoOpen: true, isChampion: true)
+        let access = ZoneAccess(medals: 16, openRegions: Set(GymCatalog.shared.regions), isChampion: true)
         for rarity in Rarity.allCases where rarity.spawnsInTheWild {
             let pool = spawner.candidates(rarity: rarity, access: access)
             expectFalse(pool.contains(where: \.isLegendary), "\(rarity) ofrece legendarios")
@@ -77,18 +90,24 @@ enum MilestoneTests: TestSuite {
         let store = makeStore()
         store.chooseStarter(speciesID: 7)
 
-        // Sin medallas, la Torre Quemada está cerrada.
-        let raikou = try unwrap(catalog["torre-quemada-raikou"])
-        if case .zoneClosed = store.availability(of: raikou) {} else {
-            expectTrue(false, "esperaba zona cerrada, llegó \(store.availability(of: raikou).reason)")
+        // Sin medallas, la Central Eléctrica está cerrada.
+        let zapdos = try unwrap(catalog["central-zapdos"])
+        if case .zoneClosed = store.availability(of: zapdos) {} else {
+            expectTrue(false, "esperaba zona cerrada, llegó \(store.availability(of: zapdos).reason)")
         }
 
-        store.debugDefeatGyms(upTo: 8)
-        expectTrue(store.availability(of: raikou).isAvailable, "con Johto hecho ya se puede")
+        // Con 5 medallas la zona abre, pero el hito pide 8.
+        store.debugDefeatGyms(upTo: 5)
+        expectEqual(store.availability(of: zapdos), .needsMedals(3))
 
-        // Ho-Oh pide 10 medallas por encima de su zona.
-        let hooh = try unwrap(catalog["torre-campana-hooh"])
-        expectEqual(store.availability(of: hooh), .needsMedals(2))
+        store.debugDefeatGyms(upTo: 8)
+        expectTrue(store.availability(of: zapdos).isAvailable, "con la región 1 hecha ya se puede")
+
+        // Y los de Johto siguen esperando al barco.
+        let raikou = try unwrap(catalog["torre-quemada-raikou"])
+        if case .zoneClosed = store.availability(of: raikou) {} else {
+            expectTrue(false, "Raikou espera a Johto: \(store.availability(of: raikou).reason)")
+        }
 
         // Mew pide Pokédex, no medallas.
         let mew = try unwrap(catalog["faraway-mew"])
@@ -102,10 +121,16 @@ enum MilestoneTests: TestSuite {
     /// Ojo al orden: con 8 medallas el gimnasio siguiente ya es de Kanto y está
     /// tras la puerta de región, así que para tener un gimnasio en curso hay
     /// que abrir Kanto antes.
+    /// Con 8 medallas y la región 2 abierta hay a la vez dos hitos de Kanto
+    /// disponibles y un gimnasio de Johto al que entrar, que es lo que este
+    /// test necesita. Con las 16 medallas no quedaría ningún gimnasio.
     static func testCannotStartWhileBusy() throws {
-        let store = withJohtoDone()
-        let raikou = try unwrap(catalog["torre-quemada-raikou"])
-        let entei = try unwrap(catalog["torre-quemada-entei"])
+        let store = makeStore()
+        store.chooseStarter(speciesID: 7)
+        store.debugDefeatGyms(upTo: 8)
+        store.debugOpenRegion("johto")
+        let raikou = try unwrap(catalog["central-zapdos"])
+        let entei = try unwrap(catalog["espuma-articuno"])
 
         expectTrue(store.startMilestone(raikou.id))
         expectEqual(store.availability(of: entei), .busy)
@@ -113,8 +138,7 @@ enum MilestoneTests: TestSuite {
         expectEqual(try unwrap(store.activeMilestone).milestone.id, raikou.id)
         store.abandonMilestone()
 
-        // Ahora con un gimnasio en curso, que requiere Kanto abierta.
-        store.debugOpenRegion("kanto")
+        // Ahora con un gimnasio en curso.
         store.updateSettings { $0.typeEffectivenessEnabled = false }
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
@@ -122,14 +146,14 @@ enum MilestoneTests: TestSuite {
         // El gimnasio queda disponible y hay que entrar: es opcional.
         let disponible = try unwrap(store.availableGym)
         expectTrue(store.startGym(disponible.id))
-        expectNotNil(store.activeGym, "con Kanto abierta sí hay gimnasio siguiente")
+        expectNotNil(store.activeGym, "hay gimnasio al que entrar")
         expectEqual(store.availability(of: raikou), .busy)
         expectFalse(store.startMilestone(raikou.id))
         expectNil(store.activeMilestone)
     }
 
     static func testStartingReplacesTheWild() throws {
-        let store = withJohtoDone()
+        let store = withEverythingButChampion()
         expectNotNil(store.state.encounter)
         expectTrue(store.startMilestone("torre-quemada-suicune"))
 
@@ -140,7 +164,7 @@ enum MilestoneTests: TestSuite {
     }
 
     static func testBlockedMilestone() throws {
-        let store = withJohtoDone(seed: 12)
+        let store = withEverythingButChampion(seed: 12)
         // Pikachu (eléctrico) contra Suicune (agua) es ×2... buscamos bloqueo
         // de verdad: Suicune absorbe 1,0 y un cruce ×0,5 no llega.
         store.debugCapture(speciesID: 133)          // Eevee, normal
@@ -161,7 +185,7 @@ enum MilestoneTests: TestSuite {
         // Squirtle (agua) contra Entei (fuego) es ×2, que contra absorción 1,0
         // deja 1,0 HP por token. Con cruce neutro sería imposible: ver el test
         // de abajo.
-        let store = withJohtoDone(seed: 21)
+        let store = withEverythingButChampion(seed: 21)
         expectTrue(store.startMilestone("torre-quemada-entei"))
         let battle = try unwrap(store.activeMilestone).battle
         let boxBefore = store.state.box.count
@@ -184,7 +208,7 @@ enum MilestoneTests: TestSuite {
     }
 
     static func testAbandon() throws {
-        let store = withJohtoDone(seed: 33)
+        let store = withEverythingButChampion(seed: 33)
         expectTrue(store.startMilestone("torre-quemada-raikou"))
         store.abandonMilestone()
 
@@ -206,7 +230,7 @@ enum MilestoneTests: TestSuite {
             )
         }
 
-        let store = withJohtoDone(seed: 42)
+        let store = withEverythingButChampion(seed: 42)
         store.updateSettings { $0.typeEffectivenessEnabled = false }   // todo neutro
         expectTrue(store.startMilestone("torre-quemada-entei"))
         let milestone = try unwrap(store.activeMilestone).milestone

@@ -1,246 +1,246 @@
 {
- "schemaVersion": 1,
- "source": "curado a mano: PokeAPI no tiene líderes de gimnasio",
- "gyms": [
-  {
-   "id": "johto-violet",
-   "leader": "Falkner",
-   "city": "Ciudad Malva",
-   "region": "johto",
-   "type": "flying",
-   "signatureSpeciesID": 17,
-   "medal": "Medalla Céfiro",
-   "order": 1,
-   "hp": [
-    500000,
-    560000
-   ],
-   "absorption": 0.25
-  },
-  {
-   "id": "johto-azalea",
-   "leader": "Bugsy",
-   "city": "Pueblo Azalea",
-   "region": "johto",
-   "type": "bug",
-   "signatureSpeciesID": 123,
-   "medal": "Medalla Colmena",
-   "order": 2,
-   "hp": [
-    529000,
-    589000
-   ],
-   "absorption": 0.25
-  },
-  {
-   "id": "johto-goldenrod",
-   "leader": "Whitney",
-   "city": "Ciudad Trigal",
-   "region": "johto",
-   "type": "normal",
-   "signatureSpeciesID": 241,
-   "medal": "Medalla Llanura",
-   "order": 3,
-   "hp": [
-    558000,
-    618000
-   ],
-   "absorption": 0.25
-  },
-  {
-   "id": "johto-ecruteak",
-   "leader": "Morty",
-   "city": "Ciudad Iris",
-   "region": "johto",
-   "type": "ghost",
-   "signatureSpeciesID": 94,
-   "medal": "Medalla Bruma",
-   "order": 4,
-   "hp": [
-    587000,
-    647000
-   ],
-   "absorption": 0.5
-  },
-  {
-   "id": "johto-cianwood",
-   "leader": "Chuck",
-   "city": "Ciudad Orquídea",
-   "region": "johto",
-   "type": "fighting",
-   "signatureSpeciesID": 62,
-   "medal": "Medalla Tormenta",
-   "order": 5,
-   "hp": [
-    616000,
-    676000
-   ],
-   "absorption": 0.5
-  },
-  {
-   "id": "johto-olivine",
-   "leader": "Jasmine",
-   "city": "Ciudad Olivo",
-   "region": "johto",
-   "type": "steel",
-   "signatureSpeciesID": 208,
-   "medal": "Medalla Mineral",
-   "order": 6,
-   "hp": [
-    645000,
-    705000
-   ],
-   "absorption": 0.5
-  },
-  {
-   "id": "johto-mahogany",
-   "leader": "Pryce",
-   "city": "Pueblo Caoba",
-   "region": "johto",
-   "type": "ice",
-   "signatureSpeciesID": 221,
-   "medal": "Medalla Glaciar",
-   "order": 7,
-   "hp": [
-    674000,
-    734000
-   ],
-   "absorption": 0.75
-  },
-  {
-   "id": "johto-blackthorn",
-   "leader": "Clair",
-   "city": "Ciudad Endrino",
-   "region": "johto",
-   "type": "dragon",
-   "signatureSpeciesID": 230,
-   "medal": "Medalla Ascenso",
-   "order": 8,
-   "hp": [
-    703000,
-    763000
-   ],
-   "absorption": 0.75
-  },
-  {
-   "id": "kanto-pewter",
-   "leader": "Brock",
-   "city": "Ciudad Plateada",
-   "region": "kanto",
-   "type": "rock",
-   "signatureSpeciesID": 95,
-   "medal": "Medalla Roca",
-   "order": 9,
-   "hp": [
-    732000,
-    792000
-   ],
-   "absorption": 0.75
-  },
-  {
-   "id": "kanto-cerulean",
-   "leader": "Misty",
-   "city": "Ciudad Celeste",
-   "region": "kanto",
-   "type": "water",
-   "signatureSpeciesID": 121,
-   "medal": "Medalla Cascada",
-   "order": 10,
-   "hp": [
-    761000,
-    821000
-   ],
-   "absorption": 1.0
-  },
-  {
-   "id": "kanto-vermilion",
-   "leader": "Lt. Surge",
-   "city": "Ciudad Carmín",
-   "region": "kanto",
-   "type": "electric",
-   "signatureSpeciesID": 26,
-   "medal": "Medalla Trueno",
-   "order": 11,
-   "hp": [
-    790000,
-    850000
-   ],
-   "absorption": 1.0
-  },
-  {
-   "id": "kanto-celadon",
-   "leader": "Erika",
-   "city": "Ciudad Azulona",
-   "region": "kanto",
-   "type": "grass",
-   "signatureSpeciesID": 45,
-   "medal": "Medalla Arcoíris",
-   "order": 12,
-   "hp": [
-    819000,
-    879000
-   ],
-   "absorption": 1.0
-  },
-  {
-   "id": "kanto-fuchsia",
-   "leader": "Koga",
-   "city": "Ciudad Fucsia",
-   "region": "kanto",
-   "type": "poison",
-   "signatureSpeciesID": 110,
-   "medal": "Medalla Alma",
-   "order": 13,
-   "hp": [
-    848000,
-    908000
-   ],
-   "absorption": 1.25
-  },
-  {
-   "id": "kanto-saffron",
-   "leader": "Sabrina",
-   "city": "Ciudad Azafrán",
-   "region": "kanto",
-   "type": "psychic",
-   "signatureSpeciesID": 65,
-   "medal": "Medalla Pantano",
-   "order": 14,
-   "hp": [
-    877000,
-    937000
-   ],
-   "absorption": 1.25
-  },
-  {
-   "id": "kanto-cinnabar",
-   "leader": "Blaine",
-   "city": "Isla Canela",
-   "region": "kanto",
-   "type": "fire",
-   "signatureSpeciesID": 59,
-   "medal": "Medalla Volcán",
-   "order": 15,
-   "hp": [
-    906000,
-    966000
-   ],
-   "absorption": 1.5
-  },
-  {
-   "id": "kanto-viridian",
-   "leader": "Giovanni",
-   "city": "Ciudad Verde",
-   "region": "kanto",
-   "type": "ground",
-   "signatureSpeciesID": 112,
-   "medal": "Medalla Tierra",
-   "order": 16,
-   "hp": [
-    935000,
-    995000
-   ],
-   "absorption": 1.5
-  }
- ]
+  "schemaVersion": 1,
+  "source": "curado a mano · orden de juego: Kanto y luego Johto (Gen 1 -> Gen 2)",
+  "gyms": [
+    {
+      "id": "kanto-pewter",
+      "leader": "Brock",
+      "city": "Ciudad Plateada",
+      "region": "kanto",
+      "type": "rock",
+      "signatureSpeciesID": 95,
+      "medal": "Medalla Roca",
+      "order": 1,
+      "hp": [
+        500000,
+        560000
+      ],
+      "absorption": 0.25
+    },
+    {
+      "id": "kanto-cerulean",
+      "leader": "Misty",
+      "city": "Ciudad Celeste",
+      "region": "kanto",
+      "type": "water",
+      "signatureSpeciesID": 121,
+      "medal": "Medalla Cascada",
+      "order": 2,
+      "hp": [
+        529000,
+        589000
+      ],
+      "absorption": 0.25
+    },
+    {
+      "id": "kanto-vermilion",
+      "leader": "Lt. Surge",
+      "city": "Ciudad Carmín",
+      "region": "kanto",
+      "type": "electric",
+      "signatureSpeciesID": 26,
+      "medal": "Medalla Trueno",
+      "order": 3,
+      "hp": [
+        558000,
+        618000
+      ],
+      "absorption": 0.25
+    },
+    {
+      "id": "kanto-celadon",
+      "leader": "Erika",
+      "city": "Ciudad Azulona",
+      "region": "kanto",
+      "type": "grass",
+      "signatureSpeciesID": 45,
+      "medal": "Medalla Arcoíris",
+      "order": 4,
+      "hp": [
+        587000,
+        647000
+      ],
+      "absorption": 0.5
+    },
+    {
+      "id": "kanto-fuchsia",
+      "leader": "Koga",
+      "city": "Ciudad Fucsia",
+      "region": "kanto",
+      "type": "poison",
+      "signatureSpeciesID": 110,
+      "medal": "Medalla Alma",
+      "order": 5,
+      "hp": [
+        616000,
+        676000
+      ],
+      "absorption": 0.5
+    },
+    {
+      "id": "kanto-saffron",
+      "leader": "Sabrina",
+      "city": "Ciudad Azafrán",
+      "region": "kanto",
+      "type": "psychic",
+      "signatureSpeciesID": 65,
+      "medal": "Medalla Pantano",
+      "order": 6,
+      "hp": [
+        645000,
+        705000
+      ],
+      "absorption": 0.5
+    },
+    {
+      "id": "kanto-cinnabar",
+      "leader": "Blaine",
+      "city": "Isla Canela",
+      "region": "kanto",
+      "type": "fire",
+      "signatureSpeciesID": 59,
+      "medal": "Medalla Volcán",
+      "order": 7,
+      "hp": [
+        674000,
+        734000
+      ],
+      "absorption": 0.75
+    },
+    {
+      "id": "kanto-viridian",
+      "leader": "Giovanni",
+      "city": "Ciudad Verde",
+      "region": "kanto",
+      "type": "ground",
+      "signatureSpeciesID": 112,
+      "medal": "Medalla Tierra",
+      "order": 8,
+      "hp": [
+        703000,
+        763000
+      ],
+      "absorption": 0.75
+    },
+    {
+      "id": "johto-violet",
+      "leader": "Falkner",
+      "city": "Ciudad Malva",
+      "region": "johto",
+      "type": "flying",
+      "signatureSpeciesID": 17,
+      "medal": "Medalla Céfiro",
+      "order": 9,
+      "hp": [
+        732000,
+        792000
+      ],
+      "absorption": 0.75
+    },
+    {
+      "id": "johto-azalea",
+      "leader": "Bugsy",
+      "city": "Pueblo Azalea",
+      "region": "johto",
+      "type": "bug",
+      "signatureSpeciesID": 123,
+      "medal": "Medalla Colmena",
+      "order": 10,
+      "hp": [
+        761000,
+        821000
+      ],
+      "absorption": 1.0
+    },
+    {
+      "id": "johto-goldenrod",
+      "leader": "Whitney",
+      "city": "Ciudad Trigal",
+      "region": "johto",
+      "type": "normal",
+      "signatureSpeciesID": 241,
+      "medal": "Medalla Llanura",
+      "order": 11,
+      "hp": [
+        790000,
+        850000
+      ],
+      "absorption": 1.0
+    },
+    {
+      "id": "johto-ecruteak",
+      "leader": "Morty",
+      "city": "Ciudad Iris",
+      "region": "johto",
+      "type": "ghost",
+      "signatureSpeciesID": 94,
+      "medal": "Medalla Bruma",
+      "order": 12,
+      "hp": [
+        819000,
+        879000
+      ],
+      "absorption": 1.0
+    },
+    {
+      "id": "johto-cianwood",
+      "leader": "Chuck",
+      "city": "Ciudad Orquídea",
+      "region": "johto",
+      "type": "fighting",
+      "signatureSpeciesID": 62,
+      "medal": "Medalla Tormenta",
+      "order": 13,
+      "hp": [
+        848000,
+        908000
+      ],
+      "absorption": 1.25
+    },
+    {
+      "id": "johto-olivine",
+      "leader": "Jasmine",
+      "city": "Ciudad Olivo",
+      "region": "johto",
+      "type": "steel",
+      "signatureSpeciesID": 208,
+      "medal": "Medalla Mineral",
+      "order": 14,
+      "hp": [
+        877000,
+        937000
+      ],
+      "absorption": 1.25
+    },
+    {
+      "id": "johto-mahogany",
+      "leader": "Pryce",
+      "city": "Pueblo Caoba",
+      "region": "johto",
+      "type": "ice",
+      "signatureSpeciesID": 221,
+      "medal": "Medalla Glaciar",
+      "order": 15,
+      "hp": [
+        906000,
+        966000
+      ],
+      "absorption": 1.5
+    },
+    {
+      "id": "johto-blackthorn",
+      "leader": "Clair",
+      "city": "Ciudad Endrino",
+      "region": "johto",
+      "type": "dragon",
+      "signatureSpeciesID": 230,
+      "medal": "Medalla Ascenso",
+      "order": 16,
+      "hp": [
+        935000,
+        995000
+      ],
+      "absorption": 1.5
+    }
+  ]
 }

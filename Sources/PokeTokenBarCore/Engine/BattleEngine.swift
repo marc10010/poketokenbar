@@ -28,7 +28,7 @@ public struct BattleEngine {
 
     public func freshEncounter<R: RandomProvider>(
         rank: TrainerRank,
-        access: ZoneAccess = ZoneAccess(medals: 0, kantoOpen: false, isChampion: false),
+        access: ZoneAccess = ZoneAccess(medals: 0),
         focus: Zone? = nil,
         using rng: inout R,
         now: Date = Date()
@@ -48,7 +48,7 @@ public struct BattleEngine {
         to encounter: WildEncounter?,
         totalTokensAfter: Int,
         rank: TrainerRank = .campeon,
-        access: ZoneAccess = ZoneAccess(medals: 16, kantoOpen: true, isChampion: true),
+        access: ZoneAccess = ZoneAccess(medals: 16, openRegions: ["kanto", "johto"], isChampion: true),
         focus: Zone? = nil,
         multiplier: (WildEncounter) -> Double = { _ in 1 },
         using rng: inout R,

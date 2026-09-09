@@ -29,9 +29,9 @@ enum GymTests: TestSuite {
     /// los requisitos de las zonas cuentan las 16 seguidas. Es la duda que
     /// provocaba el "3/16" a secas.
     static func testMedalsByRegion() throws {
-        expectEqual(catalog.regions, ["johto", "kanto"], "en orden de reto")
-        expectEqual(catalog.gyms(in: "johto").count, 8)
+        expectEqual(catalog.regions, ["kanto", "johto"], "en orden de reto: Kanto primero")
         expectEqual(catalog.gyms(in: "kanto").count, 8)
+        expectEqual(catalog.gyms(in: "johto").count, 8)
 
         let store = GameStore(
             file: StateFileStore(url: TemporaryFiles.uniqueDirectory().appendingPathComponent("state.json")),
@@ -40,42 +40,42 @@ enum GymTests: TestSuite {
         store.chooseStarter(speciesID: 7)
 
         var regions = store.medalsByRegion
-        expectEqual(regions.map(\.region), ["johto", "kanto"])
+        expectEqual(regions.map(\.region), ["kanto", "johto"])
         expectEqual(regions[0].earned, 0)
-        expectTrue(regions[0].open, "Johto está abierta desde el principio")
-        expectTrue(!regions[1].open, "Kanto no")
-        expectEqual(regions[1].gate?.id, "johto", "y dice qué la abre")
+        expectTrue(regions[0].open, "Kanto está abierta desde el principio")
+        expectTrue(!regions[1].open, "Johto no")
+        expectEqual(regions[1].gate?.id, "kanto", "y dice qué la abre: el Alto Mando de Kanto")
 
         store.debugDefeatGyms(upTo: 8)
         regions = store.medalsByRegion
-        expectEqual(regions[0].earned, 8, "las ocho de Johto")
+        expectEqual(regions[0].earned, 8, "las ocho de Kanto")
         expectEqual(regions[1].earned, 0)
-        expectTrue(!regions[1].open, "con las 8 medallas Kanto sigue cerrada: falta el Alto Mando")
+        expectTrue(!regions[1].open, "con las 8 medallas Johto sigue cerrada: falta el barco")
         expectEqual(store.medals, 8, "y el total no se ha reiniciado")
 
-        store.debugOpenRegion("kanto")
+        store.debugOpenRegion("johto")
         regions = store.medalsByRegion
-        expectTrue(regions[1].open, "ganado el Alto Mando, Kanto se abre")
+        expectTrue(regions[1].open, "con el barco, Johto se abre")
         expectEqual(regions[1].gate, nil)
 
         store.debugDefeatGyms(upTo: 10)
         regions = store.medalsByRegion
         expectEqual(regions[0].earned, 8)
-        expectEqual(regions[1].earned, 2, "dos de Kanto")
+        expectEqual(regions[1].earned, 2, "dos de Johto")
         expectEqual(store.medals, 10, "que son 10 en total, no 2")
         expectEqual(store.rank, .campeon == store.rank ? store.rank : TrainerRank.rank(forMedals: 10))
     }
 
     static func testCatalogIntegrity() {
-        expectEqual(catalog.count, 16, "8 de Johto + 8 de Kanto")
+        expectEqual(catalog.count, 16, "8 de Kanto + 8 de Johto")
         expectEqual(Set(catalog.all.map(\.id)).count, 16, "ids únicos")
         expectEqual(Set(catalog.all.map(\.medal)).count, 16, "medallas únicas")
         expectEqual(catalog.all.map(\.order), Array(1...16), "orden consecutivo y ordenado")
         expectEqual(catalog.all.filter { $0.region == "johto" }.count, 8)
         expectEqual(catalog.all.filter { $0.region == "kanto" }.count, 8)
         expectTrue(
-            catalog.all.prefix(8).allSatisfy { $0.region == "johto" },
-            "Johto va primero, como en Gen 2"
+            catalog.all.prefix(8).allSatisfy { $0.region == "kanto" },
+            "Kanto va primero: el orden de juego es Gen 1 y luego Gen 2"
         )
     }
 
@@ -108,12 +108,12 @@ enum GymTests: TestSuite {
     }
 
     static func testNextGym() throws {
-        expectEqual(catalog.next(defeated: [])?.id, "johto-violet")
-        expectEqual(catalog.next(defeated: ["johto-violet"])?.id, "johto-azalea")
+        expectEqual(catalog.next(defeated: [])?.id, "kanto-pewter")
+        expectEqual(catalog.next(defeated: ["kanto-pewter"])?.id, "kanto-cerulean")
         // Derrotar uno de más adelante no salta los de antes.
-        expectEqual(catalog.next(defeated: ["kanto-pewter"])?.id, "johto-violet")
+        expectEqual(catalog.next(defeated: ["johto-violet"])?.id, "kanto-pewter")
         expectNil(catalog.next(defeated: Set(catalog.all.map(\.id))), "con todos, no hay siguiente")
-        expectEqual(catalog.medals(defeated: ["johto-violet", "johto-azalea"]).count, 2)
+        expectEqual(catalog.medals(defeated: ["kanto-pewter", "kanto-cerulean"]).count, 2)
     }
 
     static func testRankFromMedals() {
@@ -150,15 +150,20 @@ enum GymTests: TestSuite {
     }
 
     static func testAbsorptionBlocksWeakMatchups() {
-        // Brock: absorción 0,75 en el orden 9.
+        // Pryce: absorción 0,75, ya en la región 2 (orden 15).
+        let pryce = catalog["johto-mahogany"]!
+        expectEqual(pryce.absorption, 1.5, accuracy: 0.001)
+
+        // Y el primero de todos, Brock, con la absorción más baja: un cruce
+        // flojo no le hace nada, uno neutro sí.
         let brock = catalog["kanto-pewter"]!
-        expectEqual(brock.absorption, 0.75, accuracy: 0.001)
+        expectEqual(brock.absorption, 0.25, accuracy: 0.001)
         expectTrue(combat.isBlocked(matchup: 0.25, absorption: brock.absorption))
-        expectTrue(combat.isBlocked(matchup: 0.5, absorption: brock.absorption))
+        expectFalse(combat.isBlocked(matchup: 0.5, absorption: brock.absorption))
         expectFalse(combat.isBlocked(matchup: 1, absorption: brock.absorption))
-        expectEqual(combat.damagePerToken(matchup: 1, absorption: brock.absorption), 0.25, accuracy: 0.001)
-        expectEqual(combat.damagePerToken(matchup: 2, absorption: brock.absorption), 1.25, accuracy: 0.001)
-        expectEqual(combat.damagePerToken(matchup: 4, absorption: brock.absorption), 3.25, accuracy: 0.001)
+        expectEqual(combat.damagePerToken(matchup: 1, absorption: brock.absorption), 0.75, accuracy: 0.001)
+        expectEqual(combat.damagePerToken(matchup: 2, absorption: brock.absorption), 1.75, accuracy: 0.001)
+        expectEqual(combat.damagePerToken(matchup: 4, absorption: brock.absorption), 3.75, accuracy: 0.001)
     }
 
     static func testBlockedDealsNothing() {
@@ -184,11 +189,11 @@ enum GymTests: TestSuite {
     }
 
     static func testLateGymsRequireEffectiveness() throws {
-        let giovanni = try unwrap(catalog["kanto-viridian"])
-        expectEqual(giovanni.order, 16)
-        expectTrue(combat.isBlocked(matchup: 1, absorption: giovanni.absorption, stage: .two),
+        let clair = try unwrap(catalog["johto-blackthorn"])
+        expectEqual(clair.order, 16, "la última es Clair, ya en la región 2")
+        expectTrue(combat.isBlocked(matchup: 1, absorption: clair.absorption, stage: .two),
                    "ni evolucionado al máximo basta un cruce neutro contra el último")
-        expectFalse(combat.isBlocked(matchup: 2, absorption: giovanni.absorption, stage: .two))
-        expectFalse(combat.isBlocked(matchup: 4, absorption: giovanni.absorption))
+        expectFalse(combat.isBlocked(matchup: 2, absorption: clair.absorption, stage: .two))
+        expectFalse(combat.isBlocked(matchup: 4, absorption: clair.absorption))
     }
 }

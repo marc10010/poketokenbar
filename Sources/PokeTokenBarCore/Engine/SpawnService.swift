@@ -73,7 +73,7 @@ public struct SpawnService {
 
     public func spawn<R: RandomProvider>(
         rank: TrainerRank,
-        access: ZoneAccess = ZoneAccess(medals: 0, kantoOpen: false, isChampion: false),
+        access: ZoneAccess = ZoneAccess(medals: 0),
         focus: Zone? = nil,
         using rng: inout R,
         now: Date = Date()

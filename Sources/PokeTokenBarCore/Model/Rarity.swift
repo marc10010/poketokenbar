@@ -74,10 +74,11 @@ public enum GameRules {
     /// salga el barco a la siguiente.
     ///
     /// El equivalente al Dock Pass de PokéClicker, que allí se compra con
-    /// moneda: aquí no hay monedas, así que el peaje es la Pokédex. 50 de las
-    /// 100 de Johto son las 47 que se encuentran antes de Kanto más criar tres,
-    /// unos 600.000 tokens: obliga a recorrer la región sin ser un muro.
-    public static let regionTransferSpecies = 50
+    /// moneda: aquí no hay monedas, así que el peaje es la Pokédex. 70 de las
+    /// 151 de Kanto son las 66 que se encuentran antes de Johto más criar
+    /// cuatro, unos 800.000 tokens: obliga a recorrer la región sin ser un
+    /// muro.
+    public static let regionTransferSpecies = 70
 
     /// 1 token = 1 punto de daño.
     public static let damagePerToken = 1

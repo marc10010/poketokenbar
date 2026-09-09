@@ -461,30 +461,35 @@ swift run PokeTokenBar --render-ui docs/screenshots
 ## 11. Regiones y ligas
 
 El contenido va por **dos regiones con puerta entre ellas**: los ocho gimnasios
-de Johto, el Alto Mando, y solo entonces los de Kanto.
+de Kanto, su Alto Mando, y solo entonces Johto.
 
 ```
-Johto: 8 gimnasios ─▶ Alto Mando de Johto ─▶ abre la región de Kanto
-Kanto: 8 gimnasios ─▶ Monte Plateado: Red ─▶ Campeón, abre Cueva Celeste
+Kanto: 8 gimnasios ─▶ Alto Mando de Kanto (Lorelei…Blue) ─▶ abre Johto
+Johto: 8 gimnasios ─▶ Alto Mando de Johto y Red ─▶ Campeón, abre Cueva Celeste
 ```
 
-**El noveno gimnasio no aparece hasta que sale el barco a Kanto.** Sin esa
-puerta la región sería solo una etiqueta, y el popover dice qué es lo que
-bloquea en vez de dejar el avance en silencio.
+**El orden es el de las generaciones** (Gen 1 y luego Gen 2), no el de Oro y
+Plata. Se eligió así porque hace que **el mundo y las evoluciones cuadren**: las
+evoluciones que en el canon no existían hasta Gen 2 —Steelix, Crobat, Blissey,
+Scizor, Kingdra, Politoed, Bellossom, Slowking, Porygon2, Espeon y Umbreon— caen
+justo detrás de la puerta, así que un Onix **no puede ser Steelix hasta abrir
+Johto** (§3). Con el orden inverso esa regla no tocaba a nadie interesante.
 
-### El barco a Kanto
+**El noveno gimnasio no aparece hasta que sale el barco.** Sin esa puerta la
+región sería solo una etiqueta, y el popover dice qué es lo que bloquea en vez
+de dejar el avance en silencio.
 
-En Oro y Plata a Kanto se va **en barco desde Ciudad Olivo** después del Alto
-Mando, y el billete aquí tiene **dos mitades**:
+### El barco entre regiones
 
-1. ganar el **Alto Mando de Johto**, y
-2. tener **50 de las 100 especies de Johto registradas**.
+El billete tiene **dos mitades**:
+
+1. ganar el **Alto Mando de Kanto**, y
+2. tener **70 de las 151 especies de Kanto registradas**.
 
 El requisito de Pokédex es lo que hace que la región 1 haya que jugarla y no
-solo atravesarla: sin él se podía ganar el Alto Mando con 18 de las 100 de
-Johto sin registrar. Son las 47 que se encuentran antes de Kanto más criar
-tres, unos 600.000 tokens, y con la zona enfocada es trabajo dirigido y no
-lotería.
+solo atravesarla: sin él se ganaba el Alto Mando con la mitad de la región sin
+ver. Son las **66 que se encuentran antes de Johto** más criar cuatro, unos
+800.000 tokens, y con la zona enfocada es trabajo dirigido y no lotería.
 
 Es el equivalente al **Dock Pass** de PokéClicker, que allí se compra con
 moneda: aquí no hay monedas, así que el peaje es la Pokédex.
@@ -494,18 +499,18 @@ Dos consecuencias buenas:
 - **el Alto Mando se puede ganar igual** sin el requisito. Lo que espera es el
   barco, no el contenido;
 - **el salto de región puede llegar en una captura**, no solo ganando un
-  combate: si ya tienes la liga, la especie número 50 abre Kanto y se celebra
+  combate: si ya tienes la liga, la especie número 70 abre Johto y se celebra
   como tal. Es el pago de coleccionar.
 
-A quien ya tenía Kanto abierta antes de que el requisito existiera **no se le
-cierra** (`grandfatheredRegions`): quitar un acceso concedido es peor que el
-problema que arregla el requisito.
+A quien ya tuviera la región 2 abierta antes de que el requisito existiera **no
+se le cierra** (`grandfatheredRegions`): quitar un acceso concedido es peor que
+el problema que arregla el requisito.
 
-**Kanto no escala el HP de sus salvajes**, y con los datos delante no le hace
-falta: sus 83 especies base traen un 12 % más de HP medio y un 50 % más de
-raras que las 95 de Johto. Un multiplicador por región se comería el bonus de
-colección ganado en Johto y encarecería volver a por lo que falta. La rampa la
-ponen los jefes (absorción 0,75 → 1,5).
+**La región 2 no escala el HP de sus salvajes**, y con los datos delante no le
+hace falta. La rampa la ponen los jefes: la absorción va de 0,25 en Brock a 1,5
+en Clair, así que los últimos gimnasios exigen ventaja de tipo **y** etapa
+evolutiva. Un multiplicador por región se comería el bonus de colección ganado
+en la región 1 y encarecería volver a por lo que falta.
 
 Una liga es un **gauntlet**: sus miembros en cadena y sin salvajes en medio.
 Abandonar **reinicia la tirada**, que es lo que significa un gauntlet, pero
@@ -514,37 +519,41 @@ absorben 1,5 o más, así que un cruce neutro no pasa de ahí.
 
 | Liga | Miembros | Requisito | Premio |
 |---|---|---|---|
-| Alto Mando de Johto | Will, Koga, Bruno, Karen y Lance | 8 medallas | abre Kanto |
-| Monte Plateado | Red | 16 medallas y la liga anterior | Campeón · abre Cueva Celeste |
+| Alto Mando de Kanto | Lorelei, Bruno, Agatha, Lance y Blue | 8 medallas | abre Johto |
+| Alto Mando de Johto y Monte Plateado | Will, Koga, Bruno, Karen, Lance y **Red** | 16 medallas y la liga anterior | Campeón · abre Cueva Celeste |
 
-Detalle canónico que sale gratis: **Koga aparece dos veces**, líder de gimnasio
-en Kanto (Weezing) y Alto Mando en Johto (Crobat).
+Detalles canónicos que salen gratis: **Bruno aparece en los dos Altos Mandos**
+(como en los juegos), **Lance** pasa de miembro en Kanto a último antes de Red,
+y **Koga** es líder de gimnasio en Kanto (Weezing) y Alto Mando en Johto
+(Crobat).
 
-`kantoOpen` e `isChampion` **dejan de derivarse de las medallas** y pasan a
-depender de haber ganado la liga, que era lo provisional que quedaba.
+Qué región abre cada liga sale del **catálogo** (`LeagueReward.opensRegion`), no
+de comparar el id con un nombre: eso es lo que permitió invertir el orden
+tocando datos y no reglas.
 
 ### Cómo se cuentan las 16 medallas
 
-Cada región tiene **sus ocho**, y el popover las enseña así: `JOHTO 3/8` y
-`KANTO 0/8`, con la fila de Kanto diciendo que está cerrada hasta ganar el Alto
-Mando. Pero **el total no se reinicia** al cambiar de región: son 16 seguidas, y
-es ese número el que mueve todo lo demás.
+Cada región tiene **sus ocho**, y el popover las enseña así: `KANTO 3/8` y
+`JOHTO 0/8`, con la fila de Johto diciendo que está cerrada hasta ganar el Alto
+Mando de Kanto. Pero **el total no se reinicia** al cambiar de región: son 16
+seguidas, y es ese número el que mueve todo lo demás.
 
 | Total | Región | Qué desbloquea |
 |---|---|---|
-| 0 | Johto | rutas del sur; tier común y poco común |
-| 2 | Johto | tier **raro** (rango Entrenador) |
-| 5 | Johto | rango Veterano |
-| 8 | Johto | tier **legendario** (rango As) y el Alto Mando de Johto |
-| 8 + liga | — | **se abre Kanto**: sus zonas base y su primer gimnasio |
-| 10, 12, 14, 16 | Kanto | sus zonas por tramos (Central Eléctrica, Mansión, Cueva Celeste…) |
-| 16 + liga | — | Campeón |
+| 0 | Kanto | rutas del sur; tier común y poco común |
+| 2 | Kanto | tier **raro** (rango Entrenador) |
+| 5 | Kanto | rango Veterano y la Central Eléctrica |
+| 8 | Kanto | tier **legendario** (rango As), los tres pájaros y el Alto Mando |
+| 8 + liga | — | **se abre Johto**: sus zonas base y su primer gimnasio |
+| 10 a 16 | Johto | sus zonas por tramos (Ruinas Alfa, Monte Mortar, Senda Helada…) |
+| 16 | Johto | Torre Quemada, Torre Campana e Islas Remolino: los legendarios de Johto |
+| 16 + liga | — | Campeón, Cueva Celeste y el Monte Plateado |
 
-Es decir: donde la escalera dice "10 medallas" son **las 8 de Johto más 2 de
-Kanto**, no 10 de Kanto. Contar por región y reiniciar en cada una (como
+Es decir: donde la escalera dice "10 medallas" son **las 8 de Kanto más 2 de
+Johto**, no 10 de Johto. Contar por región y reiniciar en cada una (como
 PokéClicker) obligaría a reescribir los requisitos de las 32 zonas y los cinco
-rangos, así que por ahora se cuenta seguido y **se enseña por región**, que era
-donde estaba la confusión.
+rangos, así que se cuenta seguido y **se enseña por región**, que era donde
+estaba la confusión.
 
 ## 12. Hitos legendarios
 
@@ -655,12 +664,12 @@ Se persiste: cazar algo concreto lleva sesiones.
 
 La pestaña **Pokédex** abre los **251 huecos**, no solo lo que tienes.
 
-**Se etiqueta por región, no por generación**, porque "Gen 2" se lee como
-"región 2" y aquí es al revés: la **región 1 es Johto**, cuyos Pokémon son los
-de Gen 2 (#152-251), y la **2 es Kanto**, que son los de Gen 1 (#001-151). Ver
-un Snubbull (#209) sin haber abierto Kanto es lo normal: es de Johto. Y las
-rutas del sur de Johto mezclan 29 especies de Kanto con 27 de Johto, como en
-Oro y Plata.
+**Se etiqueta por región, no por generación**: la **región 1 es Kanto** (Gen 1,
+#001-151) y la **2 es Johto** (Gen 2, #152-251), así que el número y el orden
+de juego coinciden. Lo que sigue sorprendiendo es lo contrario: en las rutas de
+Kanto se ven **especies de Johto** (un Snubbull #209 antes de abrir Johto es
+normal), porque los encuentros salen de los datos de Oro y Plata, donde las dos
+generaciones conviven en el mapa.
 
 
 | Estado | Cómo se ve |
@@ -713,9 +722,12 @@ si se borraran el consumo ya contabilizado podría volver a entrar como daño.
 </p>
 
 `Resources/gyms.json` es el único dato **curado a mano** del proyecto: PokeAPI
-no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
-luego los de Kanto, como en Gen 2), cada una con su Pokémon estrella — que es
-también su sprite, así que no hace falta ningún recurso gráfico nuevo.
+no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Kanto y
+luego los de Johto, o sea el orden de las generaciones), cada una con su Pokémon
+estrella — que es también su sprite, así que no hace falta ningún recurso
+gráfico nuevo. **El orden lo fija el campo `order`, y el HP y la absorción salen
+de él**: invertir las regiones fue reasignar órdenes y recalcular la rampa, no
+tocar las reglas.
 
 **El disparador**: al vencer un salvaje, si llevas 300.000 tokens o **10
 victorias** desde el último gimnasio, el líder **queda disponible**. Victorias,

@@ -20,13 +20,16 @@ public struct LeagueMember: Codable, Hashable, Sendable {
 public enum LeagueReward: String, Codable, Hashable, Sendable {
     /// Abre la región de Kanto: sus gimnasios y sus zonas.
     case kanto
+    /// Abre la región de Johto.
+    case johto
     /// Campeón: abre Cueva Celeste y el título.
     case champion
 
     public var label: String {
         switch self {
         case .kanto: return "Abre la región de Kanto"
-        case .champion: return "Campeón · abre Cueva Celeste"
+        case .johto: return "Abre la región de Johto"
+        case .champion: return "Campeón · abre Cueva Celeste y el Monte Plateado"
         }
     }
 
@@ -35,6 +38,7 @@ public enum LeagueReward: String, Codable, Hashable, Sendable {
     public var opensRegion: String? {
         switch self {
         case .kanto: return "kanto"
+        case .johto: return "johto"
         case .champion: return nil
         }
     }
@@ -124,9 +128,9 @@ public struct LeagueProgress: Codable, Hashable, Sendable {
 
     public var wonIDs: Set<String> { Set(won) }
 
-    /// Kanto se abre ganando el Alto Mando de Johto, no acumulando medallas.
-    public var kantoOpen: Bool { wonIDs.contains("johto") }
-    public var isChampion: Bool { wonIDs.contains("kanto") }
+    /// Qué región abre cada liga y quién es el campeón ya no se deducen del id
+    /// de la liga: eso vivía en el código y se rompió al invertir el orden de
+    /// juego. Ahora sale del catálogo (`LeagueReward`), y lo resuelve el store.
 
     public mutating func award(_ id: String) {
         guard !won.contains(id) else { return }

@@ -80,8 +80,15 @@ public struct StateFileStore {
         }
         // v7 → v8: abrir Kanto pasa a pedir también 50 especies de Johto
         // registradas. A quien ya la tenía abierta no se le cierra.
-        if state.schemaVersion < 8, state.leagues.wonIDs.contains("johto") {
-            state.grandfatheredRegions.insert("kanto")
+        if state.schemaVersion < 8 {
+            // La liga que abre la región 2 y cuál es sale del catálogo: el id
+            // dejó de poder escribirse a mano al invertir el orden de juego.
+            for league in LeagueCatalog.shared.all {
+                guard let region = league.reward.opensRegion,
+                      state.leagues.wonIDs.contains(league.id)
+                else { continue }
+                state.grandfatheredRegions.insert(region)
+            }
         }
         state.schemaVersion = GameState.currentSchemaVersion
         return state

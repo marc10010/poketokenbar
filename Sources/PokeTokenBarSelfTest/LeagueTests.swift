@@ -7,10 +7,10 @@ enum LeagueTests: TestSuite {
 
     static let tests: [(String, () throws -> Void)] = [
         ("el catálogo tiene las dos ligas en orden", testCatalog),
-        ("los gimnasios de Kanto esperan al Alto Mando", testRegionGate),
+        ("los gimnasios de la región 2 esperan al Alto Mando", testRegionGate),
         ("la liga pide medallas y la anterior", testAvailability),
         ("el gauntlet encadena miembros sin salvajes en medio", testGauntletChains),
-        ("ganar Johto abre Kanto y sus zonas", testJohtoOpensKanto),
+        ("ganar la primera liga abre la segunda región", testFirstLeagueOpensSecondRegion),
         ("ganar Monte Plateado corona y abre Cueva Celeste", testChampionOpensCeruleanCave),
         ("abandonar reinicia la tirada", testAbandonResets),
         ("un miembro bloqueado detiene el gauntlet sin perderlo", testBlockedMemberStalls),
@@ -41,9 +41,10 @@ enum LeagueTests: TestSuite {
     }
 
     static func testCatalog() {
-        expectEqual(leagues.all.map(\.id), ["johto", "kanto"])
-        expectEqual(leagues.all.first?.members.count, 5, "Alto Mando: cuatro y campeón")
-        expectEqual(leagues.all.last?.members.count, 1, "Monte Plateado: solo Red")
+        // En orden de juego: primero el Alto Mando de Kanto, que abre Johto.
+        expectEqual(leagues.all.map(\.id), ["kanto", "johto"])
+        expectEqual(leagues.all.first?.members.count, 5, "Alto Mando de Kanto: cuatro y Blue")
+        expectEqual(leagues.all.last?.members.count, 6, "el de Johto acaba con Red en el Monte Plateado")
         for league in leagues.all {
             expectEqual(league.members.map(\.order), Array(1...league.members.count))
             for member in league.members {
@@ -54,19 +55,19 @@ enum LeagueTests: TestSuite {
                 )
             }
         }
-        expectEqual(leagues["johto"]?.reward, .kanto)
-        expectEqual(leagues["kanto"]?.reward, .champion)
+        expectEqual(leagues["kanto"]?.reward, .johto, "la primera abre la región 2")
+        expectEqual(leagues["johto"]?.reward, .champion, "y la segunda da el título")
     }
 
     static func testRegionGate() throws {
         let store = ready()
         expectEqual(store.medals, 8)
-        expectNil(store.nextGym, "el noveno es de Kanto y está tras la puerta")
-        expectEqual(store.gymGate?.id, "johto", "y se dice qué lo bloquea")
+        expectNil(store.nextGym, "el noveno es de la región 2 y está tras la puerta")
+        expectEqual(store.gymGate?.id, "kanto", "y se dice qué lo bloquea: el Alto Mando de Kanto")
 
-        store.debugOpenRegion("kanto")
+        store.debugOpenRegion("johto")
         let siguiente = try unwrap(store.nextGym)
-        expectEqual(siguiente.region, "kanto")
+        expectEqual(siguiente.region, "johto")
         expectEqual(siguiente.order, 9)
         expectNil(store.gymGate)
     }
@@ -74,74 +75,71 @@ enum LeagueTests: TestSuite {
     static func testAvailability() throws {
         let store = makeStore()
         store.chooseStarter(speciesID: 7)
-        let johto = try unwrap(leagues["johto"])
-        let kanto = try unwrap(leagues["kanto"])
+        let primera = try unwrap(leagues["kanto"])     // Alto Mando de Kanto
+        let segunda = try unwrap(leagues["johto"])     // Johto y el Monte Plateado
 
-        expectEqual(store.availability(of: johto), .needsMedals(8))
-        expectEqual(store.availability(of: kanto), .needsPreviousLeague(johto.name))
+        expectEqual(store.availability(of: primera), .needsMedals(8))
+        expectEqual(store.availability(of: segunda), .needsPreviousLeague(primera.name))
 
         store.debugDefeatGyms(upTo: 8)
-        expectTrue(store.availability(of: johto).isAvailable)
-        expectEqual(store.availability(of: kanto), .needsPreviousLeague(johto.name), "el orden manda")
+        expectTrue(store.availability(of: primera).isAvailable)
+        expectEqual(store.availability(of: segunda), .needsPreviousLeague(primera.name), "el orden manda")
 
-        store.debugOpenRegion("kanto")
-        expectEqual(store.availability(of: johto), .won)
-        expectEqual(store.availability(of: kanto), .needsMedals(8), "Red pide las 16")
+        store.debugOpenRegion("johto")
+        expectEqual(store.availability(of: primera), .won)
+        expectEqual(store.availability(of: segunda), .needsMedals(8), "el final pide las 16")
     }
 
     static func testGauntletChains() throws {
-        // Onix SIN tokens ganados: roca contra Xatu (psíquico/volador) es ×2 y
-        // pasa la absorción de 1,5. Con tokens ganados evolucionaría a Steelix
-        // y el acero contra psíquico/volador es ×1, o sea bloqueado: los tipos
-        // que cuentan son los de la forma que se muestra, no los de la
-        // capturada.
+        // Pikachu contra Lapras: eléctrico contra agua/hielo es ×2 y pasa la
+        // absorción de 1,5 del primer miembro del Alto Mando.
         let store = ready(seed: 15)
-        store.debugCapture(speciesID: 95)
+        store.debugCapture(speciesID: 25)          // Pikachu: eléctrico
         store.setActiveCompanion(try unwrap(store.state.box.last).id)
-        expectTrue(store.startLeague("johto"))
+        expectTrue(store.startLeague("kanto"))
 
         let primero = try unwrap(store.activeLeague)
-        expectEqual(primero.member.name, "Will")
+        expectEqual(primero.member.name, "Lorelei")
         expectEqual(primero.run.memberIndex, 0)
         expectNil(store.state.encounter, "no hay salvaje durante la liga")
 
-        // Onix es roca/tierra: contra Xatu (psíquico/volador) roca hace ×2.
+        // Eléctrico contra Lapras (agua/hielo) hace ×2 y pasa la absorción.
         expectFalse(store.isBlocked(against: primero.member))
-        store.ingest(event("tumba-a-will", tokens: primero.run.currentHP * 2))
+        store.ingest(event("tumba-a-lorelei", tokens: primero.run.currentHP * 2))
 
         let segundo = try unwrap(store.activeLeague)
         expectEqual(segundo.run.memberIndex, 1, "encadena al siguiente")
-        expectEqual(segundo.member.name, "Koga")
+        expectEqual(segundo.member.name, "Bruno")
         expectNil(store.state.encounter, "y sigue sin salvajes en medio")
         expectEqual(store.state.leagues.won, [], "todavía no está ganada")
     }
 
-    /// Ganar el Alto Mando ya no basta: el barco pide además 50 especies de
-    /// Johto registradas, que es lo que hace que la región 1 haya que jugarla.
-    static func testJohtoOpensKanto() throws {
+    /// Ganar el Alto Mando ya no basta: el barco pide además 70 especies de
+    /// Kanto registradas, que es lo que hace que la región 1 haya que jugarla.
+    static func testFirstLeagueOpensSecondRegion() throws {
         let store = ready(seed: 23)
-        expectFalse(store.zoneAccess.kantoOpen)
-        let central = try unwrap(zones["central-electrica"])
-        expectFalse(store.zoneAccess.opens(central))
+        expectFalse(store.openRegions.contains("johto"))
+        let costa = try unwrap(zones["rutas-johto-costa"])
+        expectFalse(store.zoneAccess.opens(costa))
 
-        store.debugWinLeague("johto")
-        expectFalse(store.zoneAccess.kantoOpen, "la liga sola no abre Kanto")
-        store.debugOpenRegion("kanto")
-        expectTrue(store.zoneAccess.kantoOpen)
-        expectTrue(store.zoneAccess.opens(central) == false, "la Central pide además 12 medallas")
-        let rutas = try unwrap(zones["rutas-kanto-sur"])
-        expectTrue(store.zoneAccess.opens(rutas), "las rutas de Kanto sí se abren")
+        store.debugWinLeague("kanto")
+        expectFalse(store.openRegions.contains("johto"), "la liga sola no abre Johto")
+        store.debugOpenRegion("johto")
+        expectTrue(store.openRegions.contains("johto"))
+        expectFalse(store.zoneAccess.opens(costa), "las rutas de la costa piden además 12 medallas")
+        let rutas = try unwrap(zones["rutas-johto-sur"])
+        expectTrue(store.zoneAccess.opens(rutas), "las rutas del sur de Johto sí se abren")
         expectGreaterThan(
             store.zoneCatalog.availableSpecies(store.zoneAccess).count,
-            store.zoneCatalog.availableSpecies(ZoneAccess(medals: 8, kantoOpen: false, isChampion: false)).count
+            store.zoneCatalog.availableSpecies(ZoneAccess(medals: 8, openRegions: ["kanto"])).count
         )
     }
 
     static func testChampionOpensCeruleanCave() throws {
         let store = makeStore(seed: 31)
         store.chooseStarter(speciesID: 7)
+        store.debugOpenRegion("johto")
         store.debugDefeatGyms(upTo: 16)
-        store.debugOpenRegion("kanto")
         expectFalse(store.zoneAccess.isChampion)
 
         let celeste = try unwrap(zones["cueva-celeste"])
@@ -151,7 +149,7 @@ enum LeagueTests: TestSuite {
             expectTrue(false, "Mewtwo debería estar tras su zona: \(store.availability(of: mewtwo).reason)")
         }
 
-        store.debugWinLeague("kanto")
+        store.debugWinLeague("johto")
         expectTrue(store.zoneAccess.isChampion)
         expectTrue(store.zoneAccess.opens(celeste))
         expectTrue(store.availability(of: mewtwo).isAvailable, "y Mewtwo ya se puede retar")
@@ -159,9 +157,9 @@ enum LeagueTests: TestSuite {
 
     static func testAbandonResets() throws {
         let store = ready(seed: 44)
-        store.debugCapture(speciesID: 95)          // Onix, ×2 contra Xatu
+        store.debugCapture(speciesID: 25)          // Pikachu, ×2 contra Lapras
         store.setActiveCompanion(try unwrap(store.state.box.last).id)
-        expectTrue(store.startLeague("johto"))
+        expectTrue(store.startLeague("kanto"))
         let hp = try unwrap(store.activeLeague).run.currentHP
         store.ingest(event("pega", tokens: hp / 2))
         expectTrue(try unwrap(store.activeLeague).run.currentHP < hp, "algo de daño sí hizo")
@@ -171,17 +169,17 @@ enum LeagueTests: TestSuite {
         expectNotNil(store.state.encounter, "recupera sus salvajes")
 
         // Y al volver empieza por el primero: es un gauntlet.
-        expectTrue(store.startLeague("johto"))
+        expectTrue(store.startLeague("kanto"))
         let reinicio = try unwrap(store.activeLeague)
         expectEqual(reinicio.run.memberIndex, 0)
-        expectEqual(reinicio.member.name, "Will")
+        expectEqual(reinicio.member.name, "Lorelei")
         expectEqual(reinicio.run.currentHP, reinicio.run.maxHP, "y a HP completo")
     }
 
     static func testBlockedMemberStalls() throws {
         let store = ready(seed: 52)
         store.updateSettings { $0.typeEffectivenessEnabled = false }   // todo neutro
-        expectTrue(store.startLeague("johto"))
+        expectTrue(store.startLeague("kanto"))
         let member = try unwrap(store.activeLeague).member
         expectTrue(store.isBlocked(against: member), "neutro no pasa una absorción de 1,5")
 

@@ -21,10 +21,9 @@ public struct Pokemon: Codable, Hashable, Identifiable, Sendable {
 
     public var isBaseForm: Bool { stage == 0 }
 
-    /// Región de origen. Se dice en la UI en vez de la generación porque
-    /// "Gen 2" se lee como "región 2" y en este juego es al revés: la región 1
-    /// es **Johto**, cuyos Pokémon son los de Gen 2 (#152-251), y la 2 es
-    /// **Kanto**, que son los de Gen 1.
+    /// Región de origen. Se dice en la UI en vez de la generación porque es lo
+    /// que el jugador ve: la región 1 es **Kanto** (Gen 1, #001-151) y la 2 es
+    /// **Johto** (Gen 2, #152-251).
     public var homeRegion: String { generation == 1 ? "Kanto" : "Johto" }
     /// Etiqueta completa, para cuando el número de Pokédex también importa.
     public var regionLabel: String { "\(homeRegion) · Gen \(generation)" }

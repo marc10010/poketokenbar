@@ -9,7 +9,7 @@ struct RegionCelebrationView: View {
     let transfer: GameStore.RegionTransfer
 
     private var zones: [Zone] {
-        store.zoneCatalog.all.filter { $0.unlock.requiresKanto || $0.region == transfer.region }
+        store.zoneCatalog.all.filter { $0.unlock.requiredRegion == transfer.region || $0.region == transfer.region }
     }
 
     private var gyms: [Gym] { store.gymCatalog.gyms(in: transfer.region) }
