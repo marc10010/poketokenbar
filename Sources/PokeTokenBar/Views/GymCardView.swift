@@ -58,6 +58,11 @@ struct GymCardView: View {
                     .font(.system(size: compact ? 9 : 10))
                     .foregroundStyle(.secondary)
             }
+
+            Button("Salir del gimnasio") { store.abandonGym() }
+                .buttonStyle(.link)
+                .font(.system(size: compact ? 10 : 11))
+                .help("Pierdes el progreso contra el líder, pero recuperas tus salvajes y puedes volver cuando quieras")
         }
     }
 

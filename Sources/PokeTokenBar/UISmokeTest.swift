@@ -206,6 +206,15 @@ enum UISmokeTest {
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
         store.ingest(UsageEvent(id: "abre-gym", inputTokens: 10, outputTokens: 0))
+        // El gimnasio ya no entra solo: queda disponible y hay que retarlo.
+        if let waiting = store.availableGym {
+            print("  gimnasio disponible: \(waiting.leader) · se entra a mano")
+            ok = layout("invitación de gimnasio") && ok
+            store.startGym(waiting.id)
+        } else {
+            print("  ✗ el gimnasio no quedó disponible")
+            ok = false
+        }
         if let battle = store.activeGym?.battle {
             store.ingest(UsageEvent(id: "gana-gym", inputTokens: battle.maxHP * 4, outputTokens: 0))
         }

@@ -6,8 +6,8 @@ enum GymBattleTests: TestSuite {
     static let suiteName = "Gimnasios · combate"
 
     static let tests: [(String, () throws -> Void)] = [
-        ("el gimnasio se abre al capturar, no a mitad", testGymOpensOnCaptureOnly),
-        ("los tokens sobrantes de la captura entran al líder", testLeftoverTokensHitTheLeader),
+        ("queda disponible en vez de imponerse, y se puede salir", testGymBecomesAvailableNotForced),
+        ("con el líder dentro, el evento entero es suyo", testWholeEventHitsTheLeader),
         ("derrotarlo da medalla y no captura", testDefeatGivesMedalNotCapture),
         ("la medalla se da una sola vez", testMedalIsAwardedOnce),
         ("con el cruce bloqueado el HP no se mueve", testBlockedGymDoesNotBudge),
@@ -44,50 +44,78 @@ enum GymBattleTests: TestSuite {
         return store
     }
 
-    static func testGymOpensOnCaptureOnly() throws {
-        let store = primed(wildHP: 10_000)
-        expectNil(store.activeGym, "todavía no")
+    /// Cumple el disparador y **entra**. Desde que el gimnasio es opcional,
+    /// entrar es un acto del jugador, y los tests tienen que hacerlo también.
+    @discardableResult
+    private static func enterGym(_ store: GameStore, id: String = "abre") throws -> ActiveGymBattle {
+        store.ingest(event(id, tokens: 10))
+        let available = try unwrap(store.availableGym)
+        expectTrue(store.startGym(available.id), "no se pudo entrar")
+        return try unwrap(store.activeGym).battle
+    }
 
-        // Un evento que no remata al salvaje no abre nada, aunque el contador
-        // esté pasado de sobra. Los tokens se calculan con la tasa real: con
-        // el bonus de colección, 1 token ya no es 1 HP.
+    /// El gimnasio ya no se impone: al cumplirse el disparador queda
+    /// **disponible** y el jugador sigue cazando hasta que decide entrar.
+    static func testGymBecomesAvailableNotForced() throws {
+        let store = primed(wildHP: 10_000)
+        // El fixture ya deja el disparador cumplido, así que el líder está
+        // disponible desde el principio. Lo que importa es que no entra solo.
+        expectNil(store.activeGym, "no entra solo")
+        expectEqual(store.availableGym?.id, "johto-violet", "pero espera")
+
         let rate = store.wildDamagePerToken
         let casi = Int(Double(10_000 - 1) / rate)
         store.ingest(event("roza", tokens: casi))
-        expectNil(store.activeGym, "el gimnasio no interrumpe un combate")
+        expectNil(store.activeGym)
         expectTrue((store.state.encounter?.currentHP ?? 0) > 0, "el salvaje sigue vivo")
 
         store.ingest(event("remata", tokens: 10))
+        let available = try unwrap(store.availableGym)
+        expectEqual(available.id, "johto-violet", "el primero del orden")
+        expectNil(store.activeGym, "pero no entra solo")
+        expectNotNil(store.state.encounter, "y se sigue cazando")
+
+        // Sigue disponible después de más eventos: la puerta no se cierra.
+        store.ingest(event("mas", tokens: 50_000))
+        expectEqual(store.availableGym?.id, "johto-violet")
+
+        expectTrue(store.startGym("johto-violet"))
         let active = try unwrap(store.activeGym)
-        expectEqual(active.gym.id, "johto-violet", "el primero del orden")
-        expectNil(store.state.encounter, "no hay salvaje mientras hay líder")
+        expectNil(store.state.encounter, "ahora sí, no hay salvaje mientras hay líder")
         expectTrue(active.gym.hpRange.contains(active.battle.maxHP))
+        expectNil(store.availableGym, "ya está dentro")
+
+        // Y se puede salir, como de una liga o un hito.
+        store.abandonGym()
+        expectNil(store.activeGym)
+        expectNotNil(store.state.encounter, "vuelve el salvaje")
+        expectEqual(store.availableGym?.id, "johto-violet", "y el líder sigue esperando")
     }
 
-    static func testLeftoverTokensHitTheLeader() throws {
+    /// Con el líder dentro, el evento entero va contra él. El "sobrante de la
+    /// captura" desapareció con el gimnasio automático: ya no hay un evento
+    /// que se corte a mitad para meter al líder.
+    static func testWholeEventHitsTheLeader() throws {
         // Squirtle contra Pidgeotto es neutro; absorción 0,25 y etapa base
         // dejan 0,75 HP por token.
         let store = primed(wildHP: 10_000)
         store.updateSettings { $0.typeEffectivenessEnabled = true }
-        // Lo que gasta el salvaje depende de la tasa (cruce + colección), así
-        // que el sobrante se calcula, no se supone.
-        let rate = store.wildDamagePerToken
-        let paraElSalvaje = Int((10_000.0 / rate).rounded(.up))
-        store.ingest(event("mata-y-sigue", tokens: 110_000))
+        let battle = try enterGym(store)
+        expectEqual(battle.tokensSpent, 0, "entrar no gasta nada")
 
+        store.ingest(event("al-lider", tokens: 100_000))
         let active = try unwrap(store.activeGym)
-        let spent = 110_000 - paraElSalvaje
-        expectEqual(active.battle.tokensSpent, spent, "el resto va al líder")
+        expectEqual(active.battle.tokensSpent, 100_000, "el evento entero")
         expectEqual(
             active.battle.maxHP - active.battle.currentHP,
-            Int((Double(spent) * 0.75).rounded()),
+            Int((100_000.0 * 0.75).rounded()),
             "a 0,75 HP por token: al líder no le llega el bonus de colección"
         )
     }
 
     static func testDefeatGivesMedalNotCapture() throws {
         let store = primed(wildHP: 10)
-        store.ingest(event("abre", tokens: 10))
+        try enterGym(store)
         let active = try unwrap(store.activeGym)
         let boxBefore = store.state.box.count
 
@@ -116,8 +144,7 @@ enum GymBattleTests: TestSuite {
     /// disparador. Lo que no puede pasar es dar dos veces la misma medalla.
     static func testMedalIsAwardedOnce() throws {
         let store = primed(wildHP: 10)
-        store.ingest(event("abre", tokens: 10))
-        let hp = try unwrap(store.activeGym).battle.maxHP
+        let hp = try enterGym(store).maxHP
         store.ingest(event("bestial", tokens: hp * 20))
 
         expectGreaterThan(store.medals, 0)
@@ -189,7 +216,7 @@ enum GymBattleTests: TestSuite {
 
     static func testCountersResetOnGymEnd() throws {
         let store = primed(wildHP: 10)
-        store.ingest(event("abre", tokens: 10))
+        try enterGym(store)
         let active = try unwrap(store.activeGym)
         expectGreaterThan(store.state.gyms.tokensSinceLastGym, GameRules.gymTokenInterval - 1)
 
@@ -239,7 +266,7 @@ enum GymBattleTests: TestSuite {
         let wild = try unwrap(store.currentTarget)
         expectTrue(!wild.isBoss, "sin gimnasio, el objetivo es el salvaje")
 
-        store.ingest(event("abre", tokens: 10))
+        try enterGym(store)
         let gym = try unwrap(store.activeGym).gym
         expectEqual(store.wildDamagePerToken, 0, accuracy: 0.0001, "no hay salvaje al que pegar")
 
@@ -280,7 +307,7 @@ enum GymBattleTests: TestSuite {
 
     static func testGymTokensStillCount() throws {
         let store = primed(wildHP: 10)
-        store.ingest(event("abre", tokens: 10))
+        try enterGym(store)
         let earnedBefore = store.activeTokensEarned
         let totalBefore = store.totalTokens
 
@@ -294,7 +321,7 @@ enum GymBattleTests: TestSuite {
     /// dentro del mismo evento y el ritmo real no sería el que la UI mostraba.
     static func testRateDoesNotChangeMidEvent() throws {
         let store = primed(wildHP: 10)
-        store.ingest(event("abre", tokens: 10))
+        try enterGym(store)
         let active = try unwrap(store.activeGym)
         let rateShown = store.damagePerToken(against: active.gym)
         expectEqual(rateShown, 0.75, accuracy: 0.001, "etapa base: 1 − 0,25 de absorción")
@@ -323,8 +350,7 @@ enum GymBattleTests: TestSuite {
     /// un contador que sube: tiene que decir si el rango cambió y qué abre.
     static func testMedalCelebration() throws {
         let store = primed(wildHP: 10)
-        store.ingest(event("abre", tokens: 10))
-        var hp = try unwrap(store.activeGym).battle.maxHP
+        var hp = try enterGym(store).maxHP
         store.ingest(event("gana-1", tokens: hp * 2))
 
         let first = try unwrap(store.lastMedal)
@@ -339,8 +365,7 @@ enum GymBattleTests: TestSuite {
         expectNil(store.lastMedal, "se puede cerrar antes de tiempo")
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
-        store.ingest(event("abre-2", tokens: 10))
-        hp = try unwrap(store.activeGym).battle.maxHP
+        hp = try enterGym(store, id: "abre-2").maxHP
         store.ingest(event("gana-2", tokens: hp * 3))
 
         let second = try unwrap(store.lastMedal)

@@ -119,6 +119,9 @@ enum MilestoneTests: TestSuite {
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
         store.ingest(event("abre-gim", tokens: 10))
+        // El gimnasio queda disponible y hay que entrar: es opcional.
+        let disponible = try unwrap(store.availableGym)
+        expectTrue(store.startGym(disponible.id))
         expectNotNil(store.activeGym, "con Kanto abierta sí hay gimnasio siguiente")
         expectEqual(store.availability(of: raikou), .busy)
         expectFalse(store.startMilestone(raikou.id))
