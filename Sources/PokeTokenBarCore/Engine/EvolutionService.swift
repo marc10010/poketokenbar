@@ -41,10 +41,19 @@ public struct EvolutionService {
         self.pokedex = pokedex
     }
 
-    /// Camino completo desde la forma base, de longitud 1...3.
+    /// Camino completo de la línea, de longitud 1...3, **pasando por la especie
+    /// capturada**: primero se sube hasta la forma base y luego se baja con la
+    /// rama que fije la semilla.
+    ///
+    /// Empezar en `baseFormID` a secas no sirve: si la captura ya viene
+    /// evolucionada (o es de una rama que la semilla no habría elegido) su
+    /// propia forma no estaría en el camino.
     public func chainPath(of captured: CapturedPokemon, maxSteps: Int = EvolutionStage.two.rawValue) -> [Pokemon] {
-        let baseID = pokedex.require(captured.speciesID).baseFormID
-        var path = [pokedex.require(baseID)]
+        let species = pokedex.require(captured.speciesID)
+        var path = [species]
+        while path.count <= maxSteps + 1, let parent = pokedex.parent(of: path[0].id) {
+            path.insert(parent, at: 0)
+        }
         var rng = SeededRandomProvider(seed: captured.evolutionSeed)
         while path.count <= maxSteps {
             let options = path[path.count - 1].evolvesInto.compactMap { pokedex[$0] }
@@ -54,8 +63,15 @@ public struct EvolutionService {
         return path
     }
 
+    /// Etapa en la que está: la que le dan sus tokens, pero **nunca por debajo
+    /// del sitio que ya ocupaba al capturarlo**. Sin ese suelo, un Pokémon
+    /// capturado ya evolucionado retrocedería hasta ganar tokens: un Pikachu
+    /// se dibujaría como Pichu.
     public func stage(of captured: CapturedPokemon) -> EvolutionStage {
-        .stage(forTotalTokens: captured.tokensEarned)
+        let earned = EvolutionStage.stage(forTotalTokens: captured.tokensEarned)
+        let floor = pokedex.require(captured.speciesID).stage
+        guard floor > earned.rawValue else { return earned }
+        return EvolutionStage(rawValue: floor) ?? earned
     }
 
     public func currentForm(of captured: CapturedPokemon) -> Pokemon {

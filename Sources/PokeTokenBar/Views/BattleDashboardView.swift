@@ -4,7 +4,26 @@ import SwiftUI
 struct ActiveCompanionCard: View {
     @EnvironmentObject private var store: GameStore
 
+    /// El compañero equipado, si es lo que se está mirando. La selección la
+    /// comparten las dos pestañas, pero en Combate solo tiene sentido enseñar
+    /// la ficha del que está luchando.
+    private var inspected: BoxGroup? {
+        guard let selected = store.selectedBoxGroupID, selected == store.activeGroupID else { return nil }
+        return store.boxGroups.first { $0.id == selected }
+    }
+
     var body: some View {
+        // Con ficha abierta, la ficha; si no, la tira de siempre. Antes el clic
+        // en el compañero solo ponía la selección, y en esta pestaña eso no lo
+        // leía nadie: el clic no hacía nada y la ficha solo salía desde la caja.
+        if let inspected {
+            PokemonDetailView(group: inspected, compact: true)
+        } else {
+            summary
+        }
+    }
+
+    private var summary: some View {
         HStack(alignment: .top, spacing: 12) {
             if let companion = store.state.activeCompanion, let form = store.activeForm {
                 Button {

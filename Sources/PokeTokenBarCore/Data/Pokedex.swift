@@ -13,6 +13,10 @@ public final class Pokedex: @unchecked Sendable {
     public let all: [Pokemon]
     private let byID: [Int: Pokemon]
     private let byRarity: [Rarity: [Pokemon]]
+    /// Quién evoluciona en quién, al revés. `evolvesInto` solo va hacia
+    /// adelante y hace falta subir la cadena para saber de dónde viene una
+    /// forma ya evolucionada.
+    private let parentByID: [Int: Int]
 
     public convenience init(bundle: Bundle) throws {
         guard let url = bundle.url(forResource: "pokedex", withExtension: "json") else {
@@ -27,6 +31,16 @@ public final class Pokedex: @unchecked Sendable {
         all = decoded.pokemon.sorted { $0.id < $1.id }
         byID = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
         byRarity = Dictionary(grouping: all, by: \.rarity)
+        var parents: [Int: Int] = [:]
+        for mon in all {
+            for child in mon.evolvesInto { parents[child] = mon.id }
+        }
+        parentByID = parents
+    }
+
+    /// Forma de la que evoluciona esta, si tiene.
+    public func parent(of id: Int) -> Pokemon? {
+        parentByID[id].flatMap { byID[$0] }
     }
 
     public subscript(id: Int) -> Pokemon? { byID[id] }

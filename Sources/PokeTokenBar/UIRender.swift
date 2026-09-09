@@ -93,6 +93,15 @@ enum UIRender {
         store.selectedTab = "progreso"
         write("popover-progreso", hosted(RootView(), size: popoverSize))
 
+        // Clic en el compañero y clic en el rival, desde la pestaña de combate.
+        store.selectedTab = "combate"
+        store.selectedBoxGroupID = store.activeGroupID
+        write("popover-combate-ficha-companero", hosted(RootView(), size: popoverSize))
+        store.selectedBoxGroupID = nil
+        store.inspectingRival = true
+        write("popover-combate-ficha-rival", hosted(RootView(), size: popoverSize))
+        store.inspectingRival = false
+
         store.selectedTab = "caja"
         write("popover-caja", hosted(RootView(), size: popoverSize))
 

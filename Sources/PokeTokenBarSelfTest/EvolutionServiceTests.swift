@@ -10,7 +10,9 @@ enum EvolutionServiceTests: TestSuite {
         ("la forma sigue sus propios tokens", testFormFollowsItsOwnEarnedTokens),
         ("two stage lines stop at their last form", testTwoStageLinesStopAtTheirLastForm),
         ("single form lines never evolve", testSingleFormLinesNeverEvolve),
-        ("an evolved species resolves from its base form", testAnEvolvedSpeciesResolvesFromItsBaseForm),
+        ("una captura ya evolucionada no retrocede", testACapturedEvolvedFormNeverDevolves),
+        ("ninguna de las 251 retrocede al capturarla", testNoSpeciesDevolvesOnCapture),
+        ("el camino pasa por la especie capturada", testChainPathGoesThroughTheCapturedSpecies),
         ("branching is stable for the same seed", testBranchingIsStableForTheSameSeed),
         ("different seeds can take different branches", testDifferentSeedsCanTakeDifferentBranches),
         ("next form previews the upcoming stage", testNextFormPreviewsTheUpcomingStage),
@@ -55,9 +57,51 @@ enum EvolutionServiceTests: TestSuite {
         expectEqual(service.currentForm(of: lapras.earning(9_000_000)).id, 131)
     }
 
-    static func testAnEvolvedSpeciesResolvesFromItsBaseForm() {
-        // Capturar un Venusaur (#3) con poco histórico muestra Bulbasaur.
-        expectEqual(service.currentForm(of: captured(3, earned: 0)).id, 1)
+    /// Antes esto era lo contrario: capturar un Venusaur con poco histórico
+    /// mostraba **Bulbasaur**, porque la forma se resolvía siempre desde la
+    /// base. Retroceder no es una etapa: la etapa que ya trae al capturarlo es
+    /// su suelo.
+    static func testACapturedEvolvedFormNeverDevolves() {
+        let venusaur = captured(3, earned: 0)
+        expectEqual(service.currentForm(of: venusaur).id, 3)
+        expectEqual(service.stage(of: venusaur), .two)
+        expectNil(service.nextForm(of: venusaur), "su línea acaba en él")
+
+        // Pikachu está en medio de Pichu -> Pikachu -> Raichu: se queda
+        // Pikachu y le sigue faltando llegar a la etapa 2 para ser Raichu.
+        let pikachu = captured(25, earned: 0)
+        expectEqual(service.currentForm(of: pikachu).id, 25)
+        expectEqual(service.stage(of: pikachu), .one)
+        expectEqual(service.nextForm(of: pikachu)?.id, 26)
+        expectEqual(service.currentForm(of: pikachu.earning(1_000_001)).id, 26)
+        // Y por debajo del umbral de la etapa 2 sigue siendo Pikachu, no baja.
+        expectEqual(service.currentForm(of: pikachu.earning(500_000)).id, 25)
+    }
+
+    /// La forma que se ve al capturar es la que se capturó, para las 251. Es la
+    /// invariante que impide que vuelva a colarse una devolución por una rama
+    /// que la semilla no habría elegido.
+    static func testNoSpeciesDevolvesOnCapture() {
+        for species in Pokedex.shared.all {
+            let fresh = captured(species.id, seed: UInt64(species.id) * 7 + 1)
+            expectEqual(
+                service.currentForm(of: fresh).id,
+                species.id,
+                "#\(species.id) \(species.name) se dibuja como otra al capturarlo"
+            )
+        }
+    }
+
+    static func testChainPathGoesThroughTheCapturedSpecies() {
+        // Vaporeon es una rama de Eevee entre cinco: la semilla habría elegido
+        // otra, y aun así el camino tiene que pasar por él.
+        for seed in [1, 2, 3, 99, 8_675_309] as [UInt64] {
+            let vaporeon = captured(134, seed: seed)
+            let path = service.chainPath(of: vaporeon).map(\.id)
+            expectTrue(path.contains(134), "semilla \(seed): \(path)")
+            expectEqual(path.first, 133, "y arranca en Eevee")
+            expectEqual(service.currentForm(of: vaporeon).id, 134)
+        }
     }
 
     static func testBranchingIsStableForTheSameSeed() {
