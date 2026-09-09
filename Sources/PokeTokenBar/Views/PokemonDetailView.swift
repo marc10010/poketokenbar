@@ -199,10 +199,18 @@ struct PokemonDetailView: View {
             }
             .disabled(isActive)
 
-            if group.isShiny {
+            // El cambio de paleta solo con la versión normal en la caja: si el
+            // shiny es el único que tienes, dibujarlo en normal enseñaría un
+            // Pokémon que no tienes.
+            if store.canToggleShinyDisplay(captured) {
                 Button(captured.prefersShiny ? "Ver en normal" : "Ver shiny") {
                     store.toggleShinyDisplay(captured.id)
                 }
+            } else if group.isShiny {
+                Text("✦ Solo lo tienes shiny")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .help("Para verlo con la paleta normal harían falta los dos: el shiny y el normal")
             }
 
             Spacer(minLength: 0)
