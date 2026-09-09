@@ -593,7 +593,35 @@ node tools/generate_zones.mjs       # 251 peticiones de encuentros, ~40 s
 `gyms.json` no se genera: es el único dato curado a mano, porque PokeAPI no
 tiene líderes de gimnasio.
 
-## 19. Límites conocidos del MVP
+## 19. Añadir una mecánica de jefe sin duplicar
+
+Gimnasios, hitos y ligas llegaron uno detrás de otro y cada uno copió al
+anterior: tres `matchup`, tres `damagePerToken`, tres `isBlocked`, tres veces la
+misma secuencia de "¿está bloqueado? ¿cuántos tokens hacen falta? ¿le llega?", y
+tres tarjetas con la misma barra de HP. Arreglar la fórmula eran tres sitios, y
+el aviso de "no le haces nada, cambia a X" solo existía en los gimnasios porque
+nadie lo copió a los otros dos.
+
+Si añades una cuarta (revanchas, un jefe de zona, lo que sea), el camino es:
+
+1. **Conforma a `BossOpponent`** (`opponentSpeciesID` y `absorption`). Con eso
+   ya tienes `store.matchup(against:)`, `store.damagePerToken(against:)`,
+   `store.isBlocked(against:)` y `store.bestCompanion(against:)` — genéricos, sin
+   escribir aritmética.
+2. **Resuelve el combate con `GymCombat.apply(tokens:toHP:…)`**, que devuelve
+   `BossHit`: `.blocked`, `.survived(hp:)` o `.fell(spent:)`. Lo único que
+   escribes es qué pasa **cuando cae**, que es lo que de verdad distingue una
+   mecánica de otra (medalla, captura, siguiente miembro…).
+3. **Pinta con `BossHPRow` y `BossBlockedNotice`**. La primera es la barra de HP
+   con la tasa real; la segunda dice por qué está bloqueado y a quién cambiar.
+4. **En el HUD, usa `panel(border:lineWidth:header:)`**, que ya trae el marco, el
+   menú contextual, el mando de plegar y el revelado de métricas y caja por
+   altura.
+
+El test `las tres mecánicas de jefe comparten la fórmula` se pone rojo si alguna
+vuelve a llevar su propia cuenta.
+
+## 20. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Las **fichas usan los

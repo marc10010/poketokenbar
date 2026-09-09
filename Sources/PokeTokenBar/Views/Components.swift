@@ -166,6 +166,70 @@ enum Layout {
     static let scrollGutter: CGFloat = 10
 }
 
+/// Barra de HP + "X / Y HP" + la tasa real, tal cual la tenían copiada las
+/// tarjetas de gimnasio, de hito y de liga. Idénticas las tres, así que un
+/// cambio de formato había que hacerlo tres veces.
+struct BossHPRow: View {
+    let currentHP: Int
+    let maxHP: Int
+    let rate: Double
+    var compact = false
+
+    private var blocked: Bool { rate <= 0 }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: compact ? 3 : 6) {
+            HPBar(fraction: maxHP > 0 ? Double(currentHP) / Double(maxHP) : 0, height: compact ? 8 : 12)
+            HStack(spacing: 6) {
+                Text("\(Fmt.tokens(currentHP)) / \(Fmt.tokens(maxHP)) HP")
+                    .font(.system(size: compact ? 10 : 11, design: .monospaced))
+                Spacer(minLength: 0)
+                Text(blocked ? "0 HP/token" : "\(Fmt.rate(rate)) HP/token")
+                    .font(.system(size: compact ? 10 : 11, design: .monospaced))
+                    .foregroundStyle(blocked ? Color.red : .secondary)
+            }
+        }
+    }
+}
+
+/// Aviso de bloqueo con la salida puesta. Un bloqueo sin salida es un bug de
+/// diseño, así que siempre dice qué hacer — y ahora lo dice en los tres
+/// combates: hasta que `bestCompanion` dejó de ser solo de gimnasios, la liga y
+/// los hitos te decían que estabas bloqueado y ahí te quedabas.
+struct BossBlockedNotice<Boss: BossOpponent>: View {
+    @EnvironmentObject private var store: GameStore
+    let boss: Boss
+    /// Por qué absorbe tanto, en las palabras de esa mecánica.
+    let reason: String
+    var compact = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Tu compañero no le hace nada.")
+                .font(.system(size: compact ? 9 : 11, weight: .semibold))
+                .foregroundStyle(.red)
+            Text(reason)
+                .font(.system(size: compact ? 9 : 10))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if let best = store.bestCompanion(against: boss) {
+                Button {
+                    store.setActiveCompanion(best.group.representative.id)
+                } label: {
+                    Text("Cambiar a \(best.group.displayForm.localizedName) (\(Fmt.rate(best.rate)) HP/token)")
+                        .font(.system(size: compact ? 9 : 10))
+                }
+                .buttonStyle(.link)
+            } else {
+                Text("Y en la caja no hay nadie que pueda: toca capturar algo con ventaja.")
+                    .font(.system(size: compact ? 9 : 10))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
 struct SectionCard<Content: View>: View {
     @EnvironmentObject private var store: GameStore
     let title: String

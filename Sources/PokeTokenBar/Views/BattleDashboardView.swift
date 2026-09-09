@@ -162,38 +162,21 @@ struct MetricsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            metric("Tokens totales", Fmt.tokens(store.totalTokens))
-            metric("Este mes", Fmt.tokens(store.monthTokens))
-            metric("Daño por token", damageLine)
-            metric("Bonus de colección", "+\(Fmt.rate(store.collectionBonus)) por \(store.pokedexCaptured)/251")
-            metric("Eventos registrados", Fmt.tokens(store.state.ledger.eventCount))
-            metric("Rango", "\(store.rank.label) · \(store.medals)/16 medallas")
-            metric("Especies conseguidas", "\(store.speciesCaught) / 251")
-            metric("Capturas totales", Fmt.tokens(store.state.box.count))
+            MetricsList(style: .popover)
 
+            // El histórico por meses solo aquí: en el HUD no cabe.
             let history = store.state.ledger.monthly.sorted { $0.key > $1.key }.prefix(6)
             if history.count > 1 {
                 Divider().padding(.vertical, 2)
                 ForEach(Array(history), id: \.key) { entry in
-                    metric(Fmt.month(entry.key), Fmt.tokens(entry.value))
+                    HStack {
+                        Text(Fmt.month(entry.key)).font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Text(Fmt.tokens(entry.value)).font(.caption.monospaced())
+                    }
                 }
             }
         }
         .padding(.top, 4)
-    }
-
-    /// Contra quién, porque con un jefe abierto no hay salvaje y la tasa del
-    /// salvaje es 0: decir "0" mientras el líder recibe daño es mentir.
-    private var damageLine: String {
-        guard let target = store.currentTarget else { return "sin rival ahora mismo" }
-        return "\(Fmt.rate(target.rate)) a \(target.label)"
-    }
-
-    private func metric(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label).font(.caption).foregroundStyle(.secondary)
-            Spacer()
-            Text(value).font(.caption.monospaced())
-        }
     }
 }

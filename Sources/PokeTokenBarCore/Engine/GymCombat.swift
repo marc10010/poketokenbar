@@ -1,5 +1,18 @@
 import Foundation
 
+/// Qué le pasa a un jefe cuando le caen tokens encima. Los tres combates de
+/// jefe (gimnasio, hito y liga) resolvían esto con la misma secuencia copiada
+/// tres veces; lo que cambia de verdad entre ellos es qué hacen **cuando cae**,
+/// y eso se queda en cada mecánica.
+public enum BossHit: Equatable, Sendable {
+    /// El cruce de tipos no basta: los tokens se gastan y el HP no se mueve.
+    case blocked
+    /// Aguantó: le queda este HP.
+    case survived(hp: Int)
+    /// Cayó, y le sobraron tokens al jugador después de gastar `spent`.
+    case fell(spent: Int)
+}
+
 /// Aritmética del combate de gimnasio: **no se pierde, se bloquea**.
 ///
 /// Un líder absorbe daño y solo le hace mella lo que pase de su umbral, así que
@@ -34,6 +47,26 @@ public struct GymCombat {
         let rate = damagePerToken(matchup: matchup, absorption: absorption, stage: stage)
         guard rate > 0 else { return 0 }
         return max(1, Int((Double(tokens) * rate).rounded()))
+    }
+
+    /// Aplica un evento entero contra un jefe con `hp` puntos de vida.
+    ///
+    /// Es la secuencia que estaba triplicada: mirar si está bloqueado, calcular
+    /// lo que hace falta para tumbarlo, y si no llega, quitarle lo que se pueda.
+    public func apply(
+        tokens: Int,
+        toHP hp: Int,
+        matchup: Double,
+        absorption: Double,
+        stage: EvolutionStage = .base
+    ) -> BossHit {
+        guard damagePerToken(matchup: matchup, absorption: absorption, stage: stage) > 0 else { return .blocked }
+        let needed = tokensNeeded(for: hp, matchup: matchup, absorption: absorption, stage: stage) ?? tokens
+        guard tokens >= needed else {
+            let hit = damage(tokens: tokens, matchup: matchup, absorption: absorption, stage: stage)
+            return .survived(hp: hp - min(hp, hit))
+        }
+        return .fell(spent: needed)
     }
 
     /// Tokens necesarios para tumbar el HP que queda. `nil` si está bloqueado:

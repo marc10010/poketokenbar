@@ -436,7 +436,7 @@ enum GameStoreTests: TestSuite {
         // ...y contra un jefe, no.
         let brock = try unwrap(store.gymCatalog["kanto-pewter"])
         expectEqual(
-            store.gymDamagePerToken(for: brock),
+            store.damagePerToken(against: brock),
             GymCombat().damagePerToken(matchup: 1, absorption: brock.absorption, stage: store.stage),
             accuracy: 0.0001,
             "al líder no le llega el bonus de colección"
