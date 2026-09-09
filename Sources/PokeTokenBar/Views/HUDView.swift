@@ -277,12 +277,17 @@ struct HUDView: View {
                 store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
             }
         } label: {
+            // Con fondo y a tamaño fijo: en gris sobre un panel translúcido no
+            // se veía, y desde que un clic en un sprite no agranda el panel
+            // este botón es la única forma visible de desplegarlo.
             Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 10, weight: .bold))
+                .padding(4)
+                .background(Circle().fill(Color.secondary.opacity(0.22)))
         }
         .buttonStyle(.plain)
-        .help(expanded ? "Plegar y cerrar la caja PC" : "Desplegar la caja PC")
+        .fixedSize()
+        .help(expanded ? "Plegar y cerrar la caja PC" : "Desplegar: métricas y caja PC")
     }
 
     /// Marco de jefe, con el borde del color que lo distinga del combate normal.
@@ -391,8 +396,12 @@ struct HUDView: View {
             Divider()
         }
 
-        if store.state.settings.hudSize != nil {
-            Button("Cerrar la caja PC (plegar el HUD)") { store.collapseHUD() }
+        if store.state.settings.hudSize == nil {
+            Button("Desplegar el HUD (métricas y caja PC)") {
+                store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
+            }
+        } else {
+            Button("Plegar el HUD (cerrar la caja PC)") { store.collapseHUD() }
         }
 
         if store.state.settings.hudFreeOrigin != nil {

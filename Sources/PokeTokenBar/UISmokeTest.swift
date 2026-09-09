@@ -73,13 +73,19 @@ enum UISmokeTest {
         store.ingest(UsageEvent(id: "smoke-2", inputTokens: rivalHP, outputTokens: 0))
         ok = layout("tras captura") && ok
 
+        // Con el marco real: la raíz del HUD es un GeometryReader y no tiene
+        // tamaño intrínseco, así que medir su fittingSize no dice nada del panel.
+        let compactFrame = NSSize(width: 268, height: 104)
         let hud = NSHostingView(
-            rootView: HUDView().environmentObject(store).environmentObject(sprites)
+            rootView: HUDView()
+                .environmentObject(store)
+                .environmentObject(sprites)
+                .frame(width: compactFrame.width, height: compactFrame.height)
         )
         hud.layoutSubtreeIfNeeded()
         let hudSize = hud.fittingSize
-        print("  HUD flotante: \(Int(hudSize.width))x\(Int(hudSize.height))")
-        ok = hudSize.width > 0 && hudSize.height > 0 && ok
+        print("  HUD plegado: \(Int(hudSize.width))x\(Int(hudSize.height))")
+        ok = hudSize == compactFrame && ok
 
         // El clic derecho: qué eventos intercepta el detector. Si esto se
         // equivoca, o el clic izquierdo deja de equipar o el derecho no abre.
