@@ -1220,6 +1220,31 @@ public final class GameStore: ObservableObject {
         return species.types
     }
 
+    /// Región cerrada que impide la evolución que tocaría ahora, si alguna.
+    ///
+    /// Solo bloquea cuando la evolución **cruza de región**: la línea es de una
+    /// región abierta y su forma siguiente es de otra que no lo está. Un Pichu
+    /// de Johto no puede crecer a Pikachu hasta abrir Kanto, porque Pikachu
+    /// vive allí; en cambio un Rattata, que ya es una línea de Kanto, sí
+    /// evoluciona a Raticate.
+    ///
+    /// La alternativa —"nada de una región cerrada evoluciona"— congelaría 50
+    /// de las líneas que se capturan en Johto (Rattata, Geodude, Gastly, Abra…)
+    /// porque las rutas de Johto están llenas de especies de Kanto. Esa no es
+    /// una regla, es un muro.
+    public func blockedRegion(for captured: CapturedPokemon) -> String? {
+        guard let next = evolution.branch(
+            for: captured,
+            defeatedTypes: lastDefeatedTypes,
+            at: Date(),
+            calendar: calendar
+        ) else { return nil }
+        let home = pokedex.require(captured.speciesID).homeRegion
+        let target = next.homeRegion
+        guard target != home, !isOpen(region: target.lowercased()) else { return nil }
+        return target
+    }
+
     /// Convierte el derecho a evolucionar en evolución, eligiendo rama con lo
     /// último vencido y con la hora. Es un bucle porque un evento enorme puede
     /// dar para dos saltos: los dos usan el mismo rival y la misma hora, que es
@@ -1235,6 +1260,10 @@ public final class GameStore: ObservableObject {
                       calendar: calendar
                   )
             else { return }
+            // La forma siguiente vive en una región que no has abierto: espera.
+            // No se cae a otra rama, que sería darte la que no pediste.
+            let home = pokedex.require(state.box[index].speciesID).homeRegion
+            if next.homeRegion != home, !isOpen(region: next.homeRegion.lowercased()) { return }
             state.box[index].evolvedForms.append(next.id)
             state.registeredSpeciesIDs.insert(next.id)
             groupCache = nil

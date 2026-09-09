@@ -123,8 +123,19 @@ struct PokemonDetailView: View {
         // que anunciar (la decide lo que venzas), pero sí tiene evolución. Sin
         // este caso, un Eevee decía "su línea evolutiva acaba aquí".
         let branches = store.branchOptions(for: captured)
+        let blocked = store.blockedRegion(for: captured)
         VStack(alignment: .leading, spacing: 3) {
-            if remaining == 0, !branches.isEmpty {
+            if remaining == 0, let blocked, let next = store.branchOptions(for: captured).first(where: \.isNext) ?? nil {
+                Text("Listo para evolucionar, pero \(next.form.localizedName) vive en \(blocked): hace falta abrir la región")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if remaining == 0, let blocked, let next = store.nextForm(of: captured) {
+                Text("Listo para evolucionar, pero \(next.localizedName) vive en \(blocked): hace falta abrir la región")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if remaining == 0, !branches.isEmpty {
                 Text("Listo para evolucionar: lo decide lo próximo que venza")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.orange)

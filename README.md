@@ -161,6 +161,25 @@ Espeon", con lo último vencido y qué falta para cada rama) y la barra de menú
 enseña ☀ o ☾ **solo cuando la hora está decidiendo algo**: el equipado ya puede
 evolucionar y su rama depende de la banda.
 
+**Una evolución que cruza de región espera a esa región.** Un Pichu de Johto no
+crece a Pikachu hasta que salga el barco, porque **Pikachu vive en Kanto**; y en
+Tyrogue, antes del barco solo está disponible Hitmontop (de Johto), así que por
+la mañana —cuando la condición pide Hitmonlee— espera en vez de caer a otra
+rama. Son **8 casos**, todos bebés de Johto: Pichu, Cleffa, Igglybuff, Tyrogue
+(×2), Smoochum, Elekid y Magby.
+
+Solo bloquea cuando **cruza**. Las rutas de Johto están llenas de especies de
+Kanto (48 de las 95 capturables), así que la versión estricta —"nada de una
+región cerrada evoluciona"— congelaría 50 líneas: Rattata, Geodude, Gastly,
+Abra… Eso no es una regla, es un muro.
+
+Al revés no aplica: Onix → **Steelix** no espera nada, porque Steelix es de Gen
+2, o sea de Johto, que es la región 1. Con el orden invertido (Kanto primero)
+esta misma regla bloquearía justo esos 11 casos —Steelix, Crobat, Blissey,
+Scizor, Kingdra, Politoed, Bellossom, Slowking, Porygon2, Espeon y Umbreon—,
+que son las evoluciones que en el canon no existían hasta Gen 2. La regla está
+escrita en términos de regiones abiertas, así que vale para los dos órdenes.
+
 Detalle a tener en cuenta: si el ejemplar cruza el umbral durante un combate de
 jefe —donde no hay salvajes—, la rama la decide el último salvaje que venciste,
 que puede ser de hace rato. La ficha lo dice ("último vencido: X"), así que no
