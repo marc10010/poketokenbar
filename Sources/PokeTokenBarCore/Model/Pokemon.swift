@@ -20,6 +20,14 @@ public struct Pokemon: Codable, Hashable, Identifiable, Sendable {
     public let isStarter: Bool
 
     public var isBaseForm: Bool { stage == 0 }
+
+    /// Región de origen. Se dice en la UI en vez de la generación porque
+    /// "Gen 2" se lee como "región 2" y en este juego es al revés: la región 1
+    /// es **Johto**, cuyos Pokémon son los de Gen 2 (#152-251), y la 2 es
+    /// **Kanto**, que son los de Gen 1.
+    public var homeRegion: String { generation == 1 ? "Kanto" : "Johto" }
+    /// Etiqueta completa, para cuando el número de Pokédex también importa.
+    public var regionLabel: String { "\(homeRegion) · Gen \(generation)" }
     public var displayTypes: String { types.map(\.capitalized).joined(separator: " / ") }
 
     /// Rango de entrenador que hace falta para que aparezca en libertad.

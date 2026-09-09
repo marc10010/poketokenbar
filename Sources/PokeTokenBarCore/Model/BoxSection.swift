@@ -53,7 +53,7 @@ public struct BoxSection: Identifiable, Hashable, Sendable {
     private static func bucket(_ group: BoxGroup, sort: BoxFilter.Sort, wins: Int) -> (String, String) {
         switch sort {
         case .dex:
-            return ("gen-\(group.species.generation)", "Generación \(group.species.generation)")
+            return ("gen-\(group.species.generation)", group.species.regionLabel)
         case .rarity:
             let rarity = group.species.rarity
             return ("rarity-\(rarity.rawValue)", rarity.label)

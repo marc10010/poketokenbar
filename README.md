@@ -599,7 +599,15 @@ Se persiste: cazar algo concreto lleva sesiones.
   <img src="docs/screenshots/popover-pokedex.png" width="300" alt="Pokédex: 251 huecos con cabecera por generación">
 </p>
 
-La pestaña **Pokédex** abre los **251 huecos**, no solo lo que tienes:
+La pestaña **Pokédex** abre los **251 huecos**, no solo lo que tienes.
+
+**Se etiqueta por región, no por generación**, porque "Gen 2" se lee como
+"región 2" y aquí es al revés: la **región 1 es Johto**, cuyos Pokémon son los
+de Gen 2 (#152-251), y la **2 es Kanto**, que son los de Gen 1 (#001-151). Ver
+un Snubbull (#209) sin haber abierto Kanto es lo normal: es de Johto. Y las
+rutas del sur de Johto mezclan 29 especies de Kanto con 27 de Johto, como en
+Oro y Plata.
+
 
 | Estado | Cómo se ve |
 |---|---|

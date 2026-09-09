@@ -84,7 +84,9 @@ enum BoxSectionTests: TestSuite {
     }
 
     static func testSectionTitlesMatchTheSort() {
-        expectEqual(sections(.dex).map(\.title), ["Generación 1", "Generación 2"])
+        // Por región y no por generación: "Gen 2" se lee como "región 2" y en
+        // este juego es al revés (Johto es la 1 y son los de Gen 2).
+        expectEqual(sections(.dex).map(\.title), ["Kanto · Gen 1", "Johto · Gen 2"])
         expectEqual(sections(.rarity).first?.title, "Legendario", "primero lo más raro")
 
         let byWins = sections(.wins, wins: [92: 40, 19: 3])

@@ -48,7 +48,7 @@ struct PokemonDetailView: View {
                         Text("✦").foregroundStyle(.yellow)
                     }
                 }
-                Text("#\(String(format: "%03d", group.displayForm.id)) · Gen \(group.displayForm.generation)")
+                Text("#\(String(format: "%03d", group.displayForm.id)) · \(group.displayForm.homeRegion)")
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
                 TypeChips(types: group.displayForm.types)
@@ -219,7 +219,7 @@ struct RivalDetailView: View {
                         Text(species.localizedName).font(.title3.weight(.semibold))
                         if encounter.isShiny { Text("✦").foregroundStyle(.yellow) }
                     }
-                    Text("#\(String(format: "%03d", species.id)) · Gen \(species.generation)")
+                    Text("#\(String(format: "%03d", species.id)) · \(species.homeRegion)")
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                     TypeChips(types: species.types)
