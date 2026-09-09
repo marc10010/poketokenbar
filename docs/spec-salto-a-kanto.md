@@ -1,6 +1,22 @@
 # Spec: el salto a Kanto
 
-Estado: **borrador para decidir**. Nada de esto está implementado.
+Estado: **implementada**, con una vuelta de tuerca posterior: al ver que la
+regla de "una evolución que cruza de región espera a esa región" no tocaba nada
+interesante con Johto primero, **se invirtió el orden de juego a Kanto → Johto**
+(el de las generaciones). El mecanismo del barco es el mismo; lo que cambia son
+los números:
+
+| | En esta spec | Implementado |
+|---|---|---|
+| Región 1 | Johto | **Kanto** |
+| Liga que abre la 2 | Alto Mando de Johto | **Alto Mando de Kanto** (Lorelei…Blue) |
+| Requisito del barco | 50 de las 100 de Johto | **70 de las 151 de Kanto** |
+| Coste del requisito | 47 encontrables + criar 3 (~0,6M) | 66 encontrables + criar 4 (~0,8M) |
+
+El resto —las decisiones K1 a K6— se mantiene tal cual: el requisito de Pokédex,
+que la liga se pueda ganar sin él, que no se escale el HP por región, que el
+patrón valga para Hoenn y que a quien ya tuviera la región abierta no se le
+cierre.
 
 Definir bien este salto es lo que hace que las regiones siguientes salgan
 solas: si Johto→Kanto queda bien resuelto, Kanto→Hoenn es el mismo patrón con

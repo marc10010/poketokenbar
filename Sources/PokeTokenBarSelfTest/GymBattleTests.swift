@@ -61,7 +61,7 @@ enum GymBattleTests: TestSuite {
         // El fixture ya deja el disparador cumplido, así que el líder está
         // disponible desde el principio. Lo que importa es que no entra solo.
         expectNil(store.activeGym, "no entra solo")
-        expectEqual(store.availableGym?.id, "johto-violet", "pero espera")
+        expectEqual(store.availableGym?.id, "kanto-pewter", "pero espera")
 
         let rate = store.wildDamagePerToken
         let casi = Int(Double(10_000 - 1) / rate)
@@ -71,15 +71,15 @@ enum GymBattleTests: TestSuite {
 
         store.ingest(event("remata", tokens: 10))
         let available = try unwrap(store.availableGym)
-        expectEqual(available.id, "johto-violet", "el primero del orden")
+        expectEqual(available.id, "kanto-pewter", "el primero del orden: Brock")
         expectNil(store.activeGym, "pero no entra solo")
         expectNotNil(store.state.encounter, "y se sigue cazando")
 
         // Sigue disponible después de más eventos: la puerta no se cierra.
         store.ingest(event("mas", tokens: 50_000))
-        expectEqual(store.availableGym?.id, "johto-violet")
+        expectEqual(store.availableGym?.id, "kanto-pewter")
 
-        expectTrue(store.startGym("johto-violet"))
+        expectTrue(store.startGym("kanto-pewter"))
         let active = try unwrap(store.activeGym)
         expectNil(store.state.encounter, "ahora sí, no hay salvaje mientras hay líder")
         expectTrue(active.gym.hpRange.contains(active.battle.maxHP))
@@ -89,27 +89,31 @@ enum GymBattleTests: TestSuite {
         store.abandonGym()
         expectNil(store.activeGym)
         expectNotNil(store.state.encounter, "vuelve el salvaje")
-        expectEqual(store.availableGym?.id, "johto-violet", "y el líder sigue esperando")
+        expectEqual(store.availableGym?.id, "kanto-pewter", "y el líder sigue esperando")
     }
 
     /// Con el líder dentro, el evento entero va contra él. El "sobrante de la
     /// captura" desapareció con el gimnasio automático: ya no hay un evento
     /// que se corte a mitad para meter al líder.
     static func testWholeEventHitsTheLeader() throws {
-        // Squirtle contra Pidgeotto es neutro; absorción 0,25 y etapa base
-        // dejan 0,75 HP por token.
         let store = primed(wildHP: 10_000)
         store.updateSettings { $0.typeEffectivenessEnabled = true }
         let battle = try enterGym(store)
         expectEqual(battle.tokensSpent, 0, "entrar no gasta nada")
+
+        // La tasa se pregunta, no se supone: Squirtle contra el Onix de Brock
+        // es ×4 y su absorción es la más baja de las 16.
+        let gym = try unwrap(store.activeGym).gym
+        let rate = store.damagePerToken(against: gym)
+        expectTrue(rate > 1, "agua contra roca/tierra pasa de sobra: \(rate)")
 
         store.ingest(event("al-lider", tokens: 100_000))
         let active = try unwrap(store.activeGym)
         expectEqual(active.battle.tokensSpent, 100_000, "el evento entero")
         expectEqual(
             active.battle.maxHP - active.battle.currentHP,
-            Int((100_000.0 * 0.75).rounded()),
-            "a 0,75 HP por token: al líder no le llega el bonus de colección"
+            Int((100_000.0 * rate).rounded()),
+            "y al líder no le llega el bonus de colección"
         )
     }
 
@@ -126,16 +130,16 @@ enum GymBattleTests: TestSuite {
         expectNil(store.activeGym, "el gimnasio se cierra")
         expectEqual(store.medals, 1)
         expectEqual(store.rank, TrainerRank.novato, "una medalla todavía no sube de rango")
-        expectEqual(store.state.gyms.defeated, ["johto-violet"])
-        expectEqual(store.lastMedal?.gym.medal, "Medalla Céfiro")
+        expectEqual(store.state.gyms.defeated, ["kanto-pewter"])
+        expectEqual(store.lastMedal?.gym.medal, "Medalla Roca")
         expectNotNil(store.state.encounter, "vuelve a haber salvaje")
         expectTrue(
             store.state.box.count >= boxBefore,
             "el líder no se captura: la caja solo puede crecer por los salvajes del sobrante"
         )
         expectFalse(
-            store.state.box.contains { $0.speciesID == 17 },
-            "Pidgeotto, el Pokémon del líder, no acaba en la caja"
+            store.state.box.contains { $0.speciesID == 95 },
+            "Onix, el Pokémon del líder, no acaba en la caja"
         )
     }
 
@@ -153,12 +157,12 @@ enum GymBattleTests: TestSuite {
             store.state.gyms.defeated.count,
             "ninguna medalla repetida aunque el evento pase de sobra del HP"
         )
-        expectEqual(store.state.gyms.defeated.first, "johto-violet", "y en orden")
+        expectEqual(store.state.gyms.defeated.first, "kanto-pewter", "y en orden")
 
         // El invariante, directo: otorgar dos veces el mismo gimnasio no suma.
         var progress = GymProgress()
-        progress.award(gymID: "johto-violet")
-        progress.award(gymID: "johto-violet")
+        progress.award(gymID: "kanto-pewter")
+        progress.award(gymID: "kanto-pewter")
         expectEqual(progress.medals, 1)
     }
 
@@ -167,17 +171,16 @@ enum GymBattleTests: TestSuite {
     static func testBlockedGymDoesNotBudge() throws {
         let store = makeStore(seed: 9)
         store.chooseStarter(speciesID: 7)
+        store.debugOpenRegion("johto")     // los gimnasios de la región 2
         store.debugDefeatGyms(upTo: 15)
-        store.debugOpenRegion("kanto")     // los gimnasios de Kanto piden la liga
-        let giovanni = try unwrap(store.debugOpenNextGym())
-        expectEqual(giovanni.leader, "Giovanni")
+        let clair = try unwrap(store.debugOpenNextGym())
+        expectEqual(clair.leader, "Clair", "la última del orden")
 
-        // Pikachu (eléctrico) contra Rhydon (tierra/roca): eléctrico no toca a
-        // tierra, así que el cruce cae al suelo de ×0,25 y con absorción 1,5 el
-        // progreso es cero.
+        // Pikachu (eléctrico) contra Kingdra (agua/dragón): ×2 al agua y ×0,5
+        // al dragón se quedan en ×1, y con absorción 1,5 el progreso es cero.
         store.debugCapture(speciesID: 25)
         store.setActiveCompanion(try unwrap(store.state.box.last).id)
-        expectTrue(store.isBlocked(against: giovanni))
+        expectTrue(store.isBlocked(against: clair))
 
         let before = try unwrap(store.activeGym).battle
         store.ingest(event("inútil", tokens: 400_000))
@@ -192,26 +195,27 @@ enum GymBattleTests: TestSuite {
     static func testSwitchingCompanionUnblocks() throws {
         let store = makeStore(seed: 11)
         store.chooseStarter(speciesID: 7)
-        store.debugDefeatGyms(upTo: 15)
-        store.debugOpenRegion("kanto")     // los gimnasios de Kanto piden la liga                   // siguiente: Giovanni, absorción 1,5
-        let giovanni = try unwrap(store.nextGym)
+        store.debugOpenRegion("johto")
+        store.debugDefeatGyms(upTo: 15)    // siguiente: Clair, absorción 1,5
+        let clair = try unwrap(store.nextGym)
 
-        // Rhydon es tierra/roca. Squirtle (agua) le hace ×4: 4 - 1,5 = 2,5.
-        expectFalse(store.isBlocked(against: giovanni))
-        expectEqual(store.damagePerToken(against: giovanni), 2.5, accuracy: 0.001)
+        // Squirtle (agua) contra Kingdra (agua/dragón) hace ×0,5: bloqueado.
+        expectTrue(store.isBlocked(against: clair), "agua contra agua/dragón no pasa 1,5")
+        expectEqual(store.damagePerToken(against: clair), 0, accuracy: 0.001)
 
-        // Con un compañero de tipo eléctrico, tierra es inmune: cae al suelo de
-        // ×0,25 y contra absorción 1,5 el progreso es cero.
-        store.debugCapture(speciesID: 25)                 // Pikachu
-        let pikachu = try unwrap(store.state.box.last)
-        store.setActiveCompanion(pikachu.id)
-        expectTrue(store.isBlocked(against: giovanni), "eléctrico no le hace nada a tierra")
-        expectEqual(store.damagePerToken(against: giovanni), 0, accuracy: 0.001)
+        // Contra Kingdra solo pasa el dragón: hielo y planta se quedan en ×1
+        // porque el dragón resiste justo lo que al agua le duele. Dratini hace
+        // ×2 y deja 2 - 1,5 = 0,5 por token. Es la salida que ofrece la ficha.
+        store.debugCapture(speciesID: 147)                // Dratini
+        let dratini = try unwrap(store.state.box.last)
+        store.setActiveCompanion(dratini.id)
+        expectFalse(store.isBlocked(against: clair), "dragón contra agua/dragón sí pasa")
+        expectEqual(store.damagePerToken(against: clair), 0.5, accuracy: 0.001)
 
-        // Volver al Squirtle desbloquea sin tocar el daño ya hecho.
+        // Y volver al Squirtle vuelve a bloquear, sin tocar el daño ya hecho.
         let squirtle = try unwrap(store.state.box.first)
         store.setActiveCompanion(squirtle.id)
-        expectFalse(store.isBlocked(against: giovanni))
+        expectTrue(store.isBlocked(against: clair))
     }
 
     static func testCountersResetOnGymEnd() throws {
@@ -354,11 +358,11 @@ enum GymBattleTests: TestSuite {
         store.ingest(event("gana-1", tokens: hp * 2))
 
         let first = try unwrap(store.lastMedal)
-        expectEqual(first.gym.medal, "Medalla Céfiro")
+        expectEqual(first.gym.medal, "Medalla Roca")
         expectEqual(first.medals, 1)
         expectNil(first.newRank, "una medalla no sube de rango")
         expectTrue(first.unlocked.isEmpty)
-        expectEqual(first.headline, "¡Medalla Céfiro!")
+        expectEqual(first.headline, "¡Medalla Roca!")
 
         // La segunda sí: Entrenador, que es lo que abre los raros.
         store.dismissMedalCelebration()

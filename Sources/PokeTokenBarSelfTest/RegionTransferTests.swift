@@ -3,11 +3,11 @@ import PokeTokenBarCore
 
 @MainActor
 enum RegionTransferTests: TestSuite {
-    static let suiteName = "Barco a Kanto"
+    static let suiteName = "Barco entre regiones"
 
     static let tests: [(String, () throws -> Void)] = [
-        ("la liga sola no abre Kanto", testLeagueAloneIsNotEnough),
-        ("solo cuentan las especies de Johto", testOnlyPreviousRegionCounts),
+        ("la liga sola no abre la región 2", testLeagueAloneIsNotEnough),
+        ("solo cuentan las especies de la región 1", testOnlyPreviousRegionCounts),
         ("la última especie abre la región y se celebra", testLastSpeciesOpensTheRegion),
         ("el Alto Mando se puede ganar sin el requisito", testLeagueIsPlayableWithoutTheGate),
         ("a quien ya la tenía abierta no se le cierra", testGrandfatheredSavesKeepKanto),
@@ -23,8 +23,8 @@ enum RegionTransferTests: TestSuite {
         )
     }
 
-    private static func johtoIDs(_ count: Int) -> [Int] {
-        dex.all.filter { $0.homeRegion == "Johto" }.map(\.id).sorted().prefix(count).map { $0 }
+    private static func kantoIDs(_ count: Int) -> [Int] {
+        dex.all.filter { $0.homeRegion == "Kanto" }.map(\.id).sorted().prefix(count).map { $0 }
     }
 
     private static func ready(seed: UInt64 = 12) -> GameStore {
@@ -36,13 +36,13 @@ enum RegionTransferTests: TestSuite {
 
     static func testLeagueAloneIsNotEnough() throws {
         let store = ready()
-        store.debugWinLeague("johto")
-        let transfer = try unwrap(store.transfer(to: "kanto"))
+        store.debugWinLeague("kanto")
+        let transfer = try unwrap(store.transfer(to: "johto"))
         expectTrue(transfer.leagueWon)
         expectTrue(!transfer.isOpen, "falta la Pokédex")
         expectEqual(transfer.required, GameRules.regionTransferSpecies)
         expectEqual(transfer.missingSpecies, GameRules.regionTransferSpecies - transfer.registered)
-        expectTrue(!store.zoneAccess.kantoOpen)
+        expectTrue(!store.openRegions.contains("johto"))
         expectEqual(store.nextGym, nil, "y el noveno gimnasio sigue esperando")
     }
 
@@ -50,32 +50,32 @@ enum RegionTransferTests: TestSuite {
     /// que contar cualquiera haría el requisito trivial.
     static func testOnlyPreviousRegionCounts() throws {
         let store = ready()
-        store.debugWinLeague("johto")
-        for id in dex.all.filter({ $0.homeRegion == "Kanto" }).prefix(120).map(\.id) {
+        store.debugWinLeague("kanto")
+        for id in dex.all.filter({ $0.homeRegion == "Johto" }).prefix(90).map(\.id) {
             store.debugRegister(speciesID: id)
         }
-        expectTrue(!store.zoneAccess.kantoOpen, "120 de Kanto no valen para el barco")
-        expectEqual(store.registeredSpecies(of: "johto"), 0, "el inicial era Squirtle, que es de Kanto")
+        expectTrue(!store.openRegions.contains("johto"), "90 de Johto no valen para el barco")
+        expectEqual(store.registeredSpecies(of: "kanto"), 1, "solo el inicial, Squirtle")
 
-        for id in johtoIDs(GameRules.regionTransferSpecies) { store.debugRegister(speciesID: id) }
-        expectTrue(store.zoneAccess.kantoOpen)
+        for id in kantoIDs(GameRules.regionTransferSpecies) { store.debugRegister(speciesID: id) }
+        expectTrue(store.openRegions.contains("johto"))
     }
 
     /// El requisito hace que el salto de región pueda llegar **en una captura**,
     /// no solo ganando un combate. Es el pago de coleccionar.
     static func testLastSpeciesOpensTheRegion() throws {
         let store = ready()
-        store.debugWinLeague("johto")
-        let ids = johtoIDs(GameRules.regionTransferSpecies)
+        store.debugWinLeague("kanto")
+        let ids = kantoIDs(GameRules.regionTransferSpecies)
         for id in ids.dropLast() { store.debugRegister(speciesID: id) }
         store.flush()
-        expectTrue(!store.zoneAccess.kantoOpen, "con una menos, no")
+        expectTrue(!store.openRegions.contains("johto"), "con una menos, no")
         expectEqual(store.lastRegion?.region, nil)
 
         store.debugRegister(speciesID: try unwrap(ids.last))
         store.flush()
-        expectTrue(store.zoneAccess.kantoOpen)
-        expectEqual(store.lastRegion?.region, "kanto", "y se celebra")
+        expectTrue(store.openRegions.contains("johto"))
+        expectEqual(store.lastRegion?.region, "johto", "y se celebra")
         expectEqual(store.lastRegion?.registered, GameRules.regionTransferSpecies)
 
         store.dismissRegionCelebration()
@@ -88,8 +88,8 @@ enum RegionTransferTests: TestSuite {
 
     static func testLeagueIsPlayableWithoutTheGate() throws {
         let store = ready()
-        expectTrue(store.availability(of: try unwrap(store.leagueCatalog["johto"])).isAvailable, "con 8 medallas se puede retar")
-        expectTrue(store.startLeague("johto"), "el requisito no bloquea el contenido, solo el barco")
+        expectTrue(store.availability(of: try unwrap(store.leagueCatalog["kanto"])).isAvailable, "con 8 medallas se puede retar")
+        expectTrue(store.startLeague("kanto"), "el requisito no bloquea el contenido, solo el barco")
     }
 
     /// K6: quitarle a alguien un acceso que ya tenía es peor que el problema
@@ -107,14 +107,14 @@ enum RegionTransferTests: TestSuite {
                 "evolutionSeed": 3,
                 "tokensEarned": 0,
             ]],
-            "leagues": ["won": ["johto"]],
+            "leagues": ["won": ["kanto"]],
         ]
         try JSONSerialization.data(withJSONObject: legacy).write(to: url)
 
         let store = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 3))
-        expectTrue(store.state.grandfatheredRegions.contains("kanto"))
-        expectTrue(store.zoneAccess.kantoOpen, "ya la tenía abierta")
-        expectTrue(store.registeredSpecies(of: "johto") < GameRules.regionTransferSpecies, "y sin llegar al requisito")
+        expectTrue(store.state.grandfatheredRegions.contains("johto"))
+        expectTrue(store.openRegions.contains("johto"), "ya la tenía abierta")
+        expectTrue(store.registeredSpecies(of: "kanto") < GameRules.regionTransferSpecies, "y sin llegar al requisito")
         store.flush()
         expectEqual(store.lastRegion?.region, nil, "pero no se celebra algo de hace semanas")
     }

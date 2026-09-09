@@ -46,9 +46,9 @@ struct PokedexView: View {
         }
     }
 
-    /// Por qué los números no van en el orden en que se juega.
+    /// Qué región es cada tramo de números.
     private var regionNotice: some View {
-        Text("La Pokédex va por número, no por orden de juego: los #001-151 son de **Kanto**, que es la región 2, y los #152-251 de **Johto**, que es la 1. Un Pokémon con número alto no significa que venga de Kanto.")
+        Text("Los #001-151 son de **Kanto**, la región 1, y los #152-251 de **Johto**, la 2: el número y el orden de juego coinciden. Aun así, en las rutas de Kanto se ven especies de Johto, como en Oro y Plata.")
             .font(.system(size: 9))
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
@@ -253,7 +253,7 @@ struct PokedexView: View {
                         Text(entrada.zone.name)
                             .font(.system(size: 10))
                         if !entrada.open {
-                            Text("· \(entrada.zone.unlock.label(kantoOpen: store.zoneAccess.kantoOpen))")
+                            Text("· \(entrada.zone.unlock.label(openRegions: store.openRegions))")
                                 .font(.system(size: 9))
                                 .foregroundStyle(.secondary)
                         }

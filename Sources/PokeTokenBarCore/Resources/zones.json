@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-09-08T18:11:41.065Z",
+ "generatedAt": "2026-09-09T11:15:52.356Z",
  "source": "PokeAPI /pokemon/{id}/encounters filtrado a rojo, azul, amarillo, oro, plata y cristal",
  "note": "El agrupamiento de áreas a zonas es curado; los encuentros son de la API.",
  "zones": [
@@ -9,7 +9,7 @@
    "name": "Rutas del sur de Johto",
    "region": "johto",
    "unlock": {
-    "medals": 0
+    "region": "johto"
    },
    "species": [
     10,
@@ -75,7 +75,8 @@
    "name": "Rutas centrales de Johto",
    "region": "johto",
    "unlock": {
-    "medals": 2
+    "region": "johto",
+    "medals": 10
    },
    "species": [
     10,
@@ -147,7 +148,8 @@
    "name": "Rutas de la costa",
    "region": "johto",
    "unlock": {
-    "medals": 4
+    "region": "johto",
+    "medals": 12
    },
    "species": [
     17,
@@ -211,7 +213,8 @@
    "name": "Rutas del norte de Johto",
    "region": "johto",
    "unlock": {
-    "medals": 6
+    "region": "johto",
+    "medals": 14
    },
    "species": [
     19,
@@ -231,7 +234,7 @@
    "name": "Cueva Unión",
    "region": "johto",
    "unlock": {
-    "medals": 1
+    "region": "johto"
    },
    "species": [
     19,
@@ -260,7 +263,8 @@
    "name": "Parque Nacional",
    "region": "johto",
    "unlock": {
-    "medals": 2
+    "region": "johto",
+    "medals": 10
    },
    "species": [
     10,
@@ -283,7 +287,8 @@
    "name": "Pozo Slowpoke",
    "region": "johto",
    "unlock": {
-    "medals": 2
+    "region": "johto",
+    "medals": 10
    },
    "species": [
     41,
@@ -300,7 +305,8 @@
    "name": "Ruinas Alfa",
    "region": "johto",
    "unlock": {
-    "medals": 3
+    "region": "johto",
+    "medals": 11
    },
    "species": [
     60,
@@ -317,7 +323,8 @@
    "name": "Cueva Oscura",
    "region": "johto",
    "unlock": {
-    "medals": 4
+    "region": "johto",
+    "medals": 12
    },
    "species": [
     41,
@@ -340,7 +347,8 @@
    "name": "Monte Mortar",
    "region": "johto",
    "unlock": {
-    "medals": 5
+    "region": "johto",
+    "medals": 13
    },
    "species": [
     19,
@@ -363,7 +371,8 @@
    "name": "Lago de la Furia",
    "region": "johto",
    "unlock": {
-    "medals": 6
+    "region": "johto",
+    "medals": 14
    },
    "species": [
     10,
@@ -385,7 +394,8 @@
    "name": "Senda Helada",
    "region": "johto",
    "unlock": {
-    "medals": 7
+    "region": "johto",
+    "medals": 15
    },
    "species": [
     41,
@@ -401,7 +411,8 @@
    "name": "Torre Quemada",
    "region": "johto",
    "unlock": {
-    "medals": 8
+    "region": "johto",
+    "medals": 16
    },
    "species": [
     19,
@@ -417,7 +428,8 @@
    "name": "Torre Campana",
    "region": "johto",
    "unlock": {
-    "medals": 8
+    "region": "johto",
+    "medals": 16
    },
    "species": [
     19,
@@ -431,7 +443,8 @@
    "name": "Islas Remolino",
    "region": "johto",
    "unlock": {
-    "medals": 8
+    "region": "johto",
+    "medals": 16
    },
    "species": [
     41,
@@ -452,7 +465,7 @@
    "name": "Bosque Encinar",
    "region": "johto",
    "unlock": {
-    "medals": 1
+    "region": "johto"
    },
    "species": [
     10,
@@ -482,7 +495,7 @@
    "name": "Torre Hojalata",
    "region": "johto",
    "unlock": {
-    "medals": 1
+    "region": "johto"
    },
    "species": [
     19,
@@ -494,7 +507,8 @@
    "name": "Catarata Tohjo",
    "region": "johto",
    "unlock": {
-    "medals": 8
+    "region": "johto",
+    "medals": 16
    },
    "species": [
     19,
@@ -512,7 +526,8 @@
    "name": "Guarida Dragón",
    "region": "johto",
    "unlock": {
-    "medals": 8
+    "region": "johto",
+    "medals": 16
    },
    "species": [
     129,
@@ -560,7 +575,7 @@
    "name": "Cueva Diglett",
    "region": "kanto",
    "unlock": {
-    "region": "kanto"
+    "medals": 2
    },
    "species": [
     50,
@@ -572,7 +587,7 @@
    "name": "Rutas del sur de Kanto",
    "region": "kanto",
    "unlock": {
-    "region": "kanto"
+    "medals": 0
    },
    "species": [
     1,
@@ -674,8 +689,7 @@
    "name": "Rutas del norte de Kanto",
    "region": "kanto",
    "unlock": {
-    "region": "kanto",
-    "medals": 12
+    "medals": 6
    },
    "species": [
     4,
@@ -763,7 +777,7 @@
    "name": "Bosque Verde",
    "region": "kanto",
    "unlock": {
-    "region": "kanto"
+    "medals": 1
    },
    "species": [
     10,
@@ -780,7 +794,7 @@
    "name": "Monte Moon",
    "region": "kanto",
    "unlock": {
-    "region": "kanto"
+    "medals": 2
    },
    "species": [
     27,
@@ -796,8 +810,7 @@
    "name": "Túnel Roca",
    "region": "kanto",
    "unlock": {
-    "region": "kanto",
-    "medals": 10
+    "medals": 3
    },
    "species": [
     41,
@@ -817,8 +830,7 @@
    "name": "Edificios y guaridas",
    "region": "kanto",
    "unlock": {
-    "region": "kanto",
-    "medals": 10
+    "medals": 4
    },
    "species": [
     19,
@@ -868,8 +880,7 @@
    "name": "Central Eléctrica",
    "region": "kanto",
    "unlock": {
-    "region": "kanto",
-    "medals": 12
+    "medals": 5
    },
    "species": [
     25,
@@ -889,8 +900,7 @@
    "name": "Zona Safari",
    "region": "kanto",
    "unlock": {
-    "region": "kanto",
-    "medals": 12
+    "medals": 6
    },
    "species": [
     29,
@@ -927,8 +937,7 @@
    "name": "Islas Espuma",
    "region": "kanto",
    "unlock": {
-    "region": "kanto",
-    "medals": 14
+    "medals": 7
    },
    "species": [
     41,
@@ -957,8 +966,7 @@
    "name": "Calle Victoria",
    "region": "kanto",
    "unlock": {
-    "region": "kanto",
-    "medals": 16
+    "medals": 8
    },
    "species": [
     28,

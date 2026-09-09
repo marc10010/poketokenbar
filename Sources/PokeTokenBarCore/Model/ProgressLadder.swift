@@ -55,45 +55,52 @@ public struct ProgressLadder {
 
     public func steps(medals: Int, wonLeagues: Set<String>) -> [LadderStep] {
         var steps: [LadderStep] = []
-        let kantoOpen = wonLeagues.contains("johto")
-        let champion = wonLeagues.contains("kanto")
+        // Las regiones salen del orden de los gimnasios, no de sus nombres:
+        // esta escalera tenía "kanto" escrito en seis sitios y se rompió al
+        // invertir el orden de juego.
+        let regions = gyms.regions
+        let second = regions.count > 1 ? regions[1] : nil
+        let gate = second.flatMap { region in leagues.all.first { $0.reward.opensRegion == region } }
+        let final = leagues.all.first { $0.reward == .champion }
+        let secondOpen = gate.map { wonLeagues.contains($0.id) } ?? true
+        let champion = final.map { wonLeagues.contains($0.id) } ?? false
 
         // Antes de la puerta solo cabe lo que se consigue con 8 medallas o
-        // menos y sin Kanto. Ojo: hay hitos en zonas de Johto que piden 10
-        // medallas (Ho-Oh, Lugia), y esas medallas solo llegan tras la puerta,
-        // así que van en el tramo de después aunque su región sea Johto.
+        // menos y sin la segunda región. Ojo: hay hitos en zonas de la segunda
+        // región que piden más de 8 medallas, y esas medallas solo llegan tras
+        // la puerta, así que van en el tramo de después.
         for count in 0...8 {
-            let opened = unlocks(atMedals: count, needsKanto: false)
+            let opened = unlocks(atMedals: count, second: second, afterGate: false)
             guard !opened.isEmpty else { continue }
             steps.append(LadderStep(requirement: .medals(count), unlocks: opened, reached: medals >= count))
         }
 
-        if let johto = leagues["johto"] {
-            let kantoZones = zones.all
-                .filter { $0.unlock.requiresKanto && !$0.unlock.requiresChampion && $0.unlock.requiredMedals == 0 }
+        if let gate, let second {
+            let zonesOfSecond = zones.all
+                .filter { $0.unlock.requiredRegion == second && !$0.unlock.requiresChampion && $0.unlock.requiredMedals == 0 }
                 .map { "Zona: \($0.name) · \($0.species.count) especies" }
             steps.append(
                 LadderStep(
-                    requirement: .league(id: johto.id, name: johto.name),
-                    unlocks: ["Los 8 gimnasios de Kanto"] + kantoZones,
-                    reached: kantoOpen
+                    requirement: .league(id: gate.id, name: gate.name),
+                    unlocks: ["Los 8 gimnasios de \(second.capitalized)"] + zonesOfSecond,
+                    reached: secondOpen
                 )
             )
         }
 
         for count in 9...16 {
-            let opened = unlocks(atMedals: count, needsKanto: true)
+            let opened = unlocks(atMedals: count, second: second, afterGate: true)
             guard !opened.isEmpty else { continue }
             steps.append(
                 LadderStep(
                     requirement: .medals(count),
                     unlocks: opened,
-                    reached: kantoOpen && medals >= count
+                    reached: secondOpen && medals >= count
                 )
             )
         }
 
-        if let kanto = leagues["kanto"] {
+        if let final {
             var opened = ["Título de Campeón"]
             opened += zones.all.filter { $0.unlock.requiresChampion }.map { "Zona: \($0.name)" }
             opened += milestones.all
@@ -102,7 +109,7 @@ public struct ProgressLadder {
                 .map { "Legendario: \($0)" }
             steps.append(
                 LadderStep(
-                    requirement: .league(id: kanto.id, name: kanto.name),
+                    requirement: .league(id: final.id, name: final.name),
                     unlocks: opened,
                     reached: champion
                 )
@@ -112,13 +119,13 @@ public struct ProgressLadder {
         return steps
     }
 
-    /// Qué abre alcanzar esas medallas. `needsKanto` separa los dos tramos: lo
-    /// de antes de la puerta y lo de después.
-    private func unlocks(atMedals count: Int, needsKanto: Bool) -> [String] {
+    /// Qué abre alcanzar esas medallas. `afterGate` separa los dos tramos: lo
+    /// de antes de la puerta entre regiones y lo de después.
+    private func unlocks(atMedals count: Int, second: String?, afterGate: Bool) -> [String] {
         var opened: [String] = []
 
         if let gym = gyms.all.first(where: { $0.order == count + 1 }),
-           (gym.region == "kanto") == needsKanto {
+           (gym.region == second) == afterGate {
             opened.append("Gimnasio: \(gym.leader) (\(gym.city))")
         }
 
@@ -126,7 +133,7 @@ public struct ProgressLadder {
             .filter { zone in
                 !zone.unlock.requiresChampion
                     && zone.unlock.requiredMedals == count
-                    && zone.unlock.requiresKanto == needsKanto
+                    && (zone.unlock.requiredRegion == second) == afterGate
                     && count > 0
             }
             .map { "Zona: \($0.name) · \($0.species.count) especies" }
@@ -138,10 +145,10 @@ public struct ProgressLadder {
                       !zone.unlock.requiresChampion
                 else { return false }
                 let needed = max(zone.unlock.requiredMedals, milestone.extraMedals)
-                // Cae en el tramo de después si pide Kanto o más de 8 medallas,
-                // que en la práctica es lo mismo.
-                let afterGate = zone.unlock.requiresKanto || needed > 8
-                return needed == count && afterGate == needsKanto
+                // Cae en el tramo de después si pide la segunda región o más de
+                // 8 medallas, que en la práctica es lo mismo.
+                let after = zone.unlock.requiredRegion == second || needed > 8
+                return needed == count && after == afterGate
             }
             .compactMap { pokedex[$0.speciesID].map { "Legendario: \($0.localizedName)" } }
 

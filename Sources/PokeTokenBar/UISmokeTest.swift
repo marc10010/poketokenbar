@@ -287,7 +287,7 @@ enum UISmokeTest {
         // Hitos: la lista, y un legendario abierto de verdad.
         store.debugDefeatGyms(upTo: 8)
         ok = layout("lista de hitos") && ok
-        if store.startMilestone("torre-quemada-suicune"), let boss = store.activeMilestone {
+        if store.startMilestone("central-zapdos"), let boss = store.activeMilestone {
             print("  hito abierto: \(boss.milestone.place) · \(Fmt.tokens(boss.battle.maxHP)) HP · bloqueado=\(store.isBlocked(against: boss.milestone))")
             ok = layout("hito legendario") && ok
             let hudBoss = NSHostingView(
@@ -308,9 +308,9 @@ enum UISmokeTest {
         // Ligas: la lista y un gauntlet abierto de verdad.
         ok = layout("lista de ligas") && ok
         expectGate(store)
-        store.debugCapture(speciesID: 95)      // Onix: x2 contra Xatu
-        if let onix = store.state.box.last { store.setActiveCompanion(onix.id) }
-        if store.startLeague("johto"), let run = store.activeLeague {
+        store.debugCapture(speciesID: 25)      // Pikachu: x2 contra el Lapras de Lorelei
+        if let pikachu = store.state.box.last { store.setActiveCompanion(pikachu.id) }
+        if store.startLeague("kanto"), let run = store.activeLeague {
             print("  liga abierta: \(run.member.name) 1/\(run.league.members.count) · \(Fmt.tokens(run.run.maxHP)) HP · bloqueado=\(store.isBlocked(against: run.member))")
             ok = layout("liga en curso") && ok
             let hudLeague = NSHostingView(
@@ -374,9 +374,9 @@ enum UISmokeTest {
         store.inspectingRival = false
 
         // Gimnasio abierto: el HUD y el popover cambian de tarjeta.
+        // Clair es de Johto, que está tras el barco.
+        store.debugOpenRegion("johto")
         store.debugDefeatGyms(upTo: 15)
-        // Giovanni es de Kanto, que está tras el Alto Mando de Johto.
-        store.debugOpenRegion("kanto")
         if let gym = store.debugOpenNextGym() {
             ok = layout("gimnasio (\(gym.leader))") && ok
             // El panel del HUD tiene tamaño fijo y su raíz es un GeometryReader,

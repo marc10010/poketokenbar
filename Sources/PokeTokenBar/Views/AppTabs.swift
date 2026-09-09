@@ -85,7 +85,7 @@ struct LadderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // La duda que provoca el número: en Kanto no se empieza de cero.
-            Text("Las medallas **no se reinician** al cambiar de región: las 8 de Johto siguen contando, así que \"10 medallas\" son las 8 de Johto más 2 de Kanto.")
+            Text("Las medallas **no se reinician** al cambiar de región: las 8 de la primera siguen contando, así que \"10 medallas\" son las 8 de Kanto más 2 de Johto.")
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

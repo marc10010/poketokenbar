@@ -76,7 +76,7 @@ struct ZonesView: View {
                     .font(.system(size: 9))
                 }
             } else {
-                Text(zone.unlock.label(kantoOpen: store.zoneAccess.kantoOpen))
+                Text(zone.unlock.label(openRegions: store.openRegions))
                     .font(.system(size: 9))
                     .foregroundStyle(.secondary)
             }

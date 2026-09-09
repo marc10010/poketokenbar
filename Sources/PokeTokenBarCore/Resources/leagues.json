@@ -1,84 +1,134 @@
 {
- "schemaVersion": 1,
- "source": "curado a mano",
- "leagues": [
-  {
-   "id": "johto",
-   "name": "Alto Mando de Johto",
-   "place": "Plateau Añil",
-   "requiredMedals": 8,
-   "reward": "kanto",
-   "members": [
+  "schemaVersion": 1,
+  "source": "curado a mano · el Alto Mando de cada región, en orden de juego",
+  "leagues": [
     {
-     "name": "Will",
-     "signatureSpeciesID": 178,
-     "order": 1,
-     "absorption": 1.5,
-     "hp": [
-      820000,
-      1020000
-     ]
+      "id": "kanto",
+      "name": "Alto Mando de Kanto",
+      "place": "Meseta Añil",
+      "requiredMedals": 8,
+      "reward": "johto",
+      "members": [
+        {
+          "name": "Lorelei",
+          "signatureSpeciesID": 131,
+          "order": 1,
+          "absorption": 1.5,
+          "hp": [
+            820000,
+            1020000
+          ]
+        },
+        {
+          "name": "Bruno",
+          "signatureSpeciesID": 68,
+          "order": 2,
+          "absorption": 1.5,
+          "hp": [
+            880000,
+            1080000
+          ]
+        },
+        {
+          "name": "Agatha",
+          "signatureSpeciesID": 94,
+          "order": 3,
+          "absorption": 1.6,
+          "hp": [
+            940000,
+            1140000
+          ]
+        },
+        {
+          "name": "Lance",
+          "signatureSpeciesID": 149,
+          "order": 4,
+          "absorption": 1.6,
+          "hp": [
+            1000000,
+            1200000
+          ]
+        },
+        {
+          "name": "Blue",
+          "signatureSpeciesID": 9,
+          "order": 5,
+          "absorption": 1.75,
+          "hp": [
+            1200000,
+            1400000
+          ]
+        }
+      ]
     },
     {
-     "name": "Koga",
-     "signatureSpeciesID": 169,
-     "order": 2,
-     "absorption": 1.5,
-     "hp": [
-      880000,
-      1080000
-     ]
-    },
-    {
-     "name": "Bruno",
-     "signatureSpeciesID": 68,
-     "order": 3,
-     "absorption": 1.6,
-     "hp": [
-      940000,
-      1140000
-     ]
-    },
-    {
-     "name": "Karen",
-     "signatureSpeciesID": 197,
-     "order": 4,
-     "absorption": 1.6,
-     "hp": [
-      1000000,
-      1200000
-     ]
-    },
-    {
-     "name": "Lance",
-     "signatureSpeciesID": 149,
-     "order": 5,
-     "absorption": 1.75,
-     "hp": [
-      1200000,
-      1400000
-     ]
+      "id": "johto",
+      "name": "Alto Mando de Johto y Monte Plateado",
+      "place": "Meseta Añil y la cima del Monte Plateado",
+      "requiredMedals": 16,
+      "reward": "champion",
+      "members": [
+        {
+          "name": "Will",
+          "signatureSpeciesID": 178,
+          "order": 1,
+          "absorption": 1.75,
+          "hp": [
+            1300000,
+            1500000
+          ]
+        },
+        {
+          "name": "Koga",
+          "signatureSpeciesID": 169,
+          "order": 2,
+          "absorption": 1.75,
+          "hp": [
+            1400000,
+            1600000
+          ]
+        },
+        {
+          "name": "Bruno",
+          "signatureSpeciesID": 68,
+          "order": 3,
+          "absorption": 1.8,
+          "hp": [
+            1500000,
+            1700000
+          ]
+        },
+        {
+          "name": "Karen",
+          "signatureSpeciesID": 197,
+          "order": 4,
+          "absorption": 1.8,
+          "hp": [
+            1600000,
+            1800000
+          ]
+        },
+        {
+          "name": "Lance",
+          "signatureSpeciesID": 149,
+          "order": 5,
+          "absorption": 1.9,
+          "hp": [
+            1700000,
+            1900000
+          ]
+        },
+        {
+          "name": "Red",
+          "signatureSpeciesID": 25,
+          "order": 6,
+          "absorption": 2.0,
+          "hp": [
+            2000000,
+            2200000
+          ]
+        }
+      ]
     }
-   ]
-  },
-  {
-   "id": "kanto",
-   "name": "Monte Plateado",
-   "place": "Cima del Monte Plateado",
-   "requiredMedals": 16,
-   "reward": "champion",
-   "members": [
-    {
-     "name": "Red",
-     "signatureSpeciesID": 25,
-     "order": 1,
-     "absorption": 2.0,
-     "hp": [
-      2000000,
-      2200000
-     ]
-    }
-   ]
-  }
- ]
+  ]
 }

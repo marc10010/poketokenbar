@@ -25,7 +25,11 @@ enum ZoneTests: TestSuite {
     private static let spawner = SpawnService()
 
     private static func access(_ medals: Int, kanto: Bool = false, champion: Bool = false) -> ZoneAccess {
-        ZoneAccess(medals: medals, kantoOpen: kanto, isChampion: champion)
+        ZoneAccess(
+            medals: medals,
+            openRegions: kanto ? Set(GymCatalog.shared.regions) : [GymCatalog.shared.regions.first ?? "kanto"],
+            isChampion: champion
+        )
     }
 
     private static func store(medals: Int = 16, kanto: Bool = true, champion: Bool = true) -> GameStore {
@@ -147,17 +151,19 @@ enum ZoneTests: TestSuite {
     }
 
     static func testUnlockRules() throws {
-        let inicial = try unwrap(catalog["rutas-johto-sur"])
+        // Región 1 (Kanto): por medallas.
+        let inicial = try unwrap(catalog["rutas-kanto-sur"])
         expectTrue(access(0).opens(inicial), "la zona inicial está abierta desde el principio")
 
-        let costa = try unwrap(catalog["rutas-johto-costa"])
-        expectFalse(access(3).opens(costa))
-        expectTrue(access(4).opens(costa))
-
         let central = try unwrap(catalog["central-electrica"])
-        expectFalse(access(16).opens(central), "sin Kanto no se abre por muchas medallas que haya")
-        expectFalse(access(11, kanto: true).opens(central), "y con Kanto necesita 12")
-        expectTrue(access(12, kanto: true).opens(central))
+        expectFalse(access(4).opens(central))
+        expectTrue(access(5).opens(central), "la Central Eléctrica es de la región 1")
+
+        // Región 2 (Johto): pide el barco, y algunas además medallas.
+        let costa = try unwrap(catalog["rutas-johto-costa"])
+        expectFalse(access(16).opens(costa), "sin Johto no se abre por muchas medallas que haya")
+        expectFalse(access(11, kanto: true).opens(costa), "y con Johto necesita 12")
+        expectTrue(access(12, kanto: true).opens(costa))
 
         let celeste = try unwrap(catalog["cueva-celeste"])
         expectFalse(access(16, kanto: true).opens(celeste), "Cueva Celeste es solo para el campeón")
@@ -189,10 +195,11 @@ enum ZoneTests: TestSuite {
     }
 
     static func testClosedZoneIsNotOffered() throws {
-        // Los de la Central Eléctrica no pueden salir antes de abrirla, salvo
-        // que vivan además en otra zona ya abierta.
-        let central = try unwrap(catalog["central-electrica"])
-        let cerrado = access(4)
+        // Los de la Senda Helada no pueden salir antes de abrirla, salvo que
+        // vivan además en otra zona ya abierta. (Es de la región 2 y pide 15
+        // medallas: la zona más tardía con especies propias.)
+        let central = try unwrap(catalog["senda-helada"])
+        let cerrado = access(14, kanto: true)
         let exclusivos = central.species.filter { id in
             catalog.zones(for: id).allSatisfy { !cerrado.opens($0) }
         }
@@ -201,7 +208,7 @@ enum ZoneTests: TestSuite {
         for rarity in Rarity.allCases {
             let ofrecidas = Set(spawner.candidates(rarity: rarity, access: cerrado).map(\.id))
             for id in exclusivos where !catalog.unassigned.contains(id) {
-                expectFalse(ofrecidas.contains(id), "#\(id) sale con la Central Eléctrica cerrada")
+                expectFalse(ofrecidas.contains(id), "#\(id) sale con la Senda Helada cerrada")
             }
         }
     }

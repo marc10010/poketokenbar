@@ -13,21 +13,26 @@ public struct ZoneUnlock: Codable, Hashable, Sendable {
     }
 
     public var requiredMedals: Int { medals ?? 0 }
-    public var requiresKanto: Bool { region == "kanto" }
+    /// Región que hay que haber abierto, si la zona está en la segunda o
+    /// posteriores. Antes esto era `requiresKanto`, con el nombre de la región
+    /// metido en el código: dejó de valer al invertir el orden de juego.
+    public var requiredRegion: String? { region }
     public var requiresChampion: Bool { champion == true }
 
     /// Orden en que se van abriendo: primero la región 1 por medallas, luego
-    /// las de Kanto y al final las que piden ser Campeón. Es el orden en que
-    /// el jugador las ve aparecer, y por tanto el orden en que quiere leerlas.
+    /// las que piden otra región, y al final las que piden ser Campeón. Es el
+    /// orden en que el jugador las ve aparecer.
     public var unlockOrder: (Int, Int) {
-        let phase = requiresChampion ? 2 : (requiresKanto ? 1 : 0)
+        let phase = requiresChampion ? 2 : (requiredRegion != nil ? 1 : 0)
         return (phase, requiredMedals)
     }
 
-    public func label(kantoOpen: Bool) -> String {
-        if requiresChampion { return "tras vencer a Red" }
+    public func label(openRegions: Set<String>) -> String {
+        if requiresChampion { return "tras el combate final" }
         var parts: [String] = []
-        if requiresKanto, !kantoOpen { parts.append("abrir Kanto") }
+        if let requiredRegion, !openRegions.contains(requiredRegion) {
+            parts.append("abrir \(requiredRegion.capitalized)")
+        }
         if requiredMedals > 0 { parts.append("\(requiredMedals) medallas") }
         return parts.isEmpty ? "desde el principio" : parts.joined(separator: " y ")
     }
@@ -59,18 +64,21 @@ public struct ZoneCatalogFile: Codable, Sendable {
 /// Estado de progreso que decide qué zonas están abiertas.
 public struct ZoneAccess: Hashable, Sendable {
     public let medals: Int
-    public let kantoOpen: Bool
+    /// Regiones abiertas. Era un `kantoOpen: Bool` cuando Kanto era la única
+    /// región que se podía abrir; con el orden de juego invertido —y con
+    /// cualquier región nueva— hace falta el conjunto.
+    public let openRegions: Set<String>
     public let isChampion: Bool
 
-    public init(medals: Int, kantoOpen: Bool, isChampion: Bool) {
+    public init(medals: Int, openRegions: Set<String> = [], isChampion: Bool = false) {
         self.medals = medals
-        self.kantoOpen = kantoOpen
+        self.openRegions = openRegions
         self.isChampion = isChampion
     }
 
     public func opens(_ zone: Zone) -> Bool {
         if zone.unlock.requiresChampion { return isChampion }
-        if zone.unlock.requiresKanto, !kantoOpen { return false }
+        if let required = zone.unlock.requiredRegion, !openRegions.contains(required) { return false }
         return medals >= zone.unlock.requiredMedals
     }
 }

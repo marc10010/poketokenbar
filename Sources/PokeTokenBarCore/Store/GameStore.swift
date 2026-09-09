@@ -129,9 +129,21 @@ public final class GameStore: ObservableObject {
     public var zoneAccess: ZoneAccess {
         ZoneAccess(
             medals: medals,
-            kantoOpen: isOpen(region: "kanto"),
-            isChampion: state.leagues.isChampion
+            openRegions: openRegions,
+            isChampion: isChampion
         )
+    }
+
+    /// Regiones de gimnasios abiertas ahora mismo.
+    public var openRegions: Set<String> {
+        Set(gymCatalog.regions.filter { isOpen(region: $0) })
+    }
+
+    /// Campeón: se ha ganado la liga cuyo premio es el título. Sale del
+    /// catálogo, no de comparar el id de la liga con "kanto".
+    public var isChampion: Bool {
+        guard let final = leagueCatalog.all.first(where: { $0.reward == .champion }) else { return false }
+        return state.leagues.wonIDs.contains(final.id)
     }
 
     // MARK: - El barco entre regiones
