@@ -112,23 +112,26 @@ struct HUDView: View {
             GeometryReader { geometry in
                 let showsMetrics = Self.showsMetrics(forHeight: geometry.size.height)
                 let showsBox = Self.showsBox(forHeight: geometry.size.height)
-                VStack(alignment: .leading, spacing: 5) {
-                    battleHeader(
-                        encounter: encounter,
-                        rival: rival,
-                        companion: companion,
-                        form: form,
-                        expanded: showsMetrics || showsBox,
-                        panelHeight: geometry.size.height
-                    )
-                    if showsMetrics {
-                        Divider()
-                        metricsStrip
+                HStack(alignment: .top, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        battleHeader(
+                            encounter: encounter,
+                            rival: rival,
+                            companion: companion,
+                            form: form,
+                            panelHeight: geometry.size.height
+                        )
+                        if showsMetrics {
+                            Divider()
+                            metricsStrip
+                        }
+                        if showsBox {
+                            Divider()
+                            boxSection
+                        }
                     }
-                    if showsBox {
-                        Divider()
-                        boxSection
-                    }
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    resizeHandle(expanded: showsMetrics || showsBox)
                 }
                 .padding(.horizontal, 9)
                 .padding(.vertical, 7)
@@ -210,7 +213,6 @@ struct HUDView: View {
         rival: Pokemon,
         companion: CapturedPokemon,
         form: Pokemon,
-        expanded: Bool,
         panelHeight: CGFloat
     ) -> some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -251,7 +253,6 @@ struct HUDView: View {
                     }
                 }
                 Spacer(minLength: 2)
-                resizeButton(expanded: expanded)
             }
             HPBar(fraction: encounter.hpFraction, height: 8)
             Text("\(Fmt.tokens(encounter.currentHP)) / \(Fmt.tokens(encounter.maxHP)) HP")
@@ -260,16 +261,16 @@ struct HUDView: View {
         }
     }
 
-    /// El botón de plegar en los paneles que no lo llevan en su cabecera.
-    private func panelResizeButton(height: CGFloat) -> some View {
-        resizeButton(expanded: Self.showsMetrics(forHeight: height) || Self.showsBox(forHeight: height))
-            .padding(.top, 6)
-            .padding(.trailing, 7)
+    private func expandedFor(height: CGFloat) -> Bool {
+        Self.showsMetrics(forHeight: height) || Self.showsBox(forHeight: height)
     }
 
-    /// Además de arrastrar los bordes, un botón para plegar y desplegar: el
-    /// borde de una ventana sin marco no se ve, y nadie lo encuentra solo.
-    private func resizeButton(expanded: Bool) -> some View {
+    /// El mando de plegar y desplegar: una columna en el borde derecho, a lo
+    /// alto del panel y en el mismo sitio en los cuatro. Antes era un icono
+    /// dentro de la cabecera del combate salvaje, así que en los paneles de
+    /// jefe no había ninguno y en el compacto competía por el ancho con el
+    /// nombre del rival.
+    private func resizeHandle(expanded: Bool) -> some View {
         Button {
             if expanded {
                 store.collapseHUD()
@@ -277,16 +278,17 @@ struct HUDView: View {
                 store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
             }
         } label: {
-            // Con fondo y a tamaño fijo: en gris sobre un panel translúcido no
-            // se veía, y desde que un clic en un sprite no agranda el panel
-            // este botón es la única forma visible de desplegarlo.
-            Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
-                .font(.system(size: 10, weight: .bold))
-                .padding(4)
-                .background(Circle().fill(Color.secondary.opacity(0.22)))
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color.secondary.opacity(0.16))
+                .frame(width: 20)
+                .frame(maxHeight: .infinity)
+                .overlay(
+                    Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.secondary)
+                )
         }
         .buttonStyle(.plain)
-        .fixedSize()
         .help(expanded ? "Plegar y cerrar la caja PC" : "Desplegar: métricas y caja PC")
     }
 
@@ -296,21 +298,21 @@ struct HUDView: View {
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
         GeometryReader { geometry in
-            VStack(alignment: .leading, spacing: 5) {
-                content()
-                if Self.showsMetrics(forHeight: geometry.size.height) {
-                    Divider()
-                    metricsStrip
+            HStack(alignment: .top, spacing: 6) {
+                VStack(alignment: .leading, spacing: 5) {
+                    content()
+                    if Self.showsMetrics(forHeight: geometry.size.height) {
+                        Divider()
+                        metricsStrip
+                    }
+                    if Self.showsBox(forHeight: geometry.size.height) {
+                        Divider()
+                        boxSection
+                    }
                 }
-                if Self.showsBox(forHeight: geometry.size.height) {
-                    Divider()
-                    boxSection
-                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                resizeHandle(expanded: expandedFor(height: geometry.size.height))
             }
-            // Hueco para el botón de plegar, que antes no estaba en este panel:
-            // durante una liga o un hito no había ninguna manera visible de
-            // desplegar el HUD.
-            .padding(.trailing, 14)
             .padding(.horizontal, 9)
             .padding(.vertical, 7)
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
@@ -322,7 +324,6 @@ struct HUDView: View {
                             .strokeBorder(border.opacity(0.6), lineWidth: 1.5)
                     )
             )
-            .overlay(alignment: .topTrailing) { panelResizeButton(height: geometry.size.height) }
             .contextMenu { hudMenu }
         }
         .padding(4)
@@ -352,18 +353,21 @@ struct HUDView: View {
     /// Mismo marco que el combate normal, con la tarjeta de gimnasio dentro.
     private func gymPanel(gym: Gym, battle: ActiveGymBattle) -> some View {
         GeometryReader { geometry in
-            VStack(alignment: .leading, spacing: 5) {
-                GymCardView(gym: gym, battle: battle, compact: true)
-                if Self.showsMetrics(forHeight: geometry.size.height) {
-                    Divider()
-                    metricsStrip
+            HStack(alignment: .top, spacing: 6) {
+                VStack(alignment: .leading, spacing: 5) {
+                    GymCardView(gym: gym, battle: battle, compact: true)
+                    if Self.showsMetrics(forHeight: geometry.size.height) {
+                        Divider()
+                        metricsStrip
+                    }
+                    if Self.showsBox(forHeight: geometry.size.height) {
+                        Divider()
+                        boxSection
+                    }
                 }
-                if Self.showsBox(forHeight: geometry.size.height) {
-                    Divider()
-                    boxSection
-                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                resizeHandle(expanded: expandedFor(height: geometry.size.height))
             }
-            .padding(.trailing, 14)
             .padding(.horizontal, 9)
             .padding(.vertical, 7)
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)

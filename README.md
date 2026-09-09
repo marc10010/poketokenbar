@@ -181,9 +181,12 @@ Tamaño:
   ventana sin marco no se ve, y al plegar cierra la ficha y la caja. Acotado a
   520×620 y persistido.
 
-**El panel no se agranda solo:** crecer y plegarse es cosa del botón (redondo,
-arriba a la derecha, con fondo para que se vea sobre el panel translúcido; y
-también en el menú contextual), no de un clic. Con el HUD plegado, un clic en un sprite abre la ficha en el popover, que
+**El panel no se agranda solo:** crecer y plegarse es cosa del botón, no de un
+clic. El botón es una **columna en el borde derecho**, a lo alto del panel y en
+el mismo sitio en los cuatro (combate, gimnasio, hito y liga); antes era un
+icono dentro de la cabecera del combate salvaje, así que en los paneles de jefe
+no había ninguno y en el compacto competía por el ancho con el nombre del
+rival. También está en el menú contextual. Con el HUD plegado, un clic en un sprite abre la ficha en el popover, que
 es donde hay sitio. El botón de plegar está ahora en los cuatro paneles —
 combate, gimnasio, hito y liga: en los tres últimos no había ninguno, así que
 durante una liga o un hito no había manera visible de desplegar el HUD.
@@ -347,6 +350,11 @@ caja, y el parseo de transcripts y del payload HTTP.
 `--ui-smoke-test` monta el árbol de SwiftUI en las tres pantallas (selector de
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
+
+`--render-ui <carpeta>` pinta las superficies a PNG (HUD plegado, desplegado,
+de gimnasio, y el popover) sin abrir ventanas ni capturar la pantalla. El smoke
+test mide tamaños pero no dice **dónde** cae cada cosa; con esto se mira. Útil
+sobre todo donde no hay permiso de captura de pantalla.
 
 ## 11. Regiones y ligas
 

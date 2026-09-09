@@ -5,6 +5,11 @@ struct PokeTokenBarApp {
     @MainActor
     static func main() {
         let application = NSApplication.shared
+        if let index = CommandLine.arguments.firstIndex(of: "--render-ui"),
+           let path = CommandLine.arguments.dropFirst(index + 1).first {
+            application.setActivationPolicy(.prohibited)
+            exit(UIRender.run(into: URL(fileURLWithPath: path)))
+        }
         if CommandLine.arguments.contains("--ui-smoke-test") {
             application.setActivationPolicy(.prohibited)
             exit(UISmokeTest.run())
