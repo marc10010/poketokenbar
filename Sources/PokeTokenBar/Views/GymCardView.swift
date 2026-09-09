@@ -68,43 +68,74 @@ struct MedalsView: View {
     @EnvironmentObject private var store: GameStore
 
     var body: some View {
-        let earned = Set(store.medalGyms().map(\.id))
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 7) {
             HStack(spacing: 6) {
                 Text(store.rank.label)
                     .font(.caption.weight(.semibold))
-                if let next = store.rank.next(medals: store.medals) {
-                    Text("· \(next.missing) medalla\(next.missing == 1 ? "" : "s") para \(next.rank.label)")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
+                Text("· \(store.medals) de \(store.gymCatalog.count) medallas en total")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            }
+            if let next = store.rank.next(medals: store.medals) {
+                Text("\(next.missing) más para \(next.rank.label)")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            }
+
+            // Una fila por región con su propio contador: el total de 16 no
+            // dice en qué región estás, y las ocho de Kanto ni se pueden
+            // intentar hasta ganar el Alto Mando de Johto.
+            ForEach(store.medalsByRegion) { region in
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 5) {
+                        Text(region.name.uppercased())
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(region.open ? .primary : .secondary)
+                            .tracking(0.5)
+                        Text("\(region.earned)/\(region.total)")
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                        if let gate = region.gate {
+                            Text("· cerrada hasta ganar \(gate.name)")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.orange)
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    medals(of: region.region)
                 }
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 8), spacing: 4) {
-                ForEach(store.gymCatalog.all) { gym in
-                    let won = earned.contains(gym.id)
-                    let isNext = store.nextGym?.id == gym.id
-                    Button {
-                        store.selectedGymID = gym.id
-                    } label: {
-                        SpriteView(speciesID: gym.signatureSpeciesID, shiny: false, size: 30)
-                            .opacity(won ? 1 : (isNext ? 0.75 : 0.18))
-                            .grayscale(won ? 0 : 1)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(isNext ? Color.orange.opacity(0.22) : .clear)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .strokeBorder(
-                                        store.lastMedal?.gym.id == gym.id ? Color.orange : .clear,
-                                        lineWidth: 2
-                                    )
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .onRightClick { store.selectedGymID = gym.id }
-                    .help("\(gym.medal) · \(gym.leader) (\(gym.city))\(won ? " ✓" : "")\(isNext ? " · el siguiente" : "")")
+        }
+    }
+
+    private func medals(of region: String) -> some View {
+        let earned = Set(store.medalGyms().map(\.id))
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 8), spacing: 4) {
+            ForEach(store.gymCatalog.gyms(in: region)) { gym in
+                let won = earned.contains(gym.id)
+                let isNext = store.nextGym?.id == gym.id
+                Button {
+                    store.selectedGymID = gym.id
+                } label: {
+                    SpriteView(speciesID: gym.signatureSpeciesID, shiny: false, size: 30)
+                        .opacity(won ? 1 : (isNext ? 0.75 : 0.18))
+                        .grayscale(won ? 0 : 1)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(isNext ? Color.orange.opacity(0.22) : .clear)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .strokeBorder(
+                                    store.lastMedal?.gym.id == gym.id ? Color.orange : .clear,
+                                    lineWidth: 2
+                                )
+                        )
                 }
+                .buttonStyle(.plain)
+                .onRightClick { store.selectedGymID = gym.id }
+                .help("\(gym.medal) · \(gym.leader) (\(gym.city))\(won ? " ✓" : "")\(isNext ? " · el siguiente" : "")")
             }
         }
     }

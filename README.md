@@ -424,6 +424,29 @@ en Kanto (Weezing) y Alto Mando en Johto (Crobat).
 `kantoOpen` e `isChampion` **dejan de derivarse de las medallas** y pasan a
 depender de haber ganado la liga, que era lo provisional que quedaba.
 
+### Cómo se cuentan las 16 medallas
+
+Cada región tiene **sus ocho**, y el popover las enseña así: `JOHTO 3/8` y
+`KANTO 0/8`, con la fila de Kanto diciendo que está cerrada hasta ganar el Alto
+Mando. Pero **el total no se reinicia** al cambiar de región: son 16 seguidas, y
+es ese número el que mueve todo lo demás.
+
+| Total | Región | Qué desbloquea |
+|---|---|---|
+| 0 | Johto | rutas del sur; tier común y poco común |
+| 2 | Johto | tier **raro** (rango Entrenador) |
+| 5 | Johto | rango Veterano |
+| 8 | Johto | tier **legendario** (rango As) y el Alto Mando de Johto |
+| 8 + liga | — | **se abre Kanto**: sus zonas base y su primer gimnasio |
+| 10, 12, 14, 16 | Kanto | sus zonas por tramos (Central Eléctrica, Mansión, Cueva Celeste…) |
+| 16 + liga | — | Campeón |
+
+Es decir: donde la escalera dice "10 medallas" son **las 8 de Johto más 2 de
+Kanto**, no 10 de Kanto. Contar por región y reiniciar en cada una (como
+PokéClicker) obligaría a reescribir los requisitos de las 32 zonas y los cinco
+rangos, así que por ahora se cuenta seguido y **se enseña por región**, que era
+donde estaba la confusión.
+
 ## 12. Hitos legendarios
 
 Los 11 legendarios **no aparecen en el sorteo**: tienen sitio y requisito, y se

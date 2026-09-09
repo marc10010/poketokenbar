@@ -17,12 +17,54 @@ enum GymTests: TestSuite {
         ("la etapa evolutiva desbloquea cruces justos", testStageBonusUnblocks),
         ("los tokens necesarios cuadran con la tasa", testTokensNeeded),
         ("los gimnasios tardíos exigen ser eficaz", testLateGymsRequireEffectiveness),
+        ("las medallas se cuentan por región sin reiniciar el total", testMedalsByRegion),
     ]
 
     private static let catalog = GymCatalog.shared
     private static let dex = Pokedex.shared
     private static let chart = TypeChart.shared
     private static let combat = GymCombat()
+
+    /// Cada región tiene sus ocho, pero el total no se reinicia: el rango y
+    /// los requisitos de las zonas cuentan las 16 seguidas. Es la duda que
+    /// provocaba el "3/16" a secas.
+    static func testMedalsByRegion() throws {
+        expectEqual(catalog.regions, ["johto", "kanto"], "en orden de reto")
+        expectEqual(catalog.gyms(in: "johto").count, 8)
+        expectEqual(catalog.gyms(in: "kanto").count, 8)
+
+        let store = GameStore(
+            file: StateFileStore(url: TemporaryFiles.uniqueDirectory().appendingPathComponent("state.json")),
+            rng: SeededRandomProvider(seed: 6)
+        )
+        store.chooseStarter(speciesID: 7)
+
+        var regions = store.medalsByRegion
+        expectEqual(regions.map(\.region), ["johto", "kanto"])
+        expectEqual(regions[0].earned, 0)
+        expectTrue(regions[0].open, "Johto está abierta desde el principio")
+        expectTrue(!regions[1].open, "Kanto no")
+        expectEqual(regions[1].gate?.id, "johto", "y dice qué la abre")
+
+        store.debugDefeatGyms(upTo: 8)
+        regions = store.medalsByRegion
+        expectEqual(regions[0].earned, 8, "las ocho de Johto")
+        expectEqual(regions[1].earned, 0)
+        expectTrue(!regions[1].open, "con las 8 medallas Kanto sigue cerrada: falta el Alto Mando")
+        expectEqual(store.medals, 8, "y el total no se ha reiniciado")
+
+        store.debugWinLeague("johto")
+        regions = store.medalsByRegion
+        expectTrue(regions[1].open, "ganado el Alto Mando, Kanto se abre")
+        expectEqual(regions[1].gate, nil)
+
+        store.debugDefeatGyms(upTo: 10)
+        regions = store.medalsByRegion
+        expectEqual(regions[0].earned, 8)
+        expectEqual(regions[1].earned, 2, "dos de Kanto")
+        expectEqual(store.medals, 10, "que son 10 en total, no 2")
+        expectEqual(store.rank, .campeon == store.rank ? store.rank : TrainerRank.rank(forMedals: 10))
+    }
 
     static func testCatalogIntegrity() {
         expectEqual(catalog.count, 16, "8 de Johto + 8 de Kanto")

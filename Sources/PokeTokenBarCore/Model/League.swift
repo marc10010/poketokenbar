@@ -29,6 +29,15 @@ public enum LeagueReward: String, Codable, Hashable, Sendable {
         case .champion: return "Campeón · abre Cueva Celeste"
         }
     }
+
+    /// Región de gimnasios que abre, si abre alguna. La usa la UI para decir
+    /// qué hay que ganar para poder retar a los gimnasios de esa región.
+    public var opensRegion: String? {
+        switch self {
+        case .kanto: return "kanto"
+        case .champion: return nil
+        }
+    }
 }
 
 /// Una liga es un **gauntlet**: sus miembros en cadena y sin salvajes entre
