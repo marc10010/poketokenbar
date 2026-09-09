@@ -17,6 +17,7 @@ enum GymBattleTests: TestSuite {
         ("los tokens del gimnasio cuentan para el ledger y la evolución", testGymTokensStillCount),
         ("la medalla se celebra y dice qué desbloquea", testMedalCelebration),
         ("el ritmo es el que muestra la UI, sin evolucionar a mitad", testRateDoesNotChangeMidEvent),
+        ("la métrica de daño apunta al líder, no al salvaje que no hay", testCurrentTargetIsTheBoss),
     ]
 
     private static let catalog = GymCatalog.shared
@@ -227,6 +228,25 @@ enum GymBattleTests: TestSuite {
             SpawnService().availableTiers(rank: store.rank).contains(.legendary),
             "los legendarios pasaron a ser hitos: el rango As ya no los saca en libertad"
         )
+    }
+
+    /// Con un gimnasio abierto no hay salvaje, así que `wildDamagePerToken` es
+    /// 0: la métrica tiene que hablar del líder o dice que no haces daño
+    /// mientras se lo estás haciendo.
+    static func testCurrentTargetIsTheBoss() throws {
+        let store = primed(wildHP: 10)
+        let wild = try unwrap(store.currentTarget)
+        expectTrue(!wild.isBoss, "sin gimnasio, el objetivo es el salvaje")
+
+        store.ingest(event("abre", tokens: 10))
+        let gym = try unwrap(store.activeGym).gym
+        expectEqual(store.wildDamagePerToken, 0, accuracy: 0.0001, "no hay salvaje al que pegar")
+
+        let target = try unwrap(store.currentTarget)
+        expectTrue(target.isBoss)
+        expectEqual(target.label, gym.leader)
+        expectEqual(target.rate, store.gymDamagePerToken(for: gym), accuracy: 0.0001)
+        expectTrue(target.rate > 0, "y la tasa del líder no es cero")
     }
 
     static func testGymTokensStillCount() throws {
