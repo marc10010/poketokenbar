@@ -115,12 +115,30 @@ enum CollectionTests: TestSuite {
         expectEqual(companion.gymsWon, 0)
     }
 
+    /// La paleta normal solo se puede pedir si **también** tienes el normal:
+    /// con un shiny como único ejemplar de su línea, dibujarlo en normal
+    /// enseñaría un Pokémon que no está en la caja.
     static func testShinyDisplayToggle() throws {
         let store = primed()
+
+        // Primero solo el shiny de una línea nueva.
         store.debugSetEncounter(wild(19, shiny: true))
         store.ingest(event("shiny", tokens: 100))
         let shiny = try unwrap(store.state.box.last { $0.isShiny })
         expectTrue(shiny.displaysShiny, "de fábrica se muestra shiny")
+        expectTrue(!store.canToggleShinyDisplay(shiny), "sin el normal, no se puede cambiar")
+
+        store.toggleShinyDisplay(shiny.id)
+        expectTrue(
+            try unwrap(store.state.box.first { $0.id == shiny.id }).displaysShiny,
+            "y pedirlo no hace nada"
+        )
+
+        // Con el normal de la misma línea en la caja, ya sí.
+        store.debugSetEncounter(wild(19))
+        store.ingest(event("normal", tokens: 100))
+        expectTrue(store.ownsFamily(of: 19, shiny: false), "el Rattata normal está en la caja")
+        expectTrue(store.canToggleShinyDisplay(shiny))
 
         store.toggleShinyDisplay(shiny.id)
         expectFalse(try unwrap(store.state.box.first { $0.id == shiny.id }).displaysShiny, "ahora en normal")
@@ -129,6 +147,7 @@ enum CollectionTests: TestSuite {
 
         // Un normal no se puede "pintar" de shiny.
         let plain = try unwrap(store.state.box.first { !$0.isShiny })
+        expectTrue(!store.canToggleShinyDisplay(plain))
         store.toggleShinyDisplay(plain.id)
         expectFalse(try unwrap(store.state.box.first { $0.id == plain.id }).displaysShiny)
     }

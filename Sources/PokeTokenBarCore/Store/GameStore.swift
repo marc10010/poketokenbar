@@ -719,8 +719,21 @@ public final class GameStore: ObservableObject {
         return true
     }
 
+    /// Si se le puede quitar la paleta shiny a un ejemplar.
+    ///
+    /// Solo cuando **también tienes la versión normal** de esa línea. Si el
+    /// shiny es el único que tienes, dibujarlo en normal enseñaría un Pokémon
+    /// que no está en tu caja: la caja dejaría de decir la verdad sobre lo que
+    /// has conseguido.
+    public func canToggleShinyDisplay(_ captured: CapturedPokemon) -> Bool {
+        guard captured.isShiny else { return false }
+        return ownsFamily(of: captured.speciesID, shiny: false)
+    }
+
     public func toggleShinyDisplay(_ capturedID: UUID) {
-        guard let index = state.box.firstIndex(where: { $0.id == capturedID }), state.box[index].isShiny else { return }
+        guard let index = state.box.firstIndex(where: { $0.id == capturedID }),
+              canToggleShinyDisplay(state.box[index])
+        else { return }
         state.box[index].prefersShiny.toggle()
         groupCache = nil
         dexCache = nil
