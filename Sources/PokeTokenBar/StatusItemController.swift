@@ -173,6 +173,12 @@ final class StatusItemController {
         } else {
             button.title = " —"
         }
+        // Sol o luna solo cuando la hora decide algo: el equipado ya puede
+        // evolucionar y su rama depende de la banda. Ponerlo siempre sería
+        // ruido en una barra de menú que suele estar llena.
+        if store.clockDecidesNow {
+            button.title += store.isDaylight ? " ☀" : " ☾"
+        }
         button.toolTip = tooltip()
     }
 

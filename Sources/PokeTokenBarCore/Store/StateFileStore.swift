@@ -65,7 +65,41 @@ public struct StateFileStore {
         // v2 → v3: los gimnasios arrancan de cero. Decidido explícitamente no
         // convalidar rango por tokens ya gastados: una partida en curso pierde
         // el acceso a raros y legendarios hasta ganar 2 y 8 medallas.
+        // v6 → v7: la evolución pasa de derivarse de los tokens y la semilla a
+        // ser un hecho escrito en el ejemplar. Se escribe la forma que el
+        // jugador ya estaba viendo, así que su caja no cambia: la rama que le
+        // tocó se queda, y de ahí en adelante la deciden sus victorias.
+        if state.schemaVersion < 7 {
+            let dex = Pokedex.shared
+            state.box = state.box.map { captured in
+                guard captured.evolvedForms.isEmpty else { return captured }
+                var migrated = captured
+                migrated.evolvedForms = Self.legacyPath(of: captured, pokedex: dex)
+                return migrated
+            }
+        }
         state.schemaVersion = GameState.currentSchemaVersion
         return state
+    }
+
+    /// El camino que la versión anterior habría dibujado: desde la forma
+    /// capturada, tantos pasos como den sus tokens y con la rama que fijaba la
+    /// semilla. Solo se usa para migrar.
+    static func legacyPath(of captured: CapturedPokemon, pokedex: Pokedex) -> [Int] {
+        guard let species = pokedex[captured.speciesID] else { return [] }
+        let reached = EvolutionStage.stage(forTotalTokens: captured.tokensEarned).rawValue
+        guard reached > species.stage else { return [] }
+
+        var forms: [Int] = []
+        var current = species
+        var rng = SeededRandomProvider(seed: captured.evolutionSeed)
+        while current.stage < reached {
+            let options = current.evolvesInto.compactMap { pokedex[$0] }
+            guard !options.isEmpty else { break }
+            let next = options[rng.nextInt(in: 0...(options.count - 1))]
+            forms.append(next.id)
+            current = next
+        }
+        return forms
     }
 }

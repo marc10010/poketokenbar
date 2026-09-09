@@ -36,6 +36,9 @@ public final class GameStore: ObservableObject {
     private let file: StateFileStore
     private let battle: BattleEngine
     private let spawner: SpawnService
+    /// Con qué reloj se leen las bandas de día y noche que deciden una rama.
+    /// Inyectable porque si no, un test dependería de la hora a la que corre.
+    private let calendar: Calendar
     private let evolution: EvolutionService
     private let gymCombat = GymCombat()
     private var rng: any RandomProvider
@@ -68,7 +71,8 @@ public final class GameStore: ObservableObject {
         milestoneCatalog: MilestoneCatalog = .shared,
         leagueCatalog: LeagueCatalog = .shared,
         file: StateFileStore = StateFileStore(),
-        rng: any RandomProvider = SystemRandomProvider()
+        rng: any RandomProvider = SystemRandomProvider(),
+        calendar: Calendar = .current
     ) {
         self.pokedex = pokedex
         self.typeChart = typeChart
@@ -78,6 +82,7 @@ public final class GameStore: ObservableObject {
         self.leagueCatalog = leagueCatalog
         self.file = file
         self.rng = rng
+        self.calendar = calendar
         self.battle = BattleEngine(pokedex: pokedex)
         self.spawner = SpawnService(pokedex: pokedex, zones: zoneCatalog)
         self.evolution = EvolutionService(pokedex: pokedex)
@@ -712,7 +717,7 @@ public final class GameStore: ObservableObject {
         if state.leagues.current != nil {
             tokens = resolveLeagueBattle(tokens: tokens, now: event.timestamp)
             guard tokens > 0 else {
-                creditActiveCompanion(tokens: damage)
+                creditActiveCompanion(tokens: damage, now: event.timestamp)
                 persist()
                 return nil
             }
@@ -720,7 +725,7 @@ public final class GameStore: ObservableObject {
         if state.milestones.current != nil {
             tokens = resolveMilestoneBattle(tokens: tokens, now: event.timestamp)
             guard tokens > 0 else {
-                creditActiveCompanion(tokens: damage)
+                creditActiveCompanion(tokens: damage, now: event.timestamp)
                 persist()
                 return nil
             }
@@ -728,7 +733,7 @@ public final class GameStore: ObservableObject {
         if state.gyms.current != nil {
             tokens = resolveGymBattle(tokens: tokens, now: event.timestamp)
             guard tokens > 0 else {
-                creditActiveCompanion(tokens: damage)
+                creditActiveCompanion(tokens: damage, now: event.timestamp)
                 persist()
                 return nil
             }
@@ -780,7 +785,7 @@ public final class GameStore: ObservableObject {
         // Al final y no al principio: si se acreditara antes, el compañero
         // podría evolucionar a mitad del evento y pegar con la etapa nueva, así
         // que el ritmo real no coincidiría con el que la UI acaba de mostrar.
-        creditActiveCompanion(tokens: damage)
+        creditActiveCompanion(tokens: damage, now: event.timestamp)
 
         persist()
         return result
@@ -802,12 +807,74 @@ public final class GameStore: ObservableObject {
 
     /// Veces que se ha vencido a esa línea en libertad, con captura o sin ella.
     /// Si ya tienes esa línea (en esa variante de color).
+    /// Si se puede capturar **otro** ejemplar de una línea que ya tienes.
+    ///
+    /// Solo las líneas que bifurcan, solo mientras falte alguna de sus ramas, y
+    /// solo si los que ya tienes están al final de su evolución. Lo último es
+    /// la secuencia: evolucionas el Eevee que tienes y entonces puede salir
+    /// otro, en vez de acumular cinco Eevees sin evolucionar.
+    public func acceptsAnother(baseFormID: Int, shiny: Bool) -> Bool {
+        let line = pokedex.all.filter { $0.baseFormID == baseFormID }
+        guard line.contains(where: { !BranchRules.branches(of: $0.id).isEmpty }) else { return false }
+        guard line.contains(where: { !state.registeredSpeciesIDs.contains($0.id) }) else { return false }
+
+        let mine = state.box.filter { pokedex[$0.speciesID]?.baseFormID == baseFormID && $0.isShiny == shiny }
+        return mine.allSatisfy { evolution.options(for: $0).isEmpty }
+    }
+
     public func ownsFamily(of speciesID: Int, shiny: Bool) -> Bool {
         guard let base = pokedex[speciesID]?.baseFormID else { return false }
         return ownedFamilies.contains(familyKey(baseFormID: base, shiny: shiny))
     }
 
     /// Siguiente forma de un capturado concreto, para su ficha.
+    /// Ramas de un ejemplar, con su condición y si ya la tienes registrada.
+    /// La ficha las canta para que la mecánica no sea adivinar.
+    public struct BranchOption: Identifiable, Sendable {
+        public let form: Pokemon
+        public let condition: BranchCondition
+        public let registered: Bool
+        /// La que saldría si evolucionara ahora mismo.
+        public let isNext: Bool
+
+        public var id: Int { form.id }
+    }
+
+    public func branchOptions(for captured: CapturedPokemon) -> [BranchOption] {
+        let current = evolution.currentForm(of: captured).id
+        let rules = BranchRules.branches(of: current)
+        guard !rules.isEmpty else { return [] }
+        let now = evolution.branch(for: captured, defeatedTypes: lastDefeatedTypes, at: Date(), calendar: calendar)
+        return rules.compactMap { rule in
+            guard let form = pokedex[rule.form] else { return nil }
+            return BranchOption(
+                form: form,
+                condition: rule.condition,
+                registered: state.registeredSpeciesIDs.contains(form.id),
+                isNext: now?.id == form.id
+            )
+        }
+    }
+
+    /// Si el ejemplar equipado ya tiene derecho a evolucionar.
+    public var activeCanEvolve: Bool {
+        guard let companion = state.activeCompanion else { return false }
+        return evolution.canEvolve(companion)
+    }
+
+    /// Si la banda del reloj está decidiendo algo ahora mismo: el equipado
+    /// puede evolucionar y su rama depende de la hora. Es cuando el indicador
+    /// de día/noche de la barra de menú sirve para algo.
+    public var clockDecidesNow: Bool {
+        guard let companion = state.activeCompanion, evolution.canEvolve(companion) else { return false }
+        return branchOptions(for: companion).contains {
+            if case .clock = $0.condition { return true }
+            return false
+        }
+    }
+
+    public var isDaylight: Bool { ClockBand.isDaylight(at: Date(), calendar: calendar) }
+
     public func nextForm(of captured: CapturedPokemon) -> Pokemon? {
         evolution.nextForm(of: captured)
     }
@@ -826,12 +893,13 @@ public final class GameStore: ObservableObject {
 
         for wild in defeated {
             let base = pokedex[wild.speciesID]?.baseFormID ?? wild.speciesID
+            state.lastDefeatedSpeciesID = wild.speciesID
             state.familyDefeats[base, default: 0] += 1
             state.gyms.capturesSinceLastGym += 1
             creditCompanionWildDefeat()
 
             let key = familyKey(baseFormID: base, shiny: wild.isShiny)
-            guard !owned.contains(key) else { continue }
+            if owned.contains(key), !acceptsAnother(baseFormID: base, shiny: wild.isShiny) { continue }
             owned.insert(key)
 
             let captured = CapturedPokemon(
@@ -1034,12 +1102,41 @@ public final class GameStore: ObservableObject {
 
     /// Acredita el consumo al compañero equipado: es lo que le hace subir de
     /// etapa, y por eso una evolución no se pierde al cambiar de compañero.
-    private func creditActiveCompanion(tokens: Int) {
+    private func creditActiveCompanion(tokens: Int, now: Date = Date()) {
         guard tokens > 0,
               let companionID = state.activeCompanion?.id,
               let index = state.box.firstIndex(where: { $0.id == companionID })
         else { return }
         state.box[index].tokensEarned += tokens
+        resolveEvolutions(at: index, now: now)
+    }
+
+    /// Tipos del último salvaje vencido, que es lo que decide la rama.
+    public var lastDefeatedTypes: [String] {
+        guard let id = state.lastDefeatedSpeciesID, let species = pokedex[id] else { return [] }
+        return species.types
+    }
+
+    /// Convierte el derecho a evolucionar en evolución, eligiendo rama con lo
+    /// último vencido y con la hora. Es un bucle porque un evento enorme puede
+    /// dar para dos saltos: los dos usan el mismo rival y la misma hora, que es
+    /// el instante en que llegaron esos tokens.
+    private func resolveEvolutions(at index: Int, now: Date) {
+        let types = lastDefeatedTypes
+        for _ in 0..<EvolutionStage.allCases.count {
+            guard evolution.canEvolve(state.box[index]),
+                  let next = evolution.branch(
+                      for: state.box[index],
+                      defeatedTypes: types,
+                      at: now,
+                      calendar: calendar
+                  )
+            else { return }
+            state.box[index].evolvedForms.append(next.id)
+            state.registeredSpeciesIDs.insert(next.id)
+            groupCache = nil
+            dexCache = nil
+        }
     }
 
     // MARK: - Persistencia
@@ -1054,10 +1151,8 @@ public final class GameStore: ObservableObject {
     private func syncPokedexRegistry() {
         var registry = state.registeredSpeciesIDs
         for captured in state.box {
-            let path = evolution.chainPath(of: captured)
-            let reached = min(evolution.stage(of: captured).rawValue, path.count - 1)
-            for form in path.prefix(reached + 1) { registry.insert(form.id) }
             registry.insert(captured.speciesID)
+            for form in captured.evolvedForms { registry.insert(form) }
         }
         guard registry != state.registeredSpeciesIDs else { return }
         state.registeredSpeciesIDs = registry
@@ -1100,6 +1195,12 @@ public final class GameStore: ObservableObject {
                 tokensEarned: tokensEarned
             )
         )
+    }
+
+    /// Apunta una forma en el registro de la Pokédex. Solo para tests.
+    public func debugRegister(speciesID: Int) {
+        state.registeredSpeciesIDs.insert(speciesID)
+        dexCache = nil
     }
 
     /// Da una liga por ganada. Solo para tests.

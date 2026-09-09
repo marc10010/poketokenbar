@@ -27,14 +27,14 @@ enum PokedexEntryTests: TestSuite {
     /// se convertía en Venusaur, la Pokédex dejaba de contar a Ivysaur y —como
     /// no se pueden repetir líneas— ese hueco no se podía llenar nunca más.
     static func testEvolvedPastFormStaysRegistered() throws {
-        let venusaur = build(box: [captured(1, earned: 5_000_000)], registered: [1, 2, 3])
+        let venusaur = build(box: [captured(1, earned: 5_000_000).evolved(to: 2, 3)], registered: [1, 2, 3])
         expectEqual(venusaur.first { $0.species.id == 2 }?.state, .registered, "Ivysaur sigue en la Pokédex")
         expectEqual(venusaur.first { $0.species.id == 3 }?.state, .captured, "Venusaur es lo que se ve")
         expectEqual(venusaur.first { $0.species.id == 1 }?.state, .captured, "y Bulbasaur es como se capturó")
         expectTrue(venusaur.filter(\.isCaptured).count >= 3, "los tres cuentan")
 
         // Sin registro, el hueco de en medio se pierde: es el bug de antes.
-        let sinRegistro = build(box: [captured(1, earned: 5_000_000)])
+        let sinRegistro = build(box: [captured(1, earned: 5_000_000).evolved(to: 2, 3)])
         expectEqual(sinRegistro.first { $0.species.id == 2 }?.state, .unknown)
     }
 
@@ -95,7 +95,7 @@ enum PokedexEntryTests: TestSuite {
         // Un Squirtle capturado que ya es Wartortle llena los dos huecos, pero
         // Blastoise sigue vacío: marcar la línea entera contaría formas que no
         // has visto nunca.
-        let entries = build(box: [captured(7, earned: 250_000)])
+        let entries = build(box: [captured(7, earned: 250_000).evolved(to: 8)])
         expectEqual(try unwrap(entries.first { $0.species.id == 7 }).state, PokedexEntry.State.captured)
         expectEqual(try unwrap(entries.first { $0.species.id == 8 }).state, PokedexEntry.State.captured)
         expectEqual(try unwrap(entries.first { $0.species.id == 9 }).state, PokedexEntry.State.unknown, "Blastoise no")

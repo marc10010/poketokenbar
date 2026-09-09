@@ -104,4 +104,17 @@ extension CapturedPokemon {
         copy.tokensEarned = tokens
         return copy
     }
+
+    /// Deja el ejemplar evolucionado a esas formas, en orden. Desde que la
+    /// evolución es un hecho registrado y no una cuenta de tokens, un fixture
+    /// que quiera un Wartortle tiene que decirlo, no acumular 300k.
+    func evolved(to forms: Int...) -> CapturedPokemon {
+        evolvedTo(forms)
+    }
+
+    func evolvedTo(_ forms: [Int]) -> CapturedPokemon {
+        var copy = self
+        copy.evolvedForms.append(contentsOf: forms)
+        return copy
+    }
 }

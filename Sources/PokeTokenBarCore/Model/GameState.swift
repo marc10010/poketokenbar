@@ -9,8 +9,17 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
     public let capturedAt: Date
     /// Tokens acumulados del jugador en el momento de la captura.
     public let capturedAtTotalTokens: Int
-    /// Fija la rama evolutiva cuando la cadena bifurca (Eevee, Gloom, Tyrogue).
+    /// Fijaba la rama cuando la cadena bifurca. Desde que la rama la decide lo
+    /// que se vence al evolucionar, solo se usa para desempatar cadenas sin
+    /// regla de rama; se conserva porque está en `state.json`.
     public let evolutionSeed: UInt64
+    /// Formas en las que ha ido evolucionando, en orden. Vacío = sigue siendo
+    /// la especie con la que se capturó.
+    ///
+    /// Es un **hecho registrado**, no algo que se derive de los tokens: la rama
+    /// se decidió con lo que vencía en ese momento, y tiene que seguir siendo
+    /// la misma mañana.
+    public var evolvedForms: [Int] = []
     /// Tokens ganados **mientras estaba equipado**. Es lo que le hace
     /// evolucionar, y solo crece: una evolución conseguida no se pierde al
     /// cambiar de compañero.
@@ -38,7 +47,8 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         prefersShiny: Bool = true,
         wildDefeats: Int = 0,
         gymsWon: Int = 0,
-        nickname: String? = nil
+        nickname: String? = nil,
+        evolvedForms: [Int] = []
     ) {
         self.id = id
         self.speciesID = speciesID
@@ -51,6 +61,7 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         self.wildDefeats = wildDefeats
         self.gymsWon = gymsWon
         self.nickname = nickname
+        self.evolvedForms = evolvedForms
     }
 
     /// Decodificación tolerante: los ficheros de la versión anterior no traen
@@ -68,6 +79,7 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         wildDefeats = try container.decodeIfPresent(Int.self, forKey: .wildDefeats) ?? 0
         gymsWon = try container.decodeIfPresent(Int.self, forKey: .gymsWon) ?? 0
         nickname = try container.decodeIfPresent(String.self, forKey: .nickname)
+        evolvedForms = try container.decodeIfPresent([Int].self, forKey: .evolvedForms) ?? []
     }
 }
 
@@ -253,7 +265,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
 /// Estado persistido completo. Cualquier cambio de forma requiere subir
 /// `schemaVersion` y añadir migración en `GameStore`.
 public struct GameState: Codable, Sendable {
-    public static let currentSchemaVersion = 6
+    public static let currentSchemaVersion = 7
 
     public var schemaVersion: Int = GameState.currentSchemaVersion
     public var ledger = TokenLedger()
@@ -276,6 +288,9 @@ public struct GameState: Codable, Sendable {
     /// IDs de eventos ya aplicados, en orden de llegada (ventana acotada).
     public var processedEventIDs: [String] = []
     public var lastCaptureSpeciesID: Int?
+    /// Último salvaje vencido: es lo que decide la rama de la siguiente
+    /// evolución, así que hay que recordarlo entre eventos.
+    public var lastDefeatedSpeciesID: Int?
 
     public init() {}
 
@@ -297,6 +312,7 @@ public struct GameState: Codable, Sendable {
         registeredSpeciesIDs = try container.decodeIfPresent(Set<Int>.self, forKey: .registeredSpeciesIDs) ?? []
         processedEventIDs = try container.decodeIfPresent([String].self, forKey: .processedEventIDs) ?? []
         lastCaptureSpeciesID = try container.decodeIfPresent(Int.self, forKey: .lastCaptureSpeciesID)
+        lastDefeatedSpeciesID = try container.decodeIfPresent(Int.self, forKey: .lastDefeatedSpeciesID)
     }
 
     public var activeCompanion: CapturedPokemon? {

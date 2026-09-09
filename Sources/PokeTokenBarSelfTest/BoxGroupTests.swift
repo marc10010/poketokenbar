@@ -101,8 +101,8 @@ enum BoxGroupTests: TestSuite {
     static func testEarnedStageSplitsAndSticks() throws {
         let groups = group([
             captured(104, earned: 0),
-            captured(104, seed: 2, earned: 250_000),
-            captured(104, seed: 3, earned: 250_000),
+            captured(104, seed: 2, earned: 250_000).evolved(to: 105),
+            captured(104, seed: 3, earned: 250_000).evolved(to: 105),
         ])
         expectEqual(groups.count, 2)
 

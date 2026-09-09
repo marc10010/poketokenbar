@@ -31,6 +31,7 @@ struct PokemonDetailView: View {
                 Divider()
                 stats
             }
+            branches
             actions
         }
         .padding(.vertical, 4)
@@ -63,12 +64,75 @@ struct PokemonDetailView: View {
         }
     }
 
+    /// Las ramas y su condición. Sin esto la mecánica es adivinar: la rama la
+    /// decide lo último que venció y la hora, y ninguna de las dos cosas se ve
+    /// en la ficha por sí sola.
+    @ViewBuilder
+    private var branches: some View {
+        let options = store.branchOptions(for: captured)
+        if !options.isEmpty {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Text("RAMAS")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .tracking(0.5)
+                    if store.activeCanEvolve, let next = options.first(where: \.isNext) {
+                        Text("· ahora mismo sería \(next.form.localizedName)")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(.orange)
+                    } else if let next = options.first(where: \.isNext) {
+                        Text("· con los tokens que le faltan sería \(next.form.localizedName)")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                ForEach(options) { option in
+                    HStack(spacing: 5) {
+                        SpriteView(speciesID: option.form.id, shiny: false, size: 22)
+                            .grayscale(option.registered ? 0 : 1)
+                            .opacity(option.registered ? 1 : 0.55)
+                        Text(option.form.localizedName)
+                            .font(.system(size: 10, weight: option.isNext ? .semibold : .regular))
+                        Text(option.condition.label)
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                        if option.registered {
+                            Text("✓")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.green)
+                        }
+                    }
+                }
+                if let last = store.pokedex[store.state.lastDefeatedSpeciesID ?? 0] {
+                    Text("Último vencido: \(last.localizedName) (\(last.displayTypes))")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+    }
+
     @ViewBuilder
     private var progress: some View {
         let earned = captured.tokensEarned
         let remaining = group.stage.tokensToNext(from: earned)
+        // Ojo con el orden: una línea que bifurca no tiene "siguiente forma"
+        // que anunciar (la decide lo que venzas), pero sí tiene evolución. Sin
+        // este caso, un Eevee decía "su línea evolutiva acaba aquí".
+        let branches = store.branchOptions(for: captured)
         VStack(alignment: .leading, spacing: 3) {
-            if let remaining, let next = store.nextForm(of: captured) {
+            if remaining == 0, !branches.isEmpty {
+                Text("Listo para evolucionar: lo decide lo próximo que venza")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.orange)
+            } else if let remaining, !branches.isEmpty {
+                Text("\(Fmt.tokens(remaining)) tokens para evolucionar")
+                    .font(.caption)
+                HPBar(fraction: fraction(earned: earned), height: 8)
+            } else if let remaining, let next = store.nextForm(of: captured) {
                 Text("\(Fmt.tokens(remaining)) tokens para \(next.localizedName)")
                     .font(.caption)
                 HPBar(fraction: fraction(earned: earned), height: 8)
