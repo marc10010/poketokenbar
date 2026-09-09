@@ -53,7 +53,7 @@ enum GymTests: TestSuite {
         expectTrue(!regions[1].open, "con las 8 medallas Kanto sigue cerrada: falta el Alto Mando")
         expectEqual(store.medals, 8, "y el total no se ha reiniciado")
 
-        store.debugWinLeague("johto")
+        store.debugOpenRegion("kanto")
         regions = store.medalsByRegion
         expectTrue(regions[1].open, "ganado el Alto Mando, Kanto se abre")
         expectEqual(regions[1].gate, nil)

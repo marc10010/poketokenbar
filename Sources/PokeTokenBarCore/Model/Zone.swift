@@ -16,6 +16,14 @@ public struct ZoneUnlock: Codable, Hashable, Sendable {
     public var requiresKanto: Bool { region == "kanto" }
     public var requiresChampion: Bool { champion == true }
 
+    /// Orden en que se van abriendo: primero la región 1 por medallas, luego
+    /// las de Kanto y al final las que piden ser Campeón. Es el orden en que
+    /// el jugador las ve aparecer, y por tanto el orden en que quiere leerlas.
+    public var unlockOrder: (Int, Int) {
+        let phase = requiresChampion ? 2 : (requiresKanto ? 1 : 0)
+        return (phase, requiredMedals)
+    }
+
     public func label(kantoOpen: Bool) -> String {
         if requiresChampion { return "tras vencer a Red" }
         var parts: [String] = []

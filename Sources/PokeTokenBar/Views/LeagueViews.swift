@@ -76,16 +76,40 @@ struct LeaguesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if let gate = store.gymGate {
-                Text("Los gimnasios de Kanto esperan a que ganes \(gate.name).")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.orange)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            // Solo el barco: la línea antigua decía "esperan a que ganes el
+            // Alto Mando" incluso con el Alto Mando ya ganado, porque ahora
+            // puede faltar la otra mitad del billete.
+            barco
 
             ForEach(store.leagueCatalog.all) { league in
                 row(league)
             }
+        }
+    }
+
+    /// El barco a la región siguiente: la liga es la mitad del billete y la
+    /// Pokédex de la región actual es la otra. Sin decirlo, ganar el Alto Mando
+    /// y que no pase nada parecería un bug.
+    @ViewBuilder
+    private var barco: some View {
+        if let transfer = store.transfer(to: "kanto"), !transfer.isOpen {
+            HStack(alignment: .top, spacing: 5) {
+                Image(systemName: "ferry")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.blue)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("El barco a \(transfer.name) · los gimnasios de \(transfer.name) esperan")
+                        .font(.system(size: 10, weight: .semibold))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(transfer.leagueWon
+                        ? "\(transfer.league.name) ganado · faltan \(transfer.missingSpecies) especies de \(transfer.from.capitalized) por registrar (\(transfer.registered) de \(transfer.required))"
+                        : "Pide ganar \(transfer.league.name) y \(transfer.required) especies de \(transfer.from.capitalized) registradas (tienes \(transfer.registered))")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.bottom, 2)
         }
     }
 

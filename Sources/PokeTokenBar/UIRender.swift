@@ -93,6 +93,17 @@ enum UIRender {
         store.selectedTab = "progreso"
         write("popover-progreso", hosted(RootView(), size: popoverSize))
 
+        // El barco a Kanto: el Alto Mando ganado y la Pokédex a medias.
+        store.debugDefeatGyms(upTo: 8)
+        store.debugWinLeague("johto")
+        store.toggleSection("Rango")
+        store.toggleSection("Legendarios")
+        store.toggleSection("Zonas")
+        write("popover-barco", hosted(RootView(), size: popoverSize))
+        store.toggleSection("Rango")
+        store.toggleSection("Legendarios")
+        store.toggleSection("Zonas")
+
         // Con una zona enfocada: es lo que hace visible el tamaño del bombo.
         if let small = store.unlockedZones.min(by: { store.focusSummary($0).pool < store.focusSummary($1).pool }) {
             store.focus(zoneID: small.id)

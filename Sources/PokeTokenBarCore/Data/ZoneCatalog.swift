@@ -43,6 +43,15 @@ public final class ZoneCatalog: @unchecked Sendable {
 
     public subscript(id: String) -> Zone? { byID[id] }
 
+    /// Las zonas en el orden en que se abren. `all` conserva el orden del
+    /// fichero, que es el del generador y no dice nada al jugador.
+    public lazy var inUnlockOrder: [Zone] = {
+        all.sorted {
+            ($0.unlock.unlockOrder.0, $0.unlock.unlockOrder.1, $0.name)
+                < ($1.unlock.unlockOrder.0, $1.unlock.unlockOrder.1, $1.name)
+        }
+    }()
+
     public func zones(for speciesID: Int) -> [Zone] { zonesBySpecies[speciesID] ?? [] }
 
     public func unlocked(_ access: ZoneAccess) -> [Zone] {

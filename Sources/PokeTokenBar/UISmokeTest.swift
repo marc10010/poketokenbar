@@ -367,7 +367,7 @@ enum UISmokeTest {
         // Gimnasio abierto: el HUD y el popover cambian de tarjeta.
         store.debugDefeatGyms(upTo: 15)
         // Giovanni es de Kanto, que está tras el Alto Mando de Johto.
-        store.debugWinLeague("johto")
+        store.debugOpenRegion("kanto")
         if let gym = store.debugOpenNextGym() {
             ok = layout("gimnasio (\(gym.leader))") && ok
             // El panel del HUD tiene tamaño fijo y su raíz es un GeometryReader,

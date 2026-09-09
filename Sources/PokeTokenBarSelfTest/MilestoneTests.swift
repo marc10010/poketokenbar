@@ -114,7 +114,7 @@ enum MilestoneTests: TestSuite {
         store.abandonMilestone()
 
         // Ahora con un gimnasio en curso, que requiere Kanto abierta.
-        store.debugWinLeague("johto")
+        store.debugOpenRegion("kanto")
         store.updateSettings { $0.typeEffectivenessEnabled = false }
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))

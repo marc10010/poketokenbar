@@ -35,7 +35,7 @@ enum ZoneTests: TestSuite {
         )
         store.chooseStarter(speciesID: 7)
         store.debugDefeatGyms(upTo: min(medals, 8))
-        if kanto { store.debugWinLeague("johto") }
+        if kanto { store.debugOpenRegion("kanto") }
         store.debugDefeatGyms(upTo: medals)
         if champion { store.debugWinLeague("kanto") }
         return store

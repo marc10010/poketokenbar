@@ -149,6 +149,14 @@ final class StatusItemController {
         let rivalImage = rivalSpeciesID.flatMap { sprites.image(speciesID: $0, shiny: rivalShiny) }
         button.image = Self.composite(player: playerImage, rival: rivalImage)
 
+        // Antes que la medalla: abrir una región es más grande, y las dos
+        // pueden coincidir si la última especie llega ganando un gimnasio.
+        if let region = store.lastRegion {
+            button.title = " 🚢 ¡\(region.name) abierta!"
+            button.toolTip = tooltip()
+            return
+        }
+
         if let celebration = store.lastMedal {
             button.title = " 🏅 \(celebration.headline)"
             button.toolTip = tooltip()

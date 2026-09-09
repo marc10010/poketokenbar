@@ -64,7 +64,7 @@ enum LeagueTests: TestSuite {
         expectNil(store.nextGym, "el noveno es de Kanto y está tras la puerta")
         expectEqual(store.gymGate?.id, "johto", "y se dice qué lo bloquea")
 
-        store.debugWinLeague("johto")
+        store.debugOpenRegion("kanto")
         let siguiente = try unwrap(store.nextGym)
         expectEqual(siguiente.region, "kanto")
         expectEqual(siguiente.order, 9)
@@ -84,7 +84,7 @@ enum LeagueTests: TestSuite {
         expectTrue(store.availability(of: johto).isAvailable)
         expectEqual(store.availability(of: kanto), .needsPreviousLeague(johto.name), "el orden manda")
 
-        store.debugWinLeague("johto")
+        store.debugOpenRegion("kanto")
         expectEqual(store.availability(of: johto), .won)
         expectEqual(store.availability(of: kanto), .needsMedals(8), "Red pide las 16")
     }
@@ -116,6 +116,8 @@ enum LeagueTests: TestSuite {
         expectEqual(store.state.leagues.won, [], "todavía no está ganada")
     }
 
+    /// Ganar el Alto Mando ya no basta: el barco pide además 50 especies de
+    /// Johto registradas, que es lo que hace que la región 1 haya que jugarla.
     static func testJohtoOpensKanto() throws {
         let store = ready(seed: 23)
         expectFalse(store.zoneAccess.kantoOpen)
@@ -123,6 +125,8 @@ enum LeagueTests: TestSuite {
         expectFalse(store.zoneAccess.opens(central))
 
         store.debugWinLeague("johto")
+        expectFalse(store.zoneAccess.kantoOpen, "la liga sola no abre Kanto")
+        store.debugOpenRegion("kanto")
         expectTrue(store.zoneAccess.kantoOpen)
         expectTrue(store.zoneAccess.opens(central) == false, "la Central pide además 12 medallas")
         let rutas = try unwrap(zones["rutas-kanto-sur"])
@@ -137,7 +141,7 @@ enum LeagueTests: TestSuite {
         let store = makeStore(seed: 31)
         store.chooseStarter(speciesID: 7)
         store.debugDefeatGyms(upTo: 16)
-        store.debugWinLeague("johto")
+        store.debugOpenRegion("kanto")
         expectFalse(store.zoneAccess.isChampion)
 
         let celeste = try unwrap(zones["cueva-celeste"])
