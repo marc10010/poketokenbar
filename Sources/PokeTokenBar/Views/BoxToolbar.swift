@@ -117,13 +117,13 @@ struct BoxToolbar: View {
 
             Divider()
 
-            Picker("Generación", selection: Binding(
+            Picker("Región", selection: Binding(
                 get: { store.boxFilter.generation ?? 0 },
                 set: { store.boxFilter.generation = $0 == 0 ? nil : $0 }
             )) {
                 Text("Las dos").tag(0)
-                Text("Gen 1").tag(1)
-                Text("Gen 2").tag(2)
+                Text("Kanto").tag(1)
+                Text("Johto").tag(2)
             }
 
             Divider()

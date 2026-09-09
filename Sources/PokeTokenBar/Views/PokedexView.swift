@@ -21,6 +21,7 @@ struct PokedexView: View {
                 detail(entry)
             } else {
                 toolbar
+                regionNotice
                 branchNotice
                 grid
             }
@@ -43,6 +44,14 @@ struct PokedexView: View {
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// Por qué los números no van en el orden en que se juega.
+    private var regionNotice: some View {
+        Text("La Pokédex va por número, no por orden de juego: los #001-151 son de **Kanto**, que es la región 2, y los #152-251 de **Johto**, que es la 1. Un Pokémon con número alto no significa que venga de Kanto.")
+            .font(.system(size: 9))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Lo que no se puede tener, dicho una vez y sin dramatismo.
@@ -80,12 +89,12 @@ struct PokedexView: View {
                     get: { store.pokedexFilter.generation ?? 0 },
                     set: { store.pokedexFilter.generation = $0 == 0 ? nil : $0 }
                 )) {
-                    Text("Gen 1 y 2").tag(0)
-                    Text("Gen 1").tag(1)
-                    Text("Gen 2").tag(2)
+                    Text("Las dos regiones").tag(0)
+                    Text("Kanto").tag(1)
+                    Text("Johto").tag(2)
                 }
                 .labelsHidden()
-                .frame(width: 100)
+                .frame(width: 140)
 
                 Toggle("Solo los que faltan", isOn: Binding(
                     get: { store.pokedexFilter.onlyMissing },
@@ -117,7 +126,7 @@ struct PokedexView: View {
                         }
                     } header: {
                         HStack(spacing: 5) {
-                            Text("Generación \(section.generation)")
+                            Text(section.entries.first?.species.regionLabel ?? "Generación \(section.generation)")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(.secondary)
                             Text("\(section.entries.filter(\.isCaptured).count)/\(section.entries.count)")
@@ -192,7 +201,7 @@ struct PokedexView: View {
                     .grayscale(1)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(entry.species.localizedName).font(.title3.weight(.semibold))
-                    Text("#\(String(format: "%03d", entry.species.id)) · Gen \(entry.species.generation)")
+                    Text("#\(String(format: "%03d", entry.species.id)) · \(entry.species.homeRegion)")
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                     TypeChips(types: entry.species.types)
