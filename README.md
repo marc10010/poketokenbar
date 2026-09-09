@@ -553,20 +553,34 @@ Se persiste: cazar algo concreto lleva sesiones.
   <img src="docs/screenshots/popover-pokedex.png" width="300" alt="Pokédex: 251 huecos con cabecera por generación">
 </p>
 
-*Ver Pokédex* (en la sección de la caja) abre los **251 huecos**, no solo lo que
-tienes. Tres estados, y el del medio existe porque las líneas repetidas ya no se
-capturan:
+La pestaña **Pokédex** abre los **251 huecos**, no solo lo que tienes:
 
 | Estado | Cómo se ve |
 |---|---|
 | En la caja | a color |
+| Registrada | a color, algo apagada: fue tuya y evolucionó |
 | Visto | en gris: le has ganado en libertad pero no se quedó |
 | Sin ver | silueta y solo su número |
 
-Un hueco cuenta como capturado si es **la especie con la que capturaste** o **la
-forma en la que se ve ahora**: un Squirtle que ya es Wartortle llena los dos, y
-Blastoise sigue vacío hasta que evolucione. Marcar la línea entera contaría
-formas que no has visto nunca.
+**La Pokédex es un registro, no una foto de la caja.** Cuenta la especie con la
+que capturaste, la forma en la que se ve ahora **y todas las etapas por las que
+ha pasado**. Es lo que hace que la meta exista: antes se derivaba solo de la
+caja, así que un Bulbasaur que llegaba a Venusaur **borraba a Ivysaur del
+contador** — y como no se repiten líneas, ese hueco no se podía volver a llenar
+nunca. El contador podía bajar al progresar, y el techo real eran **215 de 251**.
+Con el registro son 242.
+
+El registro se calcula por el **camino evolutivo**, no por la forma que estaba
+visible: si un evento gigante cruza dos umbrales de golpe, la forma intermedia
+se apunta igual, porque el ejemplar ha pasado por ella necesariamente.
+
+Lo que sigue sin contar es la línea entera: Blastoise está vacío hasta que tu
+Wartortle llegue.
+
+**Los 251 no son alcanzables, y la Pokédex lo dice**: 242 sí, y los otros 9 son
+ramas alternativas de una misma línea (las cuatro eeveelutions que no te
+tocaron, Vileplume o Bellossom, Poliwrath o Politoed, Slowbro o Slowking, y dos
+de los tres Hitmon). Con un ejemplar por línea solo se puede tener una rama.
 
 La ficha de algo que no tienes dice lo que sirve para decidir si buscarlo: tipos,
 rareza, **con qué rango aparece**, su línea evolutiva, cuántas veces le has

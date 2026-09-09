@@ -11,6 +11,9 @@ enum PokedexEntryTests: TestSuite {
         ("cuenta la especie capturada y la forma que se ve", testCapturedAndDisplayedForm),
         ("lo vencido sin quedárselo queda como visto", testDefeatedButNotCaptured),
         ("el filtro recorta sin inventar huecos", testFilter),
+        ("una forma que evolucionó se queda registrada", testEvolvedPastFormStaysRegistered),
+        ("el contador nunca baja al evolucionar", testCounterNeverGoesDown),
+        ("las ramas alternativas no son alcanzables, y se dice", testAlternateBranchesAreCounted),
     ]
 
     private static let dex = Pokedex.shared
@@ -20,11 +23,59 @@ enum PokedexEntryTests: TestSuite {
         CapturedPokemon(speciesID: speciesID, isShiny: false, capturedAtTotalTokens: 0, evolutionSeed: 3, tokensEarned: earned)
     }
 
-    private static func build(box: [CapturedPokemon] = [], defeats: [Int: Int] = [:]) -> [PokedexEntry] {
+    /// Ivysaur era un hueco imposible: al pasar tu Bulbasaur de 1M de tokens
+    /// se convertía en Venusaur, la Pokédex dejaba de contar a Ivysaur y —como
+    /// no se pueden repetir líneas— ese hueco no se podía llenar nunca más.
+    static func testEvolvedPastFormStaysRegistered() throws {
+        let venusaur = build(box: [captured(1, earned: 5_000_000)], registered: [1, 2, 3])
+        expectEqual(venusaur.first { $0.species.id == 2 }?.state, .registered, "Ivysaur sigue en la Pokédex")
+        expectEqual(venusaur.first { $0.species.id == 3 }?.state, .captured, "Venusaur es lo que se ve")
+        expectEqual(venusaur.first { $0.species.id == 1 }?.state, .captured, "y Bulbasaur es como se capturó")
+        expectTrue(venusaur.filter(\.isCaptured).count >= 3, "los tres cuentan")
+
+        // Sin registro, el hueco de en medio se pierde: es el bug de antes.
+        let sinRegistro = build(box: [captured(1, earned: 5_000_000)])
+        expectEqual(sinRegistro.first { $0.species.id == 2 }?.state, .unknown)
+    }
+
+    /// Un contador de colección que baja es un bug por definición.
+    static func testCounterNeverGoesDown() throws {
+        let store = GameStore(
+            file: StateFileStore(url: TemporaryFiles.uniqueDirectory().appendingPathComponent("state.json")),
+            rng: SeededRandomProvider(seed: 13)
+        )
+        store.chooseStarter(speciesID: 1)
+        store.updateSettings { $0.typeEffectivenessEnabled = false }
+
+        var peak = 0
+        // 12 eventos de 150k: el inicial cruza los dos umbrales por el camino.
+        for i in 0..<12 {
+            store.ingest(UsageEvent(id: "e\(i)", inputTokens: 150_000, outputTokens: 0))
+            let now = store.pokedexCaptured
+            expectTrue(now >= peak, "la Pokédex bajó de \(peak) a \(now)")
+            peak = max(peak, now)
+        }
+        expectTrue(store.activeTokensEarned > GameRules.stageTwoThreshold, "el inicial llegó a la etapa 2")
+        let ids = Set(store.pokedexEntries.filter(\.isCaptured).map(\.species.id))
+        expectTrue(ids.isSuperset(of: [1, 2, 3]), "y las tres formas de su línea están: \(ids.sorted())")
+    }
+
+    static func testAlternateBranchesAreCounted() {
+        expectEqual(dex.registrableCount + dex.alternateBranchCount, 251)
+        expectEqual(dex.alternateBranchCount, 9, "Eevee (4), Gloom, Poliwhirl, Slowpoke y Tyrogue (2)")
+        expectTrue(dex.registrableCount < 251, "prometer 251 sería mentir")
+    }
+
+    private static func build(
+        box: [CapturedPokemon] = [],
+        defeats: [Int: Int] = [:],
+        registered: Set<Int> = []
+    ) -> [PokedexEntry] {
         PokedexEntry.build(
             pokedex: dex,
             boxGroups: BoxGroup.group(box, pokedex: dex, evolution: evolution),
-            familyDefeats: defeats
+            familyDefeats: defeats,
+            registered: registered
         )
     }
 

@@ -59,6 +59,24 @@ public final class Pokedex: @unchecked Sendable {
 
     public var starters: [Pokemon] { all.filter { $0.isStarter && $0.isBaseForm } }
 
+    /// Cuántos huecos se pueden llegar a registrar de verdad.
+    ///
+    /// Una línea solo se captura una vez, así que de una cadena que bifurca
+    /// (Eevee, Gloom, Poliwhirl, Slowpoke, Tyrogue) se puede tener **una** rama:
+    /// el resto de sus formas no son alcanzables sin un segundo ejemplar. Con
+    /// las 251 como meta, esos huecos harían la Pokédex imposible sin decirlo.
+    public lazy var registrableCount: Int = {
+        var byFamily: [Int: Int] = [:]
+        for mon in all {
+            byFamily[mon.baseFormID] = max(byFamily[mon.baseFormID] ?? 0, mon.stage + 1)
+        }
+        return byFamily.values.reduce(0, +)
+    }()
+
+    /// Formas que son rama alternativa de una línea que ya tiene otra: los
+    /// huecos que no se pueden llenar con un ejemplar por línea.
+    public var alternateBranchCount: Int { all.count - registrableCount }
+
     public enum PokedexError: Error, CustomStringConvertible {
         case resourceMissing
         case unsupportedSchema(Int)

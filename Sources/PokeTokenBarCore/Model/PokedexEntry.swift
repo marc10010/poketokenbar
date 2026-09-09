@@ -5,6 +5,9 @@ public struct PokedexEntry: Identifiable, Hashable, Sendable {
     public enum State: String, Hashable, Sendable {
         /// Está en tu caja, o es la forma en la que se ve algo de tu caja.
         case captured
+        /// Fue tuya y evolucionó: la Pokédex la mantiene registrada aunque ya
+        /// no se vea, porque una línea no se puede volver a capturar.
+        case registered
         /// Le has ganado en libertad pero no se quedó (línea repetida).
         case defeated
         case unknown
@@ -12,6 +15,7 @@ public struct PokedexEntry: Identifiable, Hashable, Sendable {
         public var label: String {
             switch self {
             case .captured: return "En la caja"
+            case .registered: return "Registrada (evolucionó)"
             case .defeated: return "Visto"
             case .unknown: return "Sin ver"
             }
@@ -26,7 +30,8 @@ public struct PokedexEntry: Identifiable, Hashable, Sendable {
     public let defeats: Int
 
     public var id: Int { species.id }
-    public var isCaptured: Bool { state == .captured }
+    /// Cuenta para la Pokédex: la tienes o la has tenido.
+    public var isCaptured: Bool { state == .captured || state == .registered }
 
     public init(species: Pokemon, state: State, group: BoxGroup?, defeats: Int) {
         self.species = species
@@ -38,13 +43,15 @@ public struct PokedexEntry: Identifiable, Hashable, Sendable {
     /// Construye la Pokédex entera.
     ///
     /// Cuenta como capturada la especie con la que se capturó **y** la forma en
-    /// la que se ve ahora: si tu Squirtle ya es Wartortle, los dos huecos están
-    /// llenos, pero Blastoise sigue vacío hasta que evolucione. Marcar la línea
-    /// entera inflaría el contador con formas que no has visto nunca.
+    /// la que se ve ahora; y como *registrada*, cualquiera que haya sido tuya
+    /// antes (`registered`), aunque el ejemplar ya haya evolucionado. Lo que
+    /// sigue sin contar es la línea entera: Blastoise está vacío hasta que tu
+    /// Wartortle llegue.
     public static func build(
         pokedex: Pokedex,
         boxGroups: [BoxGroup],
-        familyDefeats: [Int: Int]
+        familyDefeats: [Int: Int],
+        registered: Set<Int> = []
     ) -> [PokedexEntry] {
         var groupsBySpecies: [Int: BoxGroup] = [:]
         for group in boxGroups {
@@ -55,7 +62,14 @@ public struct PokedexEntry: Identifiable, Hashable, Sendable {
         return pokedex.all.map { species in
             let defeats = familyDefeats[species.baseFormID] ?? 0
             let group = groupsBySpecies[species.id]
-            let state: State = group != nil ? .captured : (defeats > 0 ? .defeated : .unknown)
+            let state: State
+            if group != nil {
+                state = .captured
+            } else if registered.contains(species.id) {
+                state = .registered
+            } else {
+                state = defeats > 0 ? .defeated : .unknown
+            }
             return PokedexEntry(species: species, state: state, group: group, defeats: defeats)
         }
     }

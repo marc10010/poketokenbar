@@ -55,6 +55,7 @@ public final class GameStore: ObservableObject {
         let captures: Int
         let defeats: Int
         let stage: Int
+        let registered: Int
     }
 
     private var dexCache: (key: DexCacheKey, entries: [PokedexEntry])?
@@ -523,12 +524,18 @@ public final class GameStore: ObservableObject {
     /// Los 251 huecos, con su estado. Memoizada por el mismo motivo que la
     /// caja: la UI la pide en cada render.
     public var pokedexEntries: [PokedexEntry] {
-        let key = DexCacheKey(captures: state.box.count, defeats: state.familyDefeats.count, stage: stage.rawValue)
+        let key = DexCacheKey(
+            captures: state.box.count,
+            defeats: state.familyDefeats.count,
+            stage: stage.rawValue,
+            registered: state.registeredSpeciesIDs.count
+        )
         if let cached = dexCache, cached.key == key { return cached.entries }
         let entries = PokedexEntry.build(
             pokedex: pokedex,
             boxGroups: boxGroups,
-            familyDefeats: state.familyDefeats
+            familyDefeats: state.familyDefeats,
+            registered: state.registeredSpeciesIDs
         )
         dexCache = (key, entries)
         return entries
@@ -1038,7 +1045,27 @@ public final class GameStore: ObservableObject {
     // MARK: - Persistencia
 
     /// Guarda con debounce: una ráfaga de eventos escribe una sola vez.
+    /// Apunta en el registro las formas que **han sido** de cada ejemplar: su
+    /// especie de captura y todas las etapas por las que ha pasado hasta la
+    /// actual. Se sincroniza al guardar en vez de en cada sitio que mueve la
+    /// caja, para que ninguna ruta se lo pueda olvidar; y se calcula por el
+    /// camino evolutivo, no por la forma visible, para que un evento enorme que
+    /// salte dos umbrales de golpe no se deje la forma intermedia sin registrar.
+    private func syncPokedexRegistry() {
+        var registry = state.registeredSpeciesIDs
+        for captured in state.box {
+            let path = evolution.chainPath(of: captured)
+            let reached = min(evolution.stage(of: captured).rawValue, path.count - 1)
+            for form in path.prefix(reached + 1) { registry.insert(form.id) }
+            registry.insert(captured.speciesID)
+        }
+        guard registry != state.registeredSpeciesIDs else { return }
+        state.registeredSpeciesIDs = registry
+        dexCache = nil
+    }
+
     private func persist() {
+        syncPokedexRegistry()
         saveTask?.cancel()
         let snapshot = state
         saveTask = Task { [file] in
