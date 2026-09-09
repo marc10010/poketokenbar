@@ -575,7 +575,8 @@ probabilidad de la que buscas **es el tamaño de la zona**.
 | mediana de las 33 | ~7 | ~7 |
 | Rutas del sur de Johto | 46 | 46 |
 
-Por eso la lista de zonas enseña **"te faltan N de M"**: se ve solo que enfocar
+Por eso la lista de zonas enseña **"faltan N de M"** (con la palabra delante: un
+"41 de 45" a secas no dice si son las que tienes o las que te faltan): se ve solo que enfocar
 la Guarida Dragón es un láser y enfocar las Rutas del sur no sirve de nada, sin
 que nadie lo explique.
 

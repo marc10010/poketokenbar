@@ -27,7 +27,7 @@ struct ZonesView: View {
                         .buttonStyle(.link)
                         .font(.system(size: 10))
                 }
-                Text("Sale cualquiera de sus \(summary.pool) especies, a partes iguales\(summary.missing > 0 ? " · te faltan \(summary.missing)" : " · ya las tienes todas")")
+                Text("Sale cualquiera de sus \(summary.pool) especies, a partes iguales\(summary.missing > 0 ? " · te faltan \(summary.missing) por capturar" : " · ya las tienes todas")")
                     .font(.system(size: 9))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -58,13 +58,13 @@ struct ZonesView: View {
                 .foregroundStyle(open ? .primary : .secondary)
             Spacer(minLength: 4)
             if open {
-                // El tamaño del bombo es la probabilidad: en una zona de 2, lo
-                // que buscas sale en 2 apariciones; en una ruta de 46, no.
-                Text(summary.missing > 0 ? "\(summary.missing) de \(summary.pool)" : "\(summary.pool)")
+                // Con la palabra delante: "41 de 45" no dice si son las que
+                // tienes o las que te faltan, y hay que preguntarlo.
+                Text(summary.missing > 0 ? "faltan \(summary.missing) de \(summary.pool)" : "las \(summary.pool) ✓")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(summary.missing > 0 ? .primary : .secondary)
                     .help(summary.missing > 0
-                        ? "Te faltan \(summary.missing) de las \(summary.pool) que salen aquí"
+                        ? "Te faltan \(summary.missing) de las \(summary.pool) especies que salen aquí"
                         : "Ya tienes las \(summary.pool) que salen aquí")
                 if summary.pool > 0 {
                     Button(focused ? "Quitar" : "Cazar aquí") {
