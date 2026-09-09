@@ -55,7 +55,7 @@ struct GymDetailView: View {
             row("Absorbe", "\(Fmt.rate(gym.absorption)) por token")
             if isNext, store.activeGym == nil {
                 let left = store.gymTriggerProgress
-                row("Se abre en", "\(Fmt.tokens(left.tokensLeft)) tokens o \(left.capturesLeft) capturas")
+                row("Se abre en", "\(Fmt.tokens(left.tokensLeft)) tokens o \(left.capturesLeft) victorias")
             }
         }
     }

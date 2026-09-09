@@ -325,6 +325,8 @@ public final class GameStore: ObservableObject {
 
     /// Qué falta para que se abra el próximo gimnasio. Se cumple con lo que
     /// llegue antes de las dos condiciones.
+    /// Lo que falta para que se abra el siguiente gimnasio. `capturesLeft` son
+    /// **victorias**: cuentan las de líneas que ya tienes.
     public var gymTriggerProgress: (tokensLeft: Int, capturesLeft: Int) {
         (
             max(0, GameRules.gymTokenInterval - state.gyms.tokensSinceLastGym),

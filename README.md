@@ -559,9 +559,12 @@ no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
 luego los de Kanto, como en Gen 2), cada una con su Pokémon estrella — que es
 también su sprite, así que no hace falta ningún recurso gráfico nuevo.
 
-**El disparador**: al capturar un salvaje, si llevas 300.000 tokens o 10
-capturas desde el último gimnasio, el hueco del rival siguiente lo ocupa el
-líder. No interrumpe: hay que terminar el Pokémon en curso. Los contadores se
+**El disparador**: al vencer un salvaje, si llevas 300.000 tokens o **10
+victorias** desde el último gimnasio, el hueco del rival siguiente lo ocupa el
+líder. Victorias, no capturas: cuenta igual vencer algo de una línea que ya
+tienes, así que **volver a una zona vieja a por lo que falta nunca frena el
+gimnasio**. (La UI decía "capturas" y era mentira: el contador sube antes de
+mirar si se queda o no.) No interrumpe: hay que terminar el Pokémon en curso. Los contadores se
 reinician **al cerrar** el gimnasio, no al abrirlo, para que los 500k-1M tokens
 del propio combate no encadenen el siguiente.
 

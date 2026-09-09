@@ -32,6 +32,10 @@ public struct GymProgress: Codable, Hashable, Sendable {
     /// tokens del propio combate volverían a llenar el contador y encadenarían
     /// gimnasios sin descanso.
     public var tokensSinceLastGym: Int = 0
+    /// Cuenta **victorias**, no capturas: sube también cuando lo vencido era
+    /// de una línea que ya tienes y por tanto no se queda. Así volver a una
+    /// zona vieja a por lo que falta nunca frena el gimnasio. El nombre se
+    /// queda por compatibilidad: es una clave de `state.json`.
     public var capturesSinceLastGym: Int = 0
     public var current: ActiveGymBattle?
 
