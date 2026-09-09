@@ -121,6 +121,51 @@ al mismo sitio, aunque la cadena tenga cinco salidas.
 
 - Variocolor (shiny): 1 % en cualquier aparición, y se conserva al capturar.
 - Un tier bloqueado no "reintenta": su peso se reparte entre los disponibles.
+### Evolución: los tokens dan derecho, el combate decide la forma
+
+Cada Pokémon evoluciona con **sus** tokens (200.000 y 1.000.000 ganados
+estando equipado), y la evolución es un **hecho que se registra en el
+ejemplar**, no algo que se recalcule a partir de los tokens. Eso importa para
+las cinco líneas que bifurcan: antes la rama la fijaba una semilla desde la
+captura —te tocaba la que te tocaba— y ahora la decide **lo último que vence al
+evolucionar**, más la hora que sea.
+
+Las condiciones salen del canon, traducidas a lo que este juego tiene (no hay
+piedras, ni amistad, ni intercambios; hay reloj y rivales con tipo):
+
+| Línea | Rama | Condición | Canon |
+|---|---|---|---|
+| Eevee | Vaporeon | vencer un rival de tipo **agua** | Piedra Agua |
+| | Jolteon | rival **eléctrico** | Piedra Trueno |
+| | Flareon | rival **fuego** | Piedra Fuego |
+| | Espeon | **de día** (6:00–19:59) | amistad + día |
+| | Umbreon | **de noche** (20:00–5:59) | amistad + noche |
+| Gloom | Bellossom / Vileplume | día / noche | Piedra Solar / Piedra Hoja |
+| Poliwhirl | Poliwrath / Politoed | rival de agua / lo demás | Piedra Agua / Roca del Rey |
+| Slowpoke | Slowbro / Slowking | día / noche | nivel / Roca del Rey |
+| Tyrogue | Hitmonlee / Hitmonchan / Hitmontop | mañana / tarde / noche | Ataque >, <, = Defensa |
+
+**El tipo manda sobre el reloj**: si no, de noche no habría manera de sacar a
+Vaporeon. Así el reloj es el camino por defecto y el tipo es el que se busca a
+propósito — y para eso está la zona enfocada (§13).
+
+Y como una línea solo se captura una vez, para las otras ramas hay una
+excepción a esa regla: **puedes capturar otro ejemplar de una línea que bifurca
+mientras te falte alguna de sus ramas y los que ya tienes estén al final de su
+evolución**. Es decir: evolucionas tu Eevee y entonces puede volver a aparecer
+otro. De una línea recta (Squirtle) nunca podrás tener dos.
+
+Con eso, las **15 ramas de las cinco líneas son alcanzables** y la Pokédex sube
+de 242 a los 251 completos. La ficha canta la condición ("ahora mismo sería
+Espeon", con lo último vencido y qué falta para cada rama) y la barra de menú
+enseña ☀ o ☾ **solo cuando la hora está decidiendo algo**: el equipado ya puede
+evolucionar y su rama depende de la banda.
+
+Detalle a tener en cuenta: si el ejemplar cruza el umbral durante un combate de
+jefe —donde no hay salvajes—, la rama la decide el último salvaje que venciste,
+que puede ser de hace rato. La ficha lo dice ("último vencido: X"), así que no
+es una sorpresa.
+
 ### Efectividad por tipos
 
 El daño se multiplica por el cruce de tipos entre tu compañero y el rival:

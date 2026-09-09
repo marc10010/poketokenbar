@@ -115,6 +115,17 @@ enum UIRender {
         write("popover-combate-ficha-rival", hosted(RootView(), size: popoverSize))
         store.inspectingRival = false
 
+        // Un Eevee listo para evolucionar: es donde se ven las ramas.
+        store.debugCapture(speciesID: 133, tokensEarned: 260_000)
+        if let eevee = store.state.box.last {
+            store.setActiveCompanion(eevee.id)
+            warm([133, 134, 135, 136, 196, 197])
+            store.selectedTab = "caja"
+            store.selectedBoxGroupID = store.activeGroupID
+            write("popover-ramas", hosted(RootView(), size: popoverSize))
+            store.selectedBoxGroupID = nil
+        }
+
         store.selectedTab = "caja"
         write("popover-caja", hosted(RootView(), size: popoverSize))
 

@@ -46,7 +46,7 @@ enum BoxFilterTests: TestSuite {
                 captured(19, secondsAgo: 400),
                 captured(19, secondsAgo: 300),
                 captured(92, shiny: true, secondsAgo: 200),
-                captured(104, earned: 300_000, secondsAgo: 100),
+                captured(104, earned: 300_000, secondsAgo: 100).evolved(to: 105),
                 captured(152, secondsAgo: 0),
             ],
             pokedex: dex,

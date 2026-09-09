@@ -63,8 +63,20 @@ struct EvolutionProgress: View {
         // El progreso es del compañero equipado, no del histórico global.
         let earned = store.activeTokensEarned
         let remaining = store.stage.tokensToNext(from: earned)
+        let branches = store.state.activeCompanion.map { store.branchOptions(for: $0) } ?? []
         VStack(alignment: .leading, spacing: 3) {
-            if let remaining, let next = store.activeNextForm {
+            if remaining == 0, !branches.isEmpty {
+                // Una línea que bifurca no anuncia forma: la decide el combate.
+                Text("Listo para evolucionar\(branches.first(where: \.isNext).map { " · ahora sería \($0.form.localizedName)" } ?? "")")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.orange)
+            } else if let remaining, !branches.isEmpty {
+                Text("\(Fmt.tokens(remaining)) tokens para evolucionar")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                HPBar(fraction: stageFraction, height: 5)
+                    .frame(width: 180)
+            } else if let remaining, let next = store.activeNextForm {
                 Text("\(Fmt.tokens(remaining)) tokens para \(next.localizedName)")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)

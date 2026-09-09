@@ -41,51 +41,82 @@ public struct EvolutionService {
         self.pokedex = pokedex
     }
 
-    /// Camino completo de la línea, de longitud 1...3, **pasando por la especie
-    /// capturada**: primero se sube hasta la forma base y luego se baja con la
-    /// rama que fije la semilla.
+    /// Camino que **ha recorrido** este ejemplar: su especie de captura y las
+    /// formas en las que ha ido evolucionando, en orden.
     ///
-    /// Empezar en `baseFormID` a secas no sirve: si la captura ya viene
-    /// evolucionada (o es de una rama que la semilla no habría elegido) su
-    /// propia forma no estaría en el camino.
-    public func chainPath(of captured: CapturedPokemon, maxSteps: Int = EvolutionStage.two.rawValue) -> [Pokemon] {
-        let species = pokedex.require(captured.speciesID)
-        var path = [species]
-        while path.count <= maxSteps + 1, let parent = pokedex.parent(of: path[0].id) {
+    /// Antes se derivaba de la semilla, y por tanto la rama estaba echada desde
+    /// la captura. Ahora la rama se decide al evolucionar (`BranchRules`) y
+    /// queda escrita en el ejemplar, así que el camino es historia y no
+    /// predicción.
+    public func chainPath(of captured: CapturedPokemon) -> [Pokemon] {
+        var path = [pokedex.require(captured.speciesID)]
+        while let parent = pokedex.parent(of: path[0].id), path.count < 3 {
             path.insert(parent, at: 0)
         }
-        var rng = SeededRandomProvider(seed: captured.evolutionSeed)
-        while path.count <= maxSteps {
-            let options = path[path.count - 1].evolvesInto.compactMap { pokedex[$0] }
-            guard !options.isEmpty else { break }
-            path.append(options[rng.nextInt(in: 0...(options.count - 1))])
+        for id in captured.evolvedForms {
+            if let form = pokedex[id] { path.append(form) }
         }
         return path
     }
 
-    /// Etapa en la que está: la que le dan sus tokens, pero **nunca por debajo
-    /// del sitio que ya ocupaba al capturarlo**. Sin ese suelo, un Pokémon
-    /// capturado ya evolucionado retrocedería hasta ganar tokens: un Pikachu
-    /// se dibujaría como Pichu.
+    /// Etapa en la que está: la de la forma que se ve. Sale de lo que ha
+    /// evolucionado de verdad, no de sus tokens: los tokens dan **derecho** a
+    /// evolucionar, la evolución la hace `resolveEvolution`.
     public func stage(of captured: CapturedPokemon) -> EvolutionStage {
-        let earned = EvolutionStage.stage(forTotalTokens: captured.tokensEarned)
-        let floor = pokedex.require(captured.speciesID).stage
-        guard floor > earned.rawValue else { return earned }
-        return EvolutionStage(rawValue: floor) ?? earned
+        let form = currentForm(of: captured)
+        return EvolutionStage(rawValue: min(EvolutionStage.two.rawValue, form.stage)) ?? .base
     }
 
     public func currentForm(of captured: CapturedPokemon) -> Pokemon {
-        let path = chainPath(of: captured)
-        let index = min(stage(of: captured).rawValue, path.count - 1)
-        return path[index]
+        guard let last = captured.evolvedForms.last, let form = pokedex[last] else {
+            return pokedex.require(captured.speciesID)
+        }
+        return form
     }
 
-    /// Forma inmediatamente posterior a la actual, si la etapa y la cadena la permiten.
+    /// Si ya tiene tokens de sobra para el siguiente salto. Es lo que la ficha
+    /// enseña como "listo para evolucionar".
+    public func canEvolve(_ captured: CapturedPokemon) -> Bool {
+        guard !options(for: captured).isEmpty else { return false }
+        return stage(of: captured).tokensToNext(from: captured.tokensEarned) == 0
+    }
+
+    /// Ramas posibles desde su forma actual.
+    public func options(for captured: CapturedPokemon) -> [Pokemon] {
+        currentForm(of: captured).evolvesInto.compactMap { pokedex[$0] }
+    }
+
+    /// A qué evolucionaría **ahora mismo**: con lo último que ha vencido y con
+    /// la hora que es. Es lo que la ficha canta para que no haya que adivinar.
+    public func branch(
+        for captured: CapturedPokemon,
+        defeatedTypes: [String],
+        at date: Date = Date(),
+        calendar: Calendar = .current
+    ) -> Pokemon? {
+        let options = options(for: captured)
+        guard !options.isEmpty else { return nil }
+        guard options.count > 1 else { return options[0] }
+        let form = currentForm(of: captured).id
+        guard let resolved = BranchRules.resolve(
+            formID: form,
+            defeatedTypes: defeatedTypes,
+            at: date,
+            calendar: calendar
+        ) else {
+            // Cadena que bifurca sin regla escrita: desempate estable.
+            var rng = SeededRandomProvider(seed: captured.evolutionSeed)
+            return options[rng.nextInt(in: 0...(options.count - 1))]
+        }
+        return pokedex[resolved] ?? options[0]
+    }
+
+    /// Forma que viene después, para enseñar el progreso. `nil` si su línea
+    /// acaba aquí o si ya está en la etapa máxima.
     public func nextForm(of captured: CapturedPokemon) -> Pokemon? {
-        let current = stage(of: captured)
-        guard current.tokensToNext(from: captured.tokensEarned) != nil else { return nil }
-        let path = chainPath(of: captured)
-        let next = current.rawValue + 1
-        return next < path.count ? path[next] : nil
+        guard stage(of: captured).tokensToNext(from: captured.tokensEarned) != nil else { return nil }
+        let options = options(for: captured)
+        guard options.count == 1 else { return nil }
+        return options[0]
     }
 }
