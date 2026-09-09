@@ -19,6 +19,7 @@ struct SelfTestRunner {
             ZoneTests.self,
             MilestoneTests.self,
             LeagueTests.self,
+            RegionTransferTests.self,
             ProgressLadderTests.self,
             GymTests.self,
             GymBattleTests.self,

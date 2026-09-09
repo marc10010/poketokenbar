@@ -265,7 +265,7 @@ public struct GameSettings: Codable, Hashable, Sendable {
 /// Estado persistido completo. Cualquier cambio de forma requiere subir
 /// `schemaVersion` y añadir migración en `GameStore`.
 public struct GameState: Codable, Sendable {
-    public static let currentSchemaVersion = 7
+    public static let currentSchemaVersion = 8
 
     public var schemaVersion: Int = GameState.currentSchemaVersion
     public var ledger = TokenLedger()
@@ -291,6 +291,12 @@ public struct GameState: Codable, Sendable {
     /// Último salvaje vencido: es lo que decide la rama de la siguiente
     /// evolución, así que hay que recordarlo entre eventos.
     public var lastDefeatedSpeciesID: Int?
+    /// Regiones que ya estaban abiertas cuando el requisito de Pokédex no
+    /// existía. Quitarle a alguien un acceso que ya tenía es peor que el
+    /// problema que arregla el requisito, así que se conserva.
+    public var grandfatheredRegions: Set<String> = []
+    /// Regiones cuya apertura ya se ha celebrado, para no repetir la fiesta.
+    public var celebratedRegions: Set<String> = []
 
     public init() {}
 
@@ -313,6 +319,8 @@ public struct GameState: Codable, Sendable {
         processedEventIDs = try container.decodeIfPresent([String].self, forKey: .processedEventIDs) ?? []
         lastCaptureSpeciesID = try container.decodeIfPresent(Int.self, forKey: .lastCaptureSpeciesID)
         lastDefeatedSpeciesID = try container.decodeIfPresent(Int.self, forKey: .lastDefeatedSpeciesID)
+        grandfatheredRegions = try container.decodeIfPresent(Set<String>.self, forKey: .grandfatheredRegions) ?? []
+        celebratedRegions = try container.decodeIfPresent(Set<String>.self, forKey: .celebratedRegions) ?? []
     }
 
     public var activeCompanion: CapturedPokemon? {

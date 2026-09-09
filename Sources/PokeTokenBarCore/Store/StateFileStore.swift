@@ -78,6 +78,11 @@ public struct StateFileStore {
                 return migrated
             }
         }
+        // v7 → v8: abrir Kanto pasa a pedir también 50 especies de Johto
+        // registradas. A quien ya la tenía abierta no se le cierra.
+        if state.schemaVersion < 8, state.leagues.wonIDs.contains("johto") {
+            state.grandfatheredRegions.insert("kanto")
+        }
         state.schemaVersion = GameState.currentSchemaVersion
         return state
     }

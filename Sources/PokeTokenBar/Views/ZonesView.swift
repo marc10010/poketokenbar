@@ -39,7 +39,9 @@ struct ZonesView: View {
 
             Divider().padding(.vertical, 1)
 
-            ForEach(store.zoneCatalog.all) { zone in
+            // En orden de desbloqueo: es el orden en que aparecen y por tanto
+            // el que se quiere leer, no el del fichero de datos.
+            ForEach(store.zoneCatalog.inUnlockOrder) { zone in
                 row(zone, open: access.opens(zone))
             }
         }

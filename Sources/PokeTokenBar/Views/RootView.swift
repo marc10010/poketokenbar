@@ -57,6 +57,10 @@ struct CombatTabView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            if let region = store.lastRegion {
+                RegionCelebrationView(transfer: region)
+                Divider()
+            }
             if let celebration = store.lastMedal {
                 MedalCelebrationView(celebration: celebration)
                 Divider()

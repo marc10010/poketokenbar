@@ -10,6 +10,10 @@ public final class GameStore: ObservableObject {
     @Published public private(set) var lastCapture: CapturedPokemon?
     /// Liga recién ganada, para celebrarla.
     @Published public private(set) var lastLeague: League?
+    /// Región recién abierta, para celebrarla. Puede pasar al ganar la liga o
+    /// **al registrar la especie que faltaba**, que es lo bonito del requisito:
+    /// el salto de región puede llegar en una captura.
+    @Published public private(set) var lastRegion: RegionTransfer?
     /// Medalla recién ganada, mientras se celebra. Se limpia sola.
     @Published public private(set) var lastMedal: MedalCelebration?
     /// Búsqueda y filtros de la caja PC. No se persiste: es estado de consulta,
@@ -125,9 +129,85 @@ public final class GameStore: ObservableObject {
     public var zoneAccess: ZoneAccess {
         ZoneAccess(
             medals: medals,
-            kantoOpen: state.leagues.kantoOpen,
+            kantoOpen: isOpen(region: "kanto"),
             isChampion: state.leagues.isChampion
         )
+    }
+
+    // MARK: - El barco entre regiones
+
+    /// Lo que falta para pasar de región: la liga de la región anterior y un
+    /// mínimo de su Pokédex registrada.
+    ///
+    /// En Oro y Plata a Kanto se va en barco desde Ciudad Olivo después del
+    /// Alto Mando; el requisito de Pokédex es lo que hace que la región 1 haya
+    /// que jugarla y no solo atravesarla. La liga se puede ganar igual: lo que
+    /// espera es el barco, no el contenido.
+    public struct RegionTransfer: Sendable {
+        public let region: String
+        /// Liga que hay que ganar para que el barco exista.
+        public let league: League
+        /// Región de la que se cuentan las especies.
+        public let from: String
+        public let registered: Int
+        public let required: Int
+        public let leagueWon: Bool
+        /// Abierta por el requisito nuevo o por venir ya abierta de antes.
+        public let isOpen: Bool
+
+        public var name: String { region.capitalized }
+        public var missingSpecies: Int { max(0, required - registered) }
+        public var speciesMet: Bool { registered >= required }
+    }
+
+    /// Especies registradas de una región (por su generación de origen).
+    public func registeredSpecies(of region: String) -> Int {
+        state.registeredSpeciesIDs.reduce(into: 0) { total, id in
+            if pokedex[id]?.homeRegion.lowercased() == region.lowercased() { total += 1 }
+        }
+    }
+
+    public func transfer(to region: String) -> RegionTransfer? {
+        guard let league = leagueCatalog.all.first(where: { $0.reward.opensRegion == region }) else { return nil }
+        let previous = gymCatalog.regions.first ?? "johto"
+        let registered = registeredSpecies(of: previous)
+        let won = state.leagues.wonIDs.contains(league.id)
+        let grandfathered = state.grandfatheredRegions.contains(region)
+        return RegionTransfer(
+            region: region,
+            league: league,
+            from: previous,
+            registered: registered,
+            required: GameRules.regionTransferSpecies,
+            leagueWon: won,
+            isOpen: grandfathered || (won && registered >= GameRules.regionTransferSpecies)
+        )
+    }
+
+    /// Mira si alguna región se ha abierto y la deja lista para celebrar. Se
+    /// llama al guardar porque el requisito se puede cumplir por dos caminos
+    /// distintos y ninguno debería tener que acordarse.
+    private func noteRegionOpenings() {
+        for region in gymCatalog.regions.dropFirst() {
+            guard let transfer = transfer(to: region), transfer.isOpen,
+                  !state.celebratedRegions.contains(region)
+            else { continue }
+            state.celebratedRegions.insert(region)
+            // Las partidas que ya la tenían abierta no reciben confeti por algo
+            // que pasó hace semanas.
+            guard !state.grandfatheredRegions.contains(region) else { continue }
+            lastRegion = transfer
+        }
+    }
+
+    public func dismissRegionCelebration() {
+        lastRegion = nil
+    }
+
+    /// Si una región de gimnasios está abierta. La primera siempre lo está.
+    public func isOpen(region: String) -> Bool {
+        guard region != gymCatalog.regions.first else { return true }
+        return transfer(to: region)?.isOpen ?? state.leagues.wonIDs.contains("johto")
     }
 
     public var unlockedZones: [Zone] { zoneCatalog.unlocked(zoneAccess) }
@@ -272,16 +352,16 @@ public final class GameStore: ObservableObject {
     /// puerta, la región sería solo una etiqueta.
     public var nextGym: Gym? {
         guard let candidate = gymCatalog.next(defeated: state.gyms.defeatedIDs) else { return nil }
-        if candidate.region == "kanto", !state.leagues.kantoOpen { return nil }
+        if !isOpen(region: candidate.region) { return nil }
         return candidate
     }
 
     /// Qué bloquea el avance de gimnasios, si algo lo bloquea.
     public var gymGate: League? {
-        guard gymCatalog.next(defeated: state.gyms.defeatedIDs)?.region == "kanto",
-              !state.leagues.kantoOpen
+        guard let candidate = gymCatalog.next(defeated: state.gyms.defeatedIDs),
+              !isOpen(region: candidate.region)
         else { return nil }
-        return leagueCatalog["johto"]
+        return transfer(to: candidate.region)?.league
     }
 
     public func medalGyms() -> [Gym] { gymCatalog.medals(defeated: state.gyms.defeatedIDs) }
@@ -1159,8 +1239,16 @@ public final class GameStore: ObservableObject {
         dexCache = nil
     }
 
-    private func persist() {
+    /// Estado que se calcula a partir del resto y se guarda: el registro de la
+    /// Pokédex y las regiones abiertas. En un solo sitio, por el que pasan
+    /// tanto el guardado en diferido como el inmediato.
+    private func syncDerivedState() {
         syncPokedexRegistry()
+        noteRegionOpenings()
+    }
+
+    private func persist() {
+        syncDerivedState()
         saveTask?.cancel()
         let snapshot = state
         saveTask = Task { [file] in
@@ -1197,6 +1285,21 @@ public final class GameStore: ObservableObject {
         )
     }
 
+    /// Abre una región como si el jugador hubiera hecho las dos mitades: ganar
+    /// la liga y registrar las especies que pide el barco. Solo para tests y
+    /// para el smoke test, que necesitan Kanto abierta sin jugar Johto entero.
+    public func debugOpenRegion(_ region: String) {
+        guard let transfer = transfer(to: region) else { return }
+        state.leagues.award(transfer.league.id)
+        let ids = pokedex.all
+            .filter { $0.homeRegion.lowercased() == transfer.from.lowercased() }
+            .map(\.id)
+            .sorted()
+            .prefix(transfer.required)
+        for id in ids { state.registeredSpeciesIDs.insert(id) }
+        dexCache = nil
+    }
+
     /// Apunta una forma en el registro de la Pokédex. Solo para tests.
     public func debugRegister(speciesID: Int) {
         state.registeredSpeciesIDs.insert(speciesID)
@@ -1222,6 +1325,7 @@ public final class GameStore: ObservableObject {
 
     public func flush() {
         saveTask?.cancel()
+        syncDerivedState()
         do {
             try file.save(state)
         } catch {

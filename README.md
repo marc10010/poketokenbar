@@ -449,9 +449,44 @@ Johto: 8 gimnasios ─▶ Alto Mando de Johto ─▶ abre la región de Kanto
 Kanto: 8 gimnasios ─▶ Monte Plateado: Red ─▶ Campeón, abre Cueva Celeste
 ```
 
-**El noveno gimnasio no aparece hasta ganar el Alto Mando.** Sin esa puerta la
-región sería solo una etiqueta, y el popover dice qué es lo que bloquea en vez
-de dejar el avance en silencio.
+**El noveno gimnasio no aparece hasta que sale el barco a Kanto.** Sin esa
+puerta la región sería solo una etiqueta, y el popover dice qué es lo que
+bloquea en vez de dejar el avance en silencio.
+
+### El barco a Kanto
+
+En Oro y Plata a Kanto se va **en barco desde Ciudad Olivo** después del Alto
+Mando, y el billete aquí tiene **dos mitades**:
+
+1. ganar el **Alto Mando de Johto**, y
+2. tener **50 de las 100 especies de Johto registradas**.
+
+El requisito de Pokédex es lo que hace que la región 1 haya que jugarla y no
+solo atravesarla: sin él se podía ganar el Alto Mando con 18 de las 100 de
+Johto sin registrar. Son las 47 que se encuentran antes de Kanto más criar
+tres, unos 600.000 tokens, y con la zona enfocada es trabajo dirigido y no
+lotería.
+
+Es el equivalente al **Dock Pass** de PokéClicker, que allí se compra con
+moneda: aquí no hay monedas, así que el peaje es la Pokédex.
+
+Dos consecuencias buenas:
+
+- **el Alto Mando se puede ganar igual** sin el requisito. Lo que espera es el
+  barco, no el contenido;
+- **el salto de región puede llegar en una captura**, no solo ganando un
+  combate: si ya tienes la liga, la especie número 50 abre Kanto y se celebra
+  como tal. Es el pago de coleccionar.
+
+A quien ya tenía Kanto abierta antes de que el requisito existiera **no se le
+cierra** (`grandfatheredRegions`): quitar un acceso concedido es peor que el
+problema que arregla el requisito.
+
+**Kanto no escala el HP de sus salvajes**, y con los datos delante no le hace
+falta: sus 83 especies base traen un 12 % más de HP medio y un 50 % más de
+raras que las 95 de Johto. Un multiplicador por región se comería el bonus de
+colección ganado en Johto y encarecería volver a por lo que falta. La rampa la
+ponen los jefes (absorción 0,75 → 1,5).
 
 Una liga es un **gauntlet**: sus miembros en cadena y sin salvajes en medio.
 Abandonar **reinicia la tirada**, que es lo que significa un gauntlet, pero

@@ -70,6 +70,15 @@ public enum Rarity: String, Codable, CaseIterable, Sendable {
 }
 
 public enum GameRules {
+    /// Especies de la región anterior que hay que tener registradas para que
+    /// salga el barco a la siguiente.
+    ///
+    /// El equivalente al Dock Pass de PokéClicker, que allí se compra con
+    /// moneda: aquí no hay monedas, así que el peaje es la Pokédex. 50 de las
+    /// 100 de Johto son las 47 que se encuentran antes de Kanto más criar tres,
+    /// unos 600.000 tokens: obliga a recorrer la región sin ser un muro.
+    public static let regionTransferSpecies = 50
+
     /// 1 token = 1 punto de daño.
     public static let damagePerToken = 1
     public static let shinyProbability = 0.01
