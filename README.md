@@ -752,7 +752,8 @@ quedan porque explican **por qué** cada regla es como es:
 |---|---|
 | `docs/spec-gimnasios-medallas.md` | implementada |
 | `docs/spec-liga-zonas-hitos.md` | fases 1-4 implementadas; 5 y 6 pendientes |
-| `docs/spec-ramas-y-cola.md` | **borrador para decidir**: ramas por condición, otras regiones, misiones y logros |
+| `docs/spec-ramas-y-cola.md` | ramas por condición **implementadas**; el resto (regiones, misiones, logros) sigue en borrador |
+| `docs/spec-salto-a-kanto.md` | **borrador para decidir**: el requisito para abrir Kanto, si Kanto pesa más, y el momento del salto |
 
 ## 21. Límites conocidos del MVP
 
