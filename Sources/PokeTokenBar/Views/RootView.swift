@@ -11,7 +11,12 @@ struct RootView: View {
     var body: some View {
         VStack(spacing: 0) {
             if !store.state.hasStarter {
-                ScrollView { StarterPickerView() }
+                // No debería verse: el inicial se reparte al arrancar y al
+                // reiniciar. Queda como red por si una región no tuviera uno.
+                Text("Esperando al primer compañero…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(14)
             } else {
                 TabBar()
                 Divider().padding(.top, 6)

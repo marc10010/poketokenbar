@@ -41,40 +41,18 @@ struct HUDView: View {
         }
     }
 
+    /// Red por si una región no tuviera inicial asignado: el reparto lo hace
+    /// la app al arrancar, así que en la práctica no se ve.
     private var starterPicker: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("PokeTokenBar · elige tu compañero")
-                .font(.system(size: 12, weight: .semibold))
-            HStack(spacing: 2) {
-                ForEach(store.pokedex.starters) { starter in
-                    Button {
-                        store.chooseStarter(speciesID: starter.id)
-                    } label: {
-                        SpriteView(speciesID: starter.id, shiny: false, size: 46)
-                            .background(
-                                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                    .fill(Color.secondary.opacity(0.12))
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .help(starter.localizedName)
-                }
-            }
-            Text("\(Fmt.tokens(store.totalTokens)) tokens acumulados")
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.regularMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(Color.secondary.opacity(0.35), lineWidth: 1)
-                )
-        )
-        .padding(4)
+        Text("Esperando al primer compañero…")
+            .font(.system(size: 11))
+            .foregroundStyle(.secondary)
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(.regularMaterial)
+            )
+            .padding(4)
     }
 
     /// Alturas a las que el HUD va revelando contenido al crecer.
