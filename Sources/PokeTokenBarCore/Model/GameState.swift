@@ -267,6 +267,12 @@ public struct GameState: Codable, Sendable {
     /// Veces que se ha vencido a cada línea evolutiva en libertad, con captura
     /// o sin ella. Clave: id de la forma base.
     public var familyDefeats: [Int: Int] = [:]
+    /// Formas que **han sido tuyas** en algún momento, aunque el ejemplar ya
+    /// haya evolucionado y no se vea. Es lo que hace que la Pokédex sea un
+    /// registro y no una foto de la caja: sin esto, un Bulbasaur que llega a
+    /// Venusaur borra a Ivysaur del contador, y como no se repiten líneas ese
+    /// hueco no se podía volver a llenar nunca.
+    public var registeredSpeciesIDs: Set<Int> = []
     /// IDs de eventos ya aplicados, en orden de llegada (ventana acotada).
     public var processedEventIDs: [String] = []
     public var lastCaptureSpeciesID: Int?
@@ -288,6 +294,7 @@ public struct GameState: Codable, Sendable {
         milestones = try container.decodeIfPresent(MilestoneProgress.self, forKey: .milestones) ?? MilestoneProgress()
         leagues = try container.decodeIfPresent(LeagueProgress.self, forKey: .leagues) ?? LeagueProgress()
         familyDefeats = try container.decodeIfPresent([Int: Int].self, forKey: .familyDefeats) ?? [:]
+        registeredSpeciesIDs = try container.decodeIfPresent(Set<Int>.self, forKey: .registeredSpeciesIDs) ?? []
         processedEventIDs = try container.decodeIfPresent([String].self, forKey: .processedEventIDs) ?? []
         lastCaptureSpeciesID = try container.decodeIfPresent(Int.self, forKey: .lastCaptureSpeciesID)
     }

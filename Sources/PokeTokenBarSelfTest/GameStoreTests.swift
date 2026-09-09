@@ -426,10 +426,14 @@ enum GameStoreTests: TestSuite {
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 500_000))
         expectEqual(store.wildDamagePerToken, 1 + store.collectionBonus, accuracy: 0.0001)
         let antes = try unwrap(store.state.encounter).currentHP
+        // La tasa que cuenta es la de **antes** del evento: el bonus puede
+        // subir durante el propio evento (una captura, o una evolución que
+        // registra una forma nueva) y la regla es que no cambia a mitad.
+        let tasa = 1 + store.collectionBonus
         store.ingest(event("salvaje", input: 1_000, output: 0))
         expectEqual(
             store.state.encounter?.currentHP,
-            antes - Int((1_000.0 * (1 + store.collectionBonus)).rounded()),
+            antes - Int((1_000.0 * tasa).rounded()),
             "el bonus entra en el daño al salvaje"
         )
 

@@ -21,6 +21,7 @@ struct PokedexView: View {
                 detail(entry)
             } else {
                 toolbar
+                branchNotice
                 grid
             }
         }
@@ -42,6 +43,14 @@ struct PokedexView: View {
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// Lo que no se puede tener, dicho una vez y sin dramatismo.
+    private var branchNotice: some View {
+        Text("\(store.pokedex.registrableCount) de los 251 son alcanzables: los otros \(store.pokedex.alternateBranchCount) son ramas alternativas de una línea (Eevee, Gloom, Poliwhirl, Slowpoke, Tyrogue) y con un ejemplar por línea solo se puede tener una.")
+            .font(.system(size: 9))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private var toolbar: some View {
@@ -155,6 +164,7 @@ struct PokedexView: View {
     private func opacity(_ state: PokedexEntry.State) -> Double {
         switch state {
         case .captured: return 1
+        case .registered: return 0.85
         case .defeated: return 0.6
         case .unknown: return 0.25
         }
