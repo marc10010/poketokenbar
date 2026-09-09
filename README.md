@@ -161,24 +161,27 @@ Espeon", con lo último vencido y qué falta para cada rama) y la barra de menú
 enseña ☀ o ☾ **solo cuando la hora está decidiendo algo**: el equipado ya puede
 evolucionar y su rama depende de la banda.
 
-**Una evolución que cruza de región espera a esa región.** Un Pichu de Johto no
-crece a Pikachu hasta que salga el barco, porque **Pikachu vive en Kanto**; y en
-Tyrogue, antes del barco solo está disponible Hitmontop (de Johto), así que por
-la mañana —cuando la condición pide Hitmonlee— espera en vez de caer a otra
-rama. Son **8 casos**, todos bebés de Johto: Pichu, Cleffa, Igglybuff, Tyrogue
-(×2), Smoochum, Elekid y Magby.
+**Una evolución que cruza de región espera a esa región**, y con Kanto delante
+eso son **las once evoluciones que en el canon no existían hasta Gen 2**: un
+Onix no puede ser **Steelix** hasta abrir Johto, ni Golbat **Crobat**, ni
+Chansey **Blissey**, ni Scyther **Scizor**, ni Seadra **Kingdra**, ni Poliwhirl
+**Politoed**, ni Gloom **Bellossom**, ni Slowpoke **Slowking**, ni Porygon
+**Porygon2**, ni Eevee **Espeon** o **Umbreon**.
 
-Solo bloquea cuando **cruza**. Las rutas de Johto están llenas de especies de
-Kanto (48 de las 95 capturables), así que la versión estricta —"nada de una
-región cerrada evoluciona"— congelaría 50 líneas: Rattata, Geodude, Gastly,
-Abra… Eso no es una regla, es un muro.
+Cuando la rama que toca está bloqueada, **espera**: no cae a otra, que sería dar
+la que no se pidió. Un Eevee de noche antes del barco no se convierte en
+Vaporeon por descarte; se queda Eevee hasta que abras Johto, o hasta que venzas
+un rival de agua, fuego o eléctrico.
 
-Al revés no aplica: Onix → **Steelix** no espera nada, porque Steelix es de Gen
-2, o sea de Johto, que es la región 1. Con el orden invertido (Kanto primero)
-esta misma regla bloquearía justo esos 11 casos —Steelix, Crobat, Blissey,
-Scizor, Kingdra, Politoed, Bellossom, Slowking, Porygon2, Espeon y Umbreon—,
-que son las evoluciones que en el canon no existían hasta Gen 2. La regla está
-escrita en términos de regiones abiertas, así que vale para los dos órdenes.
+Solo bloquea cuando **cruza**. La versión estricta —"nada de una región cerrada
+evoluciona"— congelaría casi todas las líneas de Johto que se capturan en las
+rutas de Kanto, y eso no es una regla, es un muro. Un Hoothoot capturado en
+Kanto evoluciona a Noctowl sin problema: su línea ya es de Johto.
+
+La regla está escrita en términos de **regiones abiertas**, no de generaciones,
+así que valía igual con el orden inverso: allí tocaba a los ocho bebés de Johto
+(Pichu, Cleffa, Igglybuff, Tyrogue ×2, Smoochum, Elekid y Magby), que es un
+puñado de casos mucho menos interesante — y por eso se invirtió el orden.
 
 Detalle a tener en cuenta: si el ejemplar cruza el umbral durante un combate de
 jefe —donde no hay salvajes—, la rama la decide el último salvaje que venciste,

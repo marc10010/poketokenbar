@@ -1377,6 +1377,13 @@ public final class GameStore: ObservableObject {
         dexCache = nil
     }
 
+    /// Deja una región abierta sin tocar la Pokédex ni las ligas. Para tests
+    /// que van de otra cosa: `debugOpenRegion` registra 70 especies y eso
+    /// mueve el bonus de colección, o sea el daño.
+    public func debugGrandfatherRegion(_ region: String) {
+        state.grandfatheredRegions.insert(region)
+    }
+
     /// Apunta una forma en el registro de la Pokédex. Solo para tests.
     public func debugRegister(speciesID: Int) {
         state.registeredSpeciesIDs.insert(speciesID)
