@@ -8,6 +8,19 @@ Cuando el rival llega a 0 HP se captura, entra en tu caja PC y aparece otro.
  [ Typhlosion vs Diglett ]  37.3k/42.8k
 ```
 
+<p align="center">
+  <img src="docs/screenshots/popover-combate.png" width="300" alt="Pestaña de combate: compañero, rival, efectividad de tipos y consumo">
+  <img src="docs/screenshots/popover-caja-ficha.png" width="300" alt="Caja PC: ficha fijada encima de la rejilla, con tramos por generación">
+</p>
+<p align="center">
+  <img src="docs/screenshots/hud-plegado.png" width="290" alt="HUD flotante plegado">
+  <img src="docs/screenshots/hud-medalla.png" width="290" alt="Celebración de medalla en el HUD">
+</p>
+
+> Las capturas salen de `--render-ui` (ver §10) y por tanto son reproducibles.
+> Incluyen sprites propiedad de **Nintendo/Game Freak**, a título ilustrativo:
+> no están cubiertos por la licencia MIT de este repo.
+
 ---
 
 ## 1. Arquitectura
@@ -158,6 +171,11 @@ son Hada aunque en Gen 1 y 2 no existiera ese tipo.
 
 ## 4. HUD flotante
 
+<p align="center">
+  <img src="docs/screenshots/hud-plegado.png" width="300" alt="HUD plegado: sprites, barra de HP y el mando de la esquina">
+  <img src="docs/screenshots/hud-desplegado.png" width="230" alt="HUD desplegado: métricas y caja PC">
+</p>
+
 Además del ítem de la barra de menú, la app puede mostrar un HUD anclado a una
 esquina: fondo transparente, sin bordes, sin sombra y **click-through**
 (`ignoresMouseEvents`), así que nunca roba foco ni tapa nada con lo que quieras
@@ -171,15 +189,18 @@ Colocación:
   sola ventana. Si desconectas ese monitor, vuelve al anclaje por esquina en
   vez de quedarse en el limbo.
 
-Tamaño:
-- compacto (208×76): solo el combate;
-- arrastrando cualquier borde crece y va revelando contenido por altura:
-  a partir de 118 px las **métricas de consumo** (tokens totales, este mes,
-  especies, capturas y lo que falta para la siguiente evolución) y a partir de
-  200 px la **caja PC** (rejilla adaptativa: más ancho = más columnas). El botón
-  de la esquina despliega/pliega a 320×380 sin buscar el borde, que en una
-  ventana sin marco no se ve, y al plegar cierra la ficha y la caja. Acotado a
-  520×620 y persistido.
+Tamaño (las cifras salen de `HUDController`, no de la memoria: 268×104 base,
+umbrales 140 y 248, techo 620×760):
+- compacto **268×104**, solo el combate. Crece con el multiplicador de sprites:
+  a ×2 son 352×146, para que el pixel art grande siga cabiendo;
+- arrastrando cualquier borde crece y va revelando contenido por altura: a
+  partir de **140 px** las **métricas de consumo** (tokens totales, este mes,
+  medallas, daño por token, especies, capturas y lo que falta para la siguiente
+  evolución) y a partir de **248 px** la **caja PC** completa, con su búsqueda,
+  sus filtros y sus tramos (rejilla adaptativa: más ancho = más columnas). El
+  botón de la esquina despliega/pliega a **380×460** sin buscar el borde, que en
+  una ventana sin marco no se ve, y al plegar cierra la ficha y la caja. Acotado
+  a **620×760** y persistido.
 
 **El panel no se agranda solo:** crecer y plegarse es cosa del botón, no de un
 clic. El botón va **encima de la esquina de arriba a la derecha**, mide 22×22
@@ -324,7 +345,15 @@ jefe, y las cifras del momento), **Progreso**, **Caja**, **Pokédex** y
 
 Antes era un scroll de 620 pt con seis secciones plegables, y cada mecánica
 nueva añadía un cajón: buscar algo era abrir y cerrar. Con pestañas se ve una
-cosa a la vez.
+cosa a la vez — y dentro de cada pestaña las secciones **siguen plegándose**
+tocando su cabecera, que es lo que se perdió al hacer el cambio y volvió
+después, ahora recordado entre sesiones.
+
+<p align="center">
+  <img src="docs/screenshots/popover-progreso.png" width="240" alt="Progreso: medallas, ligas y legendarios">
+  <img src="docs/screenshots/popover-caja.png" width="240" alt="Caja en rejilla con tramos por generación">
+  <img src="docs/screenshots/popover-caja-lista.png" width="240" alt="Caja en modo lista, con los números de cada hueco">
+</p>
 
 La pestaña de Progreso incluye la **escalera de desbloqueo**, que existía en los
 datos pero en ninguna pantalla: qué abre cada cantidad de medallas, la puerta de
@@ -354,10 +383,16 @@ caja, y el parseo de transcripts y del payload HTTP.
 inicial, combate, tras captura) más el HUD, y comprueba que el panel flotante
 cae dentro del área visible de la pantalla y es click-through y no opaco.
 
-`--render-ui <carpeta>` pinta las superficies a PNG (HUD plegado, desplegado,
-de gimnasio, y el popover) sin abrir ventanas ni capturar la pantalla. El smoke
-test mide tamaños pero no dice **dónde** cae cada cosa; con esto se mira. Útil
-sobre todo donde no hay permiso de captura de pantalla.
+`--render-ui <carpeta>` pinta las superficies a PNG sin abrir ventanas ni
+capturar la pantalla: el HUD (plegado, desplegado, de gimnasio y con medalla) y
+las pestañas del popover. El smoke test mide tamaños pero no dice **dónde** cae
+cada cosa; con esto se mira, y es la única forma en una máquina sin permiso de
+captura de pantalla. De aquí salen las capturas del README, con estado y
+semilla fijos para que se puedan regenerar iguales:
+
+```bash
+swift run PokeTokenBar --render-ui docs/screenshots
+```
 
 ## 11. Regiones y ligas
 
@@ -455,6 +490,10 @@ vaciara uno, se usa el pool completo antes que dejar el combate sin rival.
 
 ## 14. Pokédex completa
 
+<p align="center">
+  <img src="docs/screenshots/popover-pokedex.png" width="300" alt="Pokédex: 251 huecos con cabecera por generación">
+</p>
+
 *Ver Pokédex* (en la sección de la caja) abre los **251 huecos**, no solo lo que
 tienes. Tres estados, y el del medio existe porque las líneas repetidas ya no se
 capturan:
@@ -483,6 +522,14 @@ son preferencias y no progreso, y los **ids de eventos ya procesados**, porque
 si se borraran el consumo ya contabilizado podría volver a entrar como daño.
 
 ## 16. Gimnasios y medallas
+
+<p align="center">
+  <img src="docs/screenshots/popover-gimnasio.png" width="270" alt="Combate de gimnasio en el popover: absorción, tasa real y tokens que le quedan">
+  <img src="docs/screenshots/popover-medalla.png" width="270" alt="Celebración de medalla, con lo que desbloquea el rango">
+</p>
+<p align="center">
+  <img src="docs/screenshots/hud-gimnasio.png" width="300" alt="Combate de gimnasio en el HUD plegado">
+</p>
 
 `Resources/gyms.json` es el único dato **curado a mano** del proyecto: PokeAPI
 no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
@@ -606,6 +653,8 @@ tiene líderes de gimnasio.
   uno), pero no se muestran de uno en uno.
 - La caja PC no permite liberar ni renombrar todavía (`nickname` ya está en el
   modelo).
-- Los sprites son propiedad de Nintendo/Game Freak: **no van en el repo**, se
-  bajan de PokeAPI en tiempo de ejecución. El código es MIT (ver `LICENSE`),
-  los sprites no.
+- Los sprites son propiedad de Nintendo/Game Freak: **no van en el repo como
+  assets**, se bajan de PokeAPI en tiempo de ejecución. El código es MIT (ver
+  `LICENSE`), los sprites no. Las capturas de `docs/screenshots/` sí los
+  muestran, a título ilustrativo y fuera de la licencia; se regeneran con
+  `--render-ui` y no las usa la app.

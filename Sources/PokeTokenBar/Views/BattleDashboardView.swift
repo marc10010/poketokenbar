@@ -145,7 +145,7 @@ struct MetricsView: View {
         VStack(alignment: .leading, spacing: 6) {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
-            metric("Daño por token", "\(Fmt.rate(store.wildDamagePerToken)) al salvaje")
+            metric("Daño por token", damageLine)
             metric("Bonus de colección", "+\(Fmt.rate(store.collectionBonus)) por \(store.pokedexCaptured)/251")
             metric("Eventos registrados", Fmt.tokens(store.state.ledger.eventCount))
             metric("Rango", "\(store.rank.label) · \(store.medals)/16 medallas")
@@ -161,6 +161,13 @@ struct MetricsView: View {
             }
         }
         .padding(.top, 4)
+    }
+
+    /// Contra quién, porque con un jefe abierto no hay salvaje y la tasa del
+    /// salvaje es 0: decir "0" mientras el líder recibe daño es mentir.
+    private var damageLine: String {
+        guard let target = store.currentTarget else { return "sin rival ahora mismo" }
+        return "\(Fmt.rate(target.rate)) a \(target.label)"
     }
 
     private func metric(_ label: String, _ value: String) -> some View {

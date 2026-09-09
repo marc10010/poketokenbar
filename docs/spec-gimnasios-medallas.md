@@ -1,7 +1,15 @@
 # Spec: gimnasios, medallas y rango de entrenador
 
-Estado: **borrador para decidir**, sin implementar. Nada de esto existe hoy en
-el código.
+Estado: **implementado**. Este documento se conserva porque explica *por qué*
+cada regla es como es; lo que se decidió está marcado abajo, y las desviaciones
+respecto a la propuesta original también.
+
+| Fase | Estado |
+| --- | --- |
+| 1. Datos y reglas (`gyms.json`, `GymCatalog`, rango, absorción) | ✅ |
+| 2. Combate (disparador, absorción, medalla sin captura) | ✅ |
+| 3. UI (tarjeta en el HUD, medallas y rango en el popover, barra de menú) | ✅ + celebración de medalla en las tres superficies |
+| 4. Opcionales D2/D6/D7 | pendiente: solo D7 (notificación del sistema) |
 
 ## 1. Por qué
 
@@ -221,10 +229,9 @@ Lo que hay que fijar con tests antes de dar esto por bueno:
 
 ## 11. Decisiones abiertas
 
-**D1 — ¿Un Pokémon o equipo?** La regla dice "su Pokémon", en singular.
-Propuesta: **uno**, con una sola barra de HP; el equipo completo se lista como
-adorno. Un equipo de 3 con barras secuenciales es más fiel pero triplica estado
-y UI.
+**D1 — ¿Un Pokémon o equipo? RESUELTA: uno.** Una sola barra de HP y el equipo
+del líder como adorno. El equipo de 3 con barras secuenciales queda anotado
+como posible más adelante; triplica estado y UI.
 
 **D2 — ¿Se puede perder? RESUELTA: no se pierde, se bloquea.** Ver §6. El líder
 absorbe daño y con un cruce de tipos insuficiente el progreso es cero, así que
@@ -239,25 +246,29 @@ la medalla se gana eligiendo bien y no esperando. Descartadas y por qué:
   que ya está tomada al empezar. Queda anotada como alternativa si el bloqueo
   resulta demasiado blando.
 
-**D3 — ¿Convalidar la partida actual?** Propuesta: **no** convalidar, porque
-regalar rango vacía la mecánica el primer día. La rebaja razonable es que el
-primer gimnasio se abra de inmediato, que es lo que pasa con 485k tokens.
+**D3 — ¿Convalidar la partida actual? RESUELTA: no.** Y se fue más lejos de lo
+propuesto: la partida se reinició entera, histórico incluido, para empezar de
+cero con las mecánicas nuevas. Se conservaron los ajustes y los ids de eventos
+ya procesados, para que el consumo ya contabilizado no volviera a entrar como
+daño.
 
-**D4 — ¿Los tokens del gimnasio cuentan para el siguiente disparador?**
-Propuesta: **no**. Cuentan para el ledger y para la evolución del compañero,
-pero el contador de 300k se reinicia al cerrar el gimnasio.
+**D4 — ¿Los tokens del gimnasio cuentan para el siguiente disparador?
+RESUELTA: no.** El contador sigue sumando mientras el gimnasio está abierto,
+pero `resetCounters()` lo pone a cero al ganar, así que el siguiente disparador
+arranca limpio. Los tokens sí cuentan para el ledger y para la evolución del
+compañero.
 
-**D5 — ¿El gate de tokens desaparece del todo?** Propuesta: **sí**, lo sustituye
-el rango. La alternativa (rango **y** tokens) hace el desbloqueo más lento y
-difícil de explicar.
+**D5 — ¿El gate de tokens desaparece del todo? RESUELTA: sí**, lo sustituyen
+las medallas. Ojo con la interacción posterior: al llegar las zonas, el gate
+por rango **no** desapareció (ver D12 del otro spec), así que hoy conviven los
+dos: el rango abre tiers y las medallas abren zonas.
 
 **D6 — ¿El rango afecta a algo más que al tier?** Propuesta: no en el MVP. La
 palanca de dificultad pasa a ser la absorción de cada líder (§6), no el HP.
 
-**D7 — ¿Notificación al abrirse un gimnasio?** Hoy no hay notificaciones a
-propósito, para no pedir permisos. Un gimnasio es el único evento que justifica
-pedirlos. Propuesta: en el MVP, el HUD y la barra cambian de aspecto; la
-notificación del sistema queda para después.
+**D7 — ¿Notificación al abrirse un gimnasio? PENDIENTE.** Sin resolver: hoy el
+HUD, la barra de menú y el popover cambian de aspecto, y la notificación del
+sistema sigue sin pedirse para no pedir permisos.
 
 ## 12. Fuera de alcance
 

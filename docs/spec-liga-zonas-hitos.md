@@ -1,6 +1,17 @@
 # Spec: Liga Pokémon, zonas de caza e hitos legendarios
 
-Estado: **borrador para decidir**, sin implementar.
+Estado: **fases 1 a 4 implementadas**; 5 y 6, pendientes. El documento se
+conserva por el *por qué*; abajo está lo decidido y en qué se desvió lo
+implementado de la propuesta.
+
+| Fase | Estado |
+| --- | --- |
+| 1. Zonas de caza | ✅ como **desbloqueo** de especies, no como sesgo (ver D3/D4/D11) |
+| 2. Hitos legendarios | ✅ |
+| 3. La colección da poder (dinámica A) | ✅ en su variante conservadora (ver D9) |
+| 4. Regiones, ligas y escalera de desbloqueo | ✅ |
+| 5. Misiones y logros (B y C) | pendiente |
+| 6. Revanchas de gimnasio (D) | pendiente |
 
 ## 1. Qué falta hoy
 
@@ -268,9 +279,13 @@ Red no queda nada que hacer.
 
 ## 7. Decisiones abiertas
 
-**D1 — ¿Un catálogo o tres?** Propuesta: **uno** (`encounters.json`) con un campo
-de tipo. Tres ficheros repetirían el 80 % del esquema y la UI tendría que
-unirlos igual.
+**D1 — ¿Un catálogo o tres? RESUELTA en contra de la propuesta: catálogos
+separados.** Se implementó con `zones.json`, `milestones.json` y `leagues.json`
+(más `gyms.json`, que ya existía). El esquema común resultó ser mucho menor del
+80 % previsto —una zona no se parece a un gauntlet de cinco miembros— y cada
+catálogo tiene su propio generador o curación a mano: `zones.json` sale de
+PokeAPI, los otros dos están escritos a mano porque PokeAPI no tiene esos
+datos.
 
 **D2 — ¿Qué da ganar cada liga? RESUELTA por la estructura de regiones.** La de
 Johto **abre Kanto**, así que su premio es el contenido siguiente y no hay que
@@ -278,56 +293,58 @@ inventar nada. Red da **Mewtwo y el título de Campeón**. Las revanchas de
 gimnasio con absorción subida quedan como contenido posterior si hiciera falta
 alargar el final.
 
-**D9 — ¿La colección da multiplicador y con qué techo?** Es la dinámica con más
-consecuencias: toca el daño a salvajes **y** el bloqueo de gimnasios. Propuesta:
-sí, techo +1,0 lineal sobre especies conseguidas, y subir la absorción de los
-gimnasios tardíos para compensar. Alternativa conservadora: que el bonus **solo
-cuente contra salvajes**, así los gimnasios siguen siendo un problema de
-cobertura de tipos y no de acumulación.
+**D9 — ¿La colección da multiplicador y con qué techo? RESUELTA: la
+alternativa conservadora.** Techo +1,0 lineal sobre especies conseguidas
+(`especies/251`) y **solo contra salvajes**: si contara contra jefes, media
+Pokédex anularía la absorción de los gimnasios tardíos y dejarían de ser un
+problema de cobertura de tipos para ser uno de acumulación. Queda como palanca
+si el final se hace largo.
 
-**D10 — ¿Qué recompensan las misiones?** Tokens reales están descartados. Lo más
+**D10 — ¿Qué recompensan las misiones? PENDIENTE** (con la fase 5). Tokens reales están descartados. Lo más
 limpio es experiencia para el compañero equipado, la única moneda de juego que
 ya existe. Un empujón temporal a la tasa de shiny es más goloso pero pide estado
 nuevo con caducidad.
 
-**D11 — ¿Se puede enfocar una zona?** Con desbloqueo puro el jugador no elige
-dónde caza: solo se le van abriendo zonas. Propuesta: sí, poder marcar **una**
-zona desbloqueada como enfocada, con un 70 % de probabilidad de que la especie
-salga de ella y 30 % del pool completo. Al 100 % la zona se vuelve una lista de
-la compra y mata la sorpresa.
+**D11 — ¿Se puede enfocar una zona? RESUELTA: no, descartado.** Las zonas
+quedaron como **desbloqueo puro**: abren qué especies pueden aparecer y no
+sesgan nada. Enfocar una zona (y con ello D3 y D4) se descartó por la misma
+razón: con desbloqueo ya hay una decisión que tomar —qué medallas persigues— y
+el sesgo añadía una segunda palanca sobre la misma cosa.
 
-**D12 — ¿El gate por rango sobrevive a las zonas?** Hoy las medallas abren
-tiers (raro a 2, legendario a 8) y con zonas abrirían **especies**. Los dos
-sistemas hacen lo mismo por vías distintas. Propuesta: **quedarse con las
-zonas** y que `Rarity` siga decidiendo HP y peso de aparición, pero no gate. Es
-un gate menos y más legible.
+**D12 — ¿El gate por rango sobrevive a las zonas? RESUELTA en contra de la
+propuesta: sobrevive.** Hoy conviven los dos: `SpawnService.availableTiers`
+sigue filtrando tiers por rango, y las zonas abren especies. Es un gate más de
+lo que decía la propuesta y la escalera de desbloqueo existe en parte para
+hacerlo legible. Si alguna vez estorba, el que se quita es el del rango.
 
-**D8 — ¿La puerta entre regiones bloquea de verdad?** Es el cambio con más
-consecuencias: hoy los 16 gimnasios se abren solos en orden, y con la puerta el
-noveno **no aparece** hasta ganar la Liga de Johto. Propuesta: **sí bloquea**,
-porque sin puerta la región es solo una etiqueta. Efecto secundario a aceptar: el
-gate de aparición de legendarios (8 medallas) se queda corto si los legendarios
-pasan a ser hitos, así que los dos sistemas hay que mirarlos juntos (ver D5).
+**D8 — ¿La puerta entre regiones bloquea de verdad? RESUELTA: sí bloquea.**
+`nextGym` devuelve `nil` para los gimnasios de Kanto hasta ganar el Alto Mando
+de Johto, y `gymGate` dice cuál es la puerta, para que el jugador no se quede
+mirando un hueco. Era el cambio con más consecuencias —antes los 16 gimnasios
+se abrían solos en orden— y sin puerta la región habría sido solo una etiqueta.
+El efecto secundario previsto se cumplió: los legendarios salieron del sorteo
+(D5) y su gate de 8 medallas dejó de importar, porque ahora son hitos con sitio
+y requisito propios.
 
-**D3 — ¿La zona se elige a mano o rota?** Propuesta: **a mano**, persistida, con
-una zona por defecto sin sesgo. Rotarla sola quitaría justo la agencia que se
-busca.
+**D3 — ¿La zona se elige a mano o rota? DESCARTADA con D11:** no hay zona
+elegida porque no hay sesgo que elegir.
 
-**D4 — ¿Cuánto sesga una zona?** Propuesta: dentro del tier, **70 % de
-probabilidad** de que la especie salga del conjunto de la zona y 30 % del pool
-completo. Un 100 % convertiría la zona en una lista de la compra y mataría la
-sorpresa.
+**D4 — ¿Cuánto sesga una zona? DESCARTADA con D11:** una zona abierta aporta
+sus especies al sorteo y nada más. Lo que sí hizo falta fue una regla para las
+especies **sin** zona (sin encuentro salvaje en Gen 1/2): entran en el tier más
+difícil entre "raro" y el suyo, para que ninguna quede incompletable sin
+abaratar un legendario.
 
-**D5 — ¿El tier legendario desaparece del sorteo?** Propuesta: **sí**. Si los
-legendarios son hitos, dejarlos también en el sorteo los abarata. `Rarity`
-mantiene el nivel para clasificar, pero `SpawnService` deja de ofrecerlo.
+**D5 — ¿El tier legendario desaparece del sorteo? RESUELTA: sí.**
+`Rarity.spawnsInTheWild` es `false` para legendario y su 2 % se redistribuye
+entre los tiers disponibles en vez de reintentarse.
 
-**D6 — ¿La Liga es un gauntlet sin salir?** Propuesta: **sí**, los cinco
+**D6 — ¿La Liga es un gauntlet sin salir? RESUELTA: sí**, los cinco
 seguidos y sin salvajes entre medias. Si te bloqueas por cruce de tipos, se
 puede cambiar de compañero igual que en un gimnasio, así que no hay callejón sin
 salida.
 
-**D7 — ¿Los hitos caducan?** Propuesta: **no**. Están disponibles desde que se
+**D7 — ¿Los hitos caducan? RESUELTA: no.** Están disponibles desde que se
 cumple el requisito y se pueden afrontar cuando quieras. Un legendario que se
 pierde para siempre castiga por no mirar la app.
 

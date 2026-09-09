@@ -393,6 +393,52 @@ public final class GameStore: ObservableObject {
         return base + collectionBonus
     }
 
+    /// A qué le estás pegando ahora mismo y con qué tasa. Existe porque la
+    /// métrica se calculaba solo contra el salvaje, y con un jefe abierto no
+    /// hay salvaje: mostraba "0 al salvaje" mientras el jefe recibía daño.
+    public struct CurrentTarget: Sendable {
+        public let label: String
+        public let rate: Double
+        public let matchup: TypeMatchup
+        public let isBoss: Bool
+    }
+
+    public var currentTarget: CurrentTarget? {
+        if let active = activeLeague {
+            return CurrentTarget(
+                label: active.member.name,
+                rate: damagePerToken(against: active.member),
+                matchup: matchup(against: active.member),
+                isBoss: true
+            )
+        }
+        if let active = activeMilestone {
+            return CurrentTarget(
+                label: pokedex[active.milestone.speciesID]?.localizedName ?? active.milestone.place,
+                rate: damagePerToken(against: active.milestone),
+                matchup: matchup(against: active.milestone),
+                isBoss: true
+            )
+        }
+        if let active = activeGym {
+            return CurrentTarget(
+                label: active.gym.leader,
+                rate: gymDamagePerToken(for: active.gym),
+                matchup: matchup(against: active.gym),
+                isBoss: true
+            )
+        }
+        if let rival = rivalSpecies {
+            return CurrentTarget(
+                label: rival.localizedName,
+                rate: wildDamagePerToken,
+                matchup: currentMatchup,
+                isBoss: false
+            )
+        }
+        return nil
+    }
+
     public var rivalSpecies: Pokemon? {
         guard let encounter = state.encounter else { return nil }
         return pokedex[encounter.speciesID]

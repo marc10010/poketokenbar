@@ -162,7 +162,11 @@ struct HUDView: View {
             metric("Tokens totales", Fmt.tokens(store.totalTokens))
             metric("Este mes", Fmt.tokens(store.monthTokens))
             metric("Medallas", "\(store.medals)/16 · \(store.rank.label)")
-            metric("Daño por token", "\(Fmt.rate(store.wildDamagePerToken)) · \(store.currentMatchup.label)")
+            if let target = store.currentTarget {
+                metric("Daño por token", "\(Fmt.rate(target.rate)) a \(target.label)")
+            } else {
+                metric("Daño por token", "sin rival")
+            }
             metric("Bonus de colección", "+\(Fmt.rate(store.collectionBonus)) · \(store.pokedexCaptured)/251")
             metric("Especies", "\(store.speciesCaught) / 251")
             metric("Capturas", Fmt.tokens(store.state.box.count))
