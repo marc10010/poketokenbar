@@ -58,12 +58,45 @@ public struct SpawnService {
         return available.isEmpty ? tierPool : available.sorted { $0.id < $1.id }
     }
 
+    /// Lo que puede aparecer en una zona enfocada: **todas** sus especies a
+    /// partes iguales, sin sortear tier ni filtrar por rango.
+    ///
+    /// Fuera quedan las formas evolucionadas (un salvaje arranca su línea) y
+    /// los legendarios, que no es un filtro de esta mecánica: no aparecen en
+    /// libertad en ningún caso, son hitos con sitio y requisito.
+    public func focusPool(_ zone: Zone) -> [Pokemon] {
+        zone.species
+            .compactMap { pokedex[$0] }
+            .filter { $0.isBaseForm && $0.rarity.spawnsInTheWild }
+            .sorted { $0.id < $1.id }
+    }
+
     public func spawn<R: RandomProvider>(
         rank: TrainerRank,
         access: ZoneAccess = ZoneAccess(medals: 0, kantoOpen: false, isChampion: false),
+        focus: Zone? = nil,
         using rng: inout R,
         now: Date = Date()
     ) -> WildEncounter {
+        // Zona enfocada: sale cualquiera de las suyas, a partes iguales. La
+        // probabilidad de una concreta es su tamaño y nada más, así que no hay
+        // constante que ajustar ni que explicar.
+        if let focus, access.opens(focus) {
+            let pool = focusPool(focus)
+            if !pool.isEmpty {
+                let species = pool[rng.nextInt(in: 0...(pool.count - 1))]
+                let hp = rng.nextInt(in: species.rarity.hpRange)
+                let shiny = rng.nextUnit() < GameRules.shinyProbability
+                return WildEncounter(
+                    speciesID: species.id,
+                    isShiny: shiny,
+                    rarity: species.rarity,
+                    maxHP: hp,
+                    spawnedAt: now
+                )
+            }
+        }
+
         let tier = rollTier(rank: rank, using: &rng)
         let pool = candidates(rarity: tier, access: access)
         let species = pool[rng.nextInt(in: 0...(pool.count - 1))]

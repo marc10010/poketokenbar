@@ -35,6 +35,7 @@ public final class GameStore: ObservableObject {
     public let leagueCatalog: LeagueCatalog
     private let file: StateFileStore
     private let battle: BattleEngine
+    private let spawner: SpawnService
     private let evolution: EvolutionService
     private let gymCombat = GymCombat()
     private var rng: any RandomProvider
@@ -77,6 +78,7 @@ public final class GameStore: ObservableObject {
         self.file = file
         self.rng = rng
         self.battle = BattleEngine(pokedex: pokedex)
+        self.spawner = SpawnService(pokedex: pokedex, zones: zoneCatalog)
         self.evolution = EvolutionService(pokedex: pokedex)
         let loaded = file.load()
         self.state = loaded
@@ -123,6 +125,36 @@ public final class GameStore: ObservableObject {
     }
 
     public var unlockedZones: [Zone] { zoneCatalog.unlocked(zoneAccess) }
+
+    /// Zona enfocada, si está puesta **y** abierta. Una zona que se enfocó y
+    /// luego dejó de estar abierta no puede seguir mandando en el sorteo.
+    public var focusedZone: Zone? {
+        guard let id = state.settings.focusedZoneID, let zone = zoneCatalog[id], zoneAccess.opens(zone)
+        else { return nil }
+        return zone
+    }
+
+    /// Enfoca una zona abierta, o quita el enfoque con `nil`. El rival en curso
+    /// se queda: enfocar no le quita el HP que ya le has hecho.
+    public func focus(zoneID: String?) {
+        guard let zoneID else {
+            updateSettings { $0.focusedZoneID = nil }
+            return
+        }
+        guard let zone = zoneCatalog[zoneID], zoneAccess.opens(zone), !spawner.focusPool(zone).isEmpty
+        else { return }
+        updateSettings { $0.focusedZoneID = zone.id }
+    }
+
+    /// Lo que se puede cazar en una zona y cuánto te falta de ahí, que es lo
+    /// que hace visible si enfocarla sirve para algo: en una zona de 2 la que
+    /// buscas sale en 2 apariciones, en una ruta de 46 no la vas a ver.
+    public func focusSummary(_ zone: Zone) -> (pool: Int, missing: Int) {
+        let pool = spawner.focusPool(zone)
+        let owned = ownedFamilies
+        let missing = pool.filter { !owned.contains(familyKey(baseFormID: $0.baseFormID, shiny: false)) }
+        return (pool.count, missing.count)
+    }
 
     /// Zonas donde vive una especie, con su estado de apertura.
     public func zones(for speciesID: Int) -> [(zone: Zone, open: Bool)] {
@@ -644,7 +676,7 @@ public final class GameStore: ObservableObject {
               state.leagues.current == nil
         else { return nil }
         if state.encounter == nil || state.encounter?.isFainted == true {
-            state.encounter = battle.freshEncounter(rank: rank, access: zoneAccess, using: &rng)
+            state.encounter = battle.freshEncounter(rank: rank, access: zoneAccess, focus: focusedZone, using: &rng)
         }
         return state.encounter
     }
@@ -713,6 +745,7 @@ public final class GameStore: ObservableObject {
             totalTokensAfter: state.ledger.total,
             rank: rank,
             access: zoneAccess,
+            focus: focusedZone,
             multiplier: { encounter in
                 guard typesEnabled, !attackerTypes.isEmpty,
                       let defender = pokedex[encounter.speciesID]
