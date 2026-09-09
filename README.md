@@ -182,11 +182,13 @@ Tamaño:
   520×620 y persistido.
 
 **El panel no se agranda solo:** crecer y plegarse es cosa del botón, no de un
-clic. El botón es una **columna en el borde derecho**, a lo alto del panel y en
-el mismo sitio en los cuatro (combate, gimnasio, hito y liga); antes era un
-icono dentro de la cabecera del combate salvaje, así que en los paneles de jefe
-no había ninguno y en el compacto competía por el ancho con el nombre del
-rival. También está en el menú contextual. Con el HUD plegado, un clic en un sprite abre la ficha en el popover, que
+clic. El botón vive en **su propia columna en el borde derecho**, arriba, y mide
+22×22 tanto plegado como desplegado: es el mismo mando en el mismo sitio y solo
+cambian las flechas (hacia fuera para desplegar, juntándose para plegar). Está
+en los cuatro paneles (combate, gimnasio, hito y liga); antes era un icono
+dentro de la cabecera del combate salvaje, así que en los paneles de jefe no
+había ninguno y en el compacto competía por el ancho con el nombre del rival.
+También está en el menú contextual. Con el HUD plegado, un clic en un sprite abre la ficha en el popover, que
 es donde hay sitio. El botón de plegar está ahora en los cuatro paneles —
 combate, gimnasio, hito y liga: en los tres últimos no había ninguno, así que
 durante una liga o un hito no había manera visible de desplegar el HUD.

@@ -265,11 +265,14 @@ struct HUDView: View {
         Self.showsMetrics(forHeight: height) || Self.showsBox(forHeight: height)
     }
 
-    /// El mando de plegar y desplegar: una columna en el borde derecho, a lo
-    /// alto del panel y en el mismo sitio en los cuatro. Antes era un icono
-    /// dentro de la cabecera del combate salvaje, así que en los paneles de
-    /// jefe no había ninguno y en el compacto competía por el ancho con el
-    /// nombre del rival.
+    /// El mando de plegar y desplegar: su propia columna en el borde derecho,
+    /// para no competir por el ancho con el nombre del rival como cuando
+    /// vivía dentro de la cabecera (y en los paneles de jefe, ni existía).
+    ///
+    /// Mide lo mismo plegado que desplegado: es el mismo mando en el mismo
+    /// sitio, y solo cambia hacia dónde apuntan las flechas.
+    private static let handleSide: CGFloat = 22
+
     private func resizeHandle(expanded: Bool) -> some View {
         Button {
             if expanded {
@@ -278,17 +281,17 @@ struct HUDView: View {
                 store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
             }
         } label: {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color.secondary.opacity(0.16))
-                .frame(width: 20)
-                .frame(maxHeight: .infinity)
-                .overlay(
-                    Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.secondary)
+            Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(.secondary)
+                .frame(width: Self.handleSide, height: Self.handleSide)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.secondary.opacity(0.16))
                 )
         }
         .buttonStyle(.plain)
+        .frame(width: Self.handleSide, height: Self.handleSide)
         .help(expanded ? "Plegar y cerrar la caja PC" : "Desplegar: métricas y caja PC")
     }
 
