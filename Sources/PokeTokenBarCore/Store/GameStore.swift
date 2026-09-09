@@ -248,6 +248,41 @@ public final class GameStore: ObservableObject {
 
     public func medalGyms() -> [Gym] { gymCatalog.medals(defeated: state.gyms.defeatedIDs) }
 
+    /// Medallas contadas **por región**, que es como se leen: cada región tiene
+    /// sus ocho. El total (0-16) sigue siendo el que mueve el rango y los
+    /// requisitos de las zonas, y por eso no se reinicia al cambiar de región:
+    /// las de Johto siguen contando en Kanto.
+    public struct RegionMedals: Identifiable, Sendable {
+        public let region: String
+        public let earned: Int
+        public let total: Int
+        /// Si sus gimnasios ya se pueden afrontar.
+        public let open: Bool
+        /// Qué hay que ganar para abrirla, si está cerrada.
+        public let gate: League?
+
+        public var id: String { region }
+        public var name: String { region.capitalized }
+    }
+
+    public var medalsByRegion: [RegionMedals] {
+        let won = state.gyms.defeatedIDs
+        return gymCatalog.regions.map { region in
+            let gyms = gymCatalog.gyms(in: region)
+            // La liga que abre esa región, si la hay: la primera está abierta
+            // desde el principio y las siguientes esperan a un Alto Mando.
+            let opener = leagueCatalog.all.first { $0.reward.opensRegion == region }
+            let open = opener.map { state.leagues.wonIDs.contains($0.id) } ?? true
+            return RegionMedals(
+                region: region,
+                earned: gyms.filter { won.contains($0.id) }.count,
+                total: gyms.count,
+                open: open,
+                gate: open ? nil : opener
+            )
+        }
+    }
+
     /// Cruce del compañero contra el Pokémon estrella del líder: son sus tipos
     /// reales, no el tema del gimnasio.
     // MARK: - Jefes
@@ -290,6 +325,8 @@ public final class GameStore: ObservableObject {
 
     /// Qué falta para que se abra el próximo gimnasio. Se cumple con lo que
     /// llegue antes de las dos condiciones.
+    /// Lo que falta para que se abra el siguiente gimnasio. `capturesLeft` son
+    /// **victorias**: cuentan las de líneas que ya tienes.
     public var gymTriggerProgress: (tokensLeft: Int, capturesLeft: Int) {
         (
             max(0, GameRules.gymTokenInterval - state.gyms.tokensSinceLastGym),

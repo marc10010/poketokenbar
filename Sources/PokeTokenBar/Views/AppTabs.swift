@@ -84,6 +84,13 @@ struct LadderView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // La duda que provoca el número: en Kanto no se empieza de cero.
+            Text("Las medallas **no se reinician** al cambiar de región: las 8 de Johto siguen contando, así que \"10 medallas\" son las 8 de Johto más 2 de Kanto.")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.bottom, 2)
+
             ForEach(store.ladder) { step in
                 HStack(alignment: .top, spacing: 7) {
                     Image(systemName: step.reached ? "checkmark.circle.fill" : "circle")

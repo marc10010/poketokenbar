@@ -38,6 +38,17 @@ public final class GymCatalog: @unchecked Sendable {
         all.first { !defeated.contains($0.id) }
     }
 
+    /// Regiones en orden de reto, sin repetir. Los gimnasios ya vienen
+    /// ordenados, así que el orden de aparición es el orden del juego.
+    public var regions: [String] {
+        var seen: Set<String> = []
+        return all.compactMap { seen.insert($0.region).inserted ? $0.region : nil }
+    }
+
+    public func gyms(in region: String) -> [Gym] {
+        all.filter { $0.region == region }
+    }
+
     public func medals(defeated: Set<String>) -> [Gym] {
         all.filter { defeated.contains($0.id) }
     }

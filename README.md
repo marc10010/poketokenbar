@@ -424,6 +424,29 @@ en Kanto (Weezing) y Alto Mando en Johto (Crobat).
 `kantoOpen` e `isChampion` **dejan de derivarse de las medallas** y pasan a
 depender de haber ganado la liga, que era lo provisional que quedaba.
 
+### Cómo se cuentan las 16 medallas
+
+Cada región tiene **sus ocho**, y el popover las enseña así: `JOHTO 3/8` y
+`KANTO 0/8`, con la fila de Kanto diciendo que está cerrada hasta ganar el Alto
+Mando. Pero **el total no se reinicia** al cambiar de región: son 16 seguidas, y
+es ese número el que mueve todo lo demás.
+
+| Total | Región | Qué desbloquea |
+|---|---|---|
+| 0 | Johto | rutas del sur; tier común y poco común |
+| 2 | Johto | tier **raro** (rango Entrenador) |
+| 5 | Johto | rango Veterano |
+| 8 | Johto | tier **legendario** (rango As) y el Alto Mando de Johto |
+| 8 + liga | — | **se abre Kanto**: sus zonas base y su primer gimnasio |
+| 10, 12, 14, 16 | Kanto | sus zonas por tramos (Central Eléctrica, Mansión, Cueva Celeste…) |
+| 16 + liga | — | Campeón |
+
+Es decir: donde la escalera dice "10 medallas" son **las 8 de Johto más 2 de
+Kanto**, no 10 de Kanto. Contar por región y reiniciar en cada una (como
+PokéClicker) obligaría a reescribir los requisitos de las 32 zonas y los cinco
+rangos, así que por ahora se cuenta seguido y **se enseña por región**, que era
+donde estaba la confusión.
+
 ## 12. Hitos legendarios
 
 Los 11 legendarios **no aparecen en el sorteo**: tienen sitio y requisito, y se
@@ -536,9 +559,12 @@ no tiene líderes de gimnasio. 16 entradas en orden de reto (los 8 de Johto y
 luego los de Kanto, como en Gen 2), cada una con su Pokémon estrella — que es
 también su sprite, así que no hace falta ningún recurso gráfico nuevo.
 
-**El disparador**: al capturar un salvaje, si llevas 300.000 tokens o 10
-capturas desde el último gimnasio, el hueco del rival siguiente lo ocupa el
-líder. No interrumpe: hay que terminar el Pokémon en curso. Los contadores se
+**El disparador**: al vencer un salvaje, si llevas 300.000 tokens o **10
+victorias** desde el último gimnasio, el hueco del rival siguiente lo ocupa el
+líder. Victorias, no capturas: cuenta igual vencer algo de una línea que ya
+tienes, así que **volver a una zona vieja a por lo que falta nunca frena el
+gimnasio**. (La UI decía "capturas" y era mentira: el contador sube antes de
+mirar si se queda o no.) No interrumpe: hay que terminar el Pokémon en curso. Los contadores se
 reinician **al cerrar** el gimnasio, no al abrirlo, para que los 500k-1M tokens
 del propio combate no encadenen el siguiente.
 
