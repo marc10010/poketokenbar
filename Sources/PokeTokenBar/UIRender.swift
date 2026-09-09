@@ -158,6 +158,12 @@ enum UIRender {
         store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
         store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
         store.ingest(UsageEvent(id: "render-gym", inputTokens: 10, outputTokens: 0))
+        if let waiting = store.availableGym {
+            warm([waiting.signatureSpeciesID])
+            store.selectedTab = "combate"
+            write("popover-gimnasio-disponible", hosted(RootView(), size: popoverSize))
+            store.startGym(waiting.id)
+        }
         if let gym = store.activeGym {
             warm([gym.gym.signatureSpeciesID])
             write("hud-gimnasio", hosted(HUDView(), size: compactHUD))

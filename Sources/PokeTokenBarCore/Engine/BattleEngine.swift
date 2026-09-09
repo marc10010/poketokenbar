@@ -12,7 +12,6 @@ public struct BattleResult: Equatable, Sendable {
     /// Tokens que quedaron sin gastar porque una captura abre gimnasio: el
     /// rival siguiente lo pone el gimnasio, no el motor.
     public var remainingTokens: Int = 0
-    public var stoppedForGym = false
 }
 
 /// Aplica daño al rival y encadena capturas. El daño sobrante de una captura
@@ -44,10 +43,6 @@ public struct BattleEngine {
     ///   - multiplier: se pide por rival, no una vez: si una captura hace
     ///     aparecer otro de tipo distinto, los tokens que sobran se escalan con
     ///     el multiplicador nuevo.
-    ///   - openGymAfterCapture: se consulta tras cada captura con el número de
-    ///     capturas hechas en esta llamada. Si dice sí, el motor para y devuelve
-    ///     los tokens que sobran en vez de sortear otro salvaje: ese hueco lo
-    ///     ocupa el líder de gimnasio.
     public func apply<R: RandomProvider>(
         damage: Int,
         to encounter: WildEncounter?,
@@ -56,7 +51,6 @@ public struct BattleEngine {
         access: ZoneAccess = ZoneAccess(medals: 16, kantoOpen: true, isChampion: true),
         focus: Zone? = nil,
         multiplier: (WildEncounter) -> Double = { _ in 1 },
-        openGymAfterCapture: (Int) -> Bool = { _ in false },
         using rng: inout R,
         now: Date = Date()
     ) -> BattleResult {
@@ -87,12 +81,6 @@ public struct BattleEngine {
             current.currentHP = 0
 
             result.defeated.append(current)
-            if openGymAfterCapture(result.defeated.count) {
-                result.stoppedForGym = true
-                result.remainingTokens = remainingTokens
-                result.encounter = nil
-                return result
-            }
             current = freshEncounter(rank: rank, access: access, focus: focus, using: &rng, now: now)
         }
 

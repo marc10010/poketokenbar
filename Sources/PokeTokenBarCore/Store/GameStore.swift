@@ -452,6 +452,37 @@ public final class GameStore: ObservableObject {
         )
     }
 
+    /// El gimnasio que ya se puede retar, si hay alguno. Sigue disponible
+    /// mientras no se gane: el requisito abre la puerta, no empuja dentro.
+    public var availableGym: Gym? {
+        guard state.gyms.current == nil,
+              state.milestones.current == nil,
+              state.leagues.current == nil,
+              state.gyms.triggerIsMet(),
+              let gym = nextGym
+        else { return nil }
+        return gym
+    }
+
+    /// Entra al gimnasio. Igual que `startLeague` y `startMilestone`: es el
+    /// jugador el que decide cuándo, y mientras no entre sigue cazando.
+    @discardableResult
+    public func startGym(_ id: String) -> Bool {
+        guard let gym = availableGym, gym.id == id else { return false }
+        openGym(now: Date())
+        persist()
+        return state.gyms.current != nil
+    }
+
+    /// Se puede salir: el progreso contra el líder se pierde y el disparador
+    /// sigue cumplido, así que se puede volver a entrar cuando convenga.
+    public func abandonGym() {
+        guard state.gyms.current != nil else { return }
+        state.gyms.current = nil
+        ensureEncounter()
+        persist()
+    }
+
     public func hasMedal(_ gymID: String) -> Bool { state.gyms.defeatedIDs.contains(gymID) }
 
     /// Tokens que faltan para tumbar al líder. `nil` si está bloqueado.
@@ -791,32 +822,10 @@ public final class GameStore: ObservableObject {
 
         state.gyms.tokensSinceLastGym += damage
 
-        // Con gimnasio abierto, el evento entero va contra el líder. Si cae,
-        // los tokens que sobran siguen contra un salvaje nuevo.
-        var tokens = damage
-        if state.leagues.current != nil {
-            tokens = resolveLeagueBattle(tokens: tokens, now: event.timestamp)
-            guard tokens > 0 else {
-                creditActiveCompanion(tokens: damage, now: event.timestamp)
-                persist()
-                return nil
-            }
-        }
-        if state.milestones.current != nil {
-            tokens = resolveMilestoneBattle(tokens: tokens, now: event.timestamp)
-            guard tokens > 0 else {
-                creditActiveCompanion(tokens: damage, now: event.timestamp)
-                persist()
-                return nil
-            }
-        }
-        if state.gyms.current != nil {
-            tokens = resolveGymBattle(tokens: tokens, now: event.timestamp)
-            guard tokens > 0 else {
-                creditActiveCompanion(tokens: damage, now: event.timestamp)
-                persist()
-                return nil
-            }
+        guard let tokens = resolveOpenBosses(tokens: damage, now: event.timestamp) else {
+            creditActiveCompanion(tokens: damage, now: event.timestamp)
+            persist()
+            return nil
         }
 
         // Se resuelve por rival dentro del motor: un evento grande puede
@@ -826,10 +835,11 @@ public final class GameStore: ObservableObject {
         let chart = typeChart
         let pokedex = pokedex
         let collection = collectionBonus
-        let progress = state.gyms
-        let hasPendingGym = nextGym != nil
-            && state.milestones.current == nil
-            && state.leagues.current == nil
+        // El gimnasio ya no se abre solo. Antes el evento se cortaba al
+        // terminar un salvaje y el líder ocupaba su sitio; ahora queda
+        // **disponible** y se entra cuando el jugador quiera, igual que una
+        // liga o un hito. Un jefe que se impone y encima te come los tokens
+        // cuando el cruce de tipos no da es un peaje, no un reto.
 
         let result = battle.apply(
             damage: tokens,
@@ -845,22 +855,11 @@ public final class GameStore: ObservableObject {
                 let matchup = chart.matchup(attacker: attackerTypes, defender: defender.types).multiplier
                 return matchup + collection
             },
-            openGymAfterCapture: { captures in
-                // El gimnasio se abre AL TERMINAR un salvaje, nunca a mitad.
-                hasPendingGym && progress.triggerIsMet(extraCaptures: captures)
-            },
             using: &rng,
             now: event.timestamp
         )
         state.encounter = result.encounter
         collect(result.defeated, at: event.timestamp)
-
-        if result.stoppedForGym {
-            openGym(now: event.timestamp)
-            if result.remainingTokens > 0 {
-                _ = resolveGymBattle(tokens: result.remainingTokens, now: event.timestamp)
-            }
-        }
 
         // Al final y no al principio: si se acreditara antes, el compañero
         // podría evolucionar a mitad del evento y pegar con la etapa nueva, así
@@ -1103,12 +1102,36 @@ public final class GameStore: ObservableObject {
         dexCache = nil
     }
 
-    /// Abre el siguiente gimnasio: sortea su HP y deja el combate en curso.
+    /// Abre el gimnasio: sortea su HP y deja el combate en curso. Privado
+    /// porque la entrada pasa por `startGym`, que comprueba el requisito.
     private func openGym(now: Date) {
         guard state.gyms.current == nil, let gym = nextGym else { return }
         let hp = rng.nextInt(in: gym.hpRange)
         state.gyms.current = ActiveGymBattle(gymID: gym.id, maxHP: hp, startedAt: now)
         state.encounter = nil
+    }
+
+    /// Manda el evento contra el jefe que haya abierto, en orden. Devuelve los
+    /// tokens que sobran si cae, o `nil` si el evento se consumió entero.
+    ///
+    /// Vivía dentro de `ingest` con la misma guarda escrita tres veces. Y
+    /// además `ingest` se había hecho tan grande que el compilador de Swift
+    /// 6.3.3 petaba generando su IR.
+    private func resolveOpenBosses(tokens: Int, now: Date) -> Int? {
+        var tokens = tokens
+        if state.leagues.current != nil {
+            tokens = resolveLeagueBattle(tokens: tokens, now: now)
+            guard tokens > 0 else { return nil }
+        }
+        if state.milestones.current != nil {
+            tokens = resolveMilestoneBattle(tokens: tokens, now: now)
+            guard tokens > 0 else { return nil }
+        }
+        if state.gyms.current != nil {
+            tokens = resolveGymBattle(tokens: tokens, now: now)
+            guard tokens > 0 else { return nil }
+        }
+        return tokens
     }
 
     /// Aplica tokens al líder y devuelve los que sobren si cae. Si el cruce de

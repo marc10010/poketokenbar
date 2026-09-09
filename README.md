@@ -699,11 +699,18 @@ luego los de Kanto, como en Gen 2), cada una con su Pokémon estrella — que es
 también su sprite, así que no hace falta ningún recurso gráfico nuevo.
 
 **El disparador**: al vencer un salvaje, si llevas 300.000 tokens o **10
-victorias** desde el último gimnasio, el hueco del rival siguiente lo ocupa el
-líder. Victorias, no capturas: cuenta igual vencer algo de una línea que ya
-tienes, así que **volver a una zona vieja a por lo que falta nunca frena el
-gimnasio**. (La UI decía "capturas" y era mentira: el contador sube antes de
-mirar si se queda o no.) No interrumpe: hay que terminar el Pokémon en curso. Los contadores se
+victorias** desde el último gimnasio, el líder **queda disponible**. Victorias,
+no capturas: cuenta igual vencer algo de una línea que ya tienes, así que
+volver a una zona vieja a por lo que falta nunca frena el gimnasio.
+
+**Y disponible es todo lo que hace: no se impone.** Entras cuando quieras con un
+botón, como en una liga o en un hito —que ya funcionaban así—, y mientras no
+entres sigues cazando. Antes el líder ocupaba el hueco del rival en cuanto se
+cumplía el disparador, y eso tenía dos problemas: te cortaba la partida, y si el
+cruce de tipos no daba, el líder **se comía los tokens sin moverse el HP** hasta
+que cambiaras de compañero. Un jefe que se impone y encima cobra peaje no es un
+reto. Se puede salir en cualquier momento (`Salir del gimnasio`): se pierde el
+progreso contra el líder, no el disparador. No interrumpe: hay que terminar el Pokémon en curso. Los contadores se
 reinician **al cerrar** el gimnasio, no al abrirlo, para que los 500k-1M tokens
 del propio combate no encadenen el siguiente.
 

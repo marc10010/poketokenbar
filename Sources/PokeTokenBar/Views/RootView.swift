@@ -82,6 +82,14 @@ struct CombatTabView: View {
                     GymCardView(gym: active.gym, battle: active.battle)
                 }
             } else {
+                // El líder espera, no interrumpe: la invitación va encima del
+                // salvaje, que sigue ahí.
+                if let waiting = store.availableGym {
+                    SectionCard(title: "Gimnasio disponible") {
+                        GymInvitationCard(gym: waiting)
+                    }
+                    Divider()
+                }
                 EncounterCard()
             }
 
