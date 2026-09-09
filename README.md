@@ -683,7 +683,18 @@ Si añades una cuarta (revanchas, un jefe de zona, lo que sea), el camino es:
 El test `las tres mecánicas de jefe comparten la fórmula` se pone rojo si alguna
 vuelve a llevar su propia cuenta.
 
-## 20. Límites conocidos del MVP
+## 20. Especificaciones
+
+Las mecánicas grandes se esbozan antes de tocar código, y los documentos se
+quedan porque explican **por qué** cada regla es como es:
+
+| Spec | Estado |
+|---|---|
+| `docs/spec-gimnasios-medallas.md` | implementada |
+| `docs/spec-liga-zonas-hitos.md` | fases 1-4 implementadas; 5 y 6 pendientes |
+| `docs/spec-ramas-y-cola.md` | **borrador para decidir**: ramas por condición, otras regiones, misiones y logros |
+
+## 21. Límites conocidos del MVP
 
 - Los sprites se bajan de `raw.githubusercontent.com/PokeAPI/sprites` la primera
   vez y quedan en `~/Library/Caches/PokeTokenBar/sprites`. Las **fichas usan los
