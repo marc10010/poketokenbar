@@ -137,6 +137,10 @@ enum UIRender {
             store.selectedBoxGroupID = nil
         }
 
+        // Rival fijo de fuego para que los puntos de eficacia de la caja salgan
+        // siempre iguales en la captura.
+        store.debugSetEncounter(WildEncounter(speciesID: 58, isShiny: false, rarity: .common, maxHP: 900_000))
+        warm([58])
         store.selectedTab = "caja"
         write("popover-caja", hosted(RootView(), size: popoverSize))
 

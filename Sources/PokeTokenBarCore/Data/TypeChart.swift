@@ -8,6 +8,12 @@ public struct TypeMatchup: Hashable, Sendable {
     public let multiplier: Double
     public let attacking: String?
 
+    public init(raw: Double, multiplier: Double, attacking: String?) {
+        self.raw = raw
+        self.multiplier = multiplier
+        self.attacking = attacking
+    }
+
     public var isImmune: Bool { raw == 0 }
     public var isNeutral: Bool { raw == 1 }
 

@@ -138,6 +138,9 @@ struct BoxGridView: View {
         if isActive { parts.append("· equipado") }
         let wins = store.timesDefeated(familyOf: group.species.id)
         if wins > 0 { parts.append("· \(wins) victorias contra su línea") }
+        if let matchup = store.matchupAgainstCurrentTarget(group), !matchup.isNeutral {
+            parts.append("· \(matchup.badge) \(matchup.label) contra el rival de ahora")
+        }
         parts.append("· clic para su ficha, doble clic para enviarlo a luchar")
         return parts.joined(separator: " ")
     }
@@ -192,18 +195,15 @@ struct BoxGridView: View {
                 Text("✦").font(.system(size: 10)).foregroundStyle(.yellow).padding(2)
             }
         }
-        .overlay(alignment: .bottomTrailing) {
-            // Ya no puede haber repetidos, así que el hueco lo ocupa el
-            // número que sí crece: victorias contra esa línea.
-            let wins = store.timesDefeated(familyOf: group.species.id)
-            if wins > 1 {
-                Text("\(wins)⚔")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .padding(.horizontal, 3)
-                    .padding(.vertical, 1)
-                    .background(Color.secondary.opacity(0.22), in: Capsule())
-                    .padding(2)
-            }
+        .overlay(alignment: .trailing) {
+            // Aquí iba el número de victorias, que de un vistazo no dice nada
+            // y encima se lee como "×2 de este Pokémon". Los números están en
+            // su ficha y en el modo lista; el hueco lo ocupa lo que sí se lee
+            // de golpe: cómo le va a este ejemplar contra el rival de ahora.
+            // Al centro del borde derecho, que es la única esquina libre y no
+            // se come el nombre.
+            MatchupDot(matchup: store.matchupAgainstCurrentTarget(group))
+                .padding(.trailing, 3)
         }
         .overlay(alignment: .bottomLeading) {
             if isActive {
@@ -241,6 +241,7 @@ struct BoxGridView: View {
                             .font(.system(size: 8))
                             .foregroundStyle(Color.accentColor)
                     }
+                    MatchupDot(matchup: store.matchupAgainstCurrentTarget(group), size: 6)
                 }
                 Text("#\(String(format: "%03d", group.displayForm.id)) · \(group.stage.label) · \(group.species.rarity.label)")
                     .font(.system(size: 9))
