@@ -8,6 +8,10 @@ struct MilestoneCardView: View {
     let milestone: Milestone
     let battle: ActiveBossBattle
     var compact = false
+    /// Hueco a la derecha de la primera fila para el mando de plegar del HUD,
+    /// que va encima de la esquina. Solo la fila, no la tarjeta: la barra de HP
+    /// aprovecha todo el ancho.
+    var headerInset: CGFloat = 0
 
     private var rate: Double { store.damagePerToken(against: milestone) }
     private var blocked: Bool { rate <= 0 }
@@ -36,6 +40,7 @@ struct MilestoneCardView: View {
                     MatchupBadge(matchup: store.matchup(against: milestone), compact: compact)
                 }
             }
+            .padding(.trailing, headerInset)
 
             HPBar(fraction: battle.hpFraction, height: compact ? 8 : 12)
             HStack(spacing: 6) {

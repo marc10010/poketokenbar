@@ -8,6 +8,10 @@ struct LeagueCardView: View {
     let member: LeagueMember
     let run: ActiveLeagueRun
     var compact = false
+    /// Hueco a la derecha de la primera fila para el mando de plegar del HUD,
+    /// que va encima de la esquina. Solo la fila, no la tarjeta: la barra de HP
+    /// aprovecha todo el ancho.
+    var headerInset: CGFloat = 0
 
     private var rate: Double { store.damagePerToken(against: member) }
     private var blocked: Bool { rate <= 0 }
@@ -40,6 +44,7 @@ struct LeagueCardView: View {
                         .frame(width: 7, height: 7)
                 }
             }
+            .padding(.trailing, headerInset)
 
             HPBar(fraction: run.hpFraction, height: compact ? 8 : 12)
             HStack(spacing: 6) {

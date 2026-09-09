@@ -20,12 +20,18 @@ struct HUDView: View {
                         league: active.league,
                         member: active.member,
                         run: active.run,
-                        compact: true
+                        compact: true,
+                        headerInset: Self.headerInset
                     )
                 }
             } else if let active = store.activeMilestone {
                 bossPanel(border: .purple) {
-                    MilestoneCardView(milestone: active.milestone, battle: active.battle, compact: true)
+                    MilestoneCardView(
+                        milestone: active.milestone,
+                        battle: active.battle,
+                        compact: true,
+                        headerInset: Self.headerInset
+                    )
                 }
             } else if let active = store.activeGym {
                 gymPanel(gym: active.gym, battle: active.battle)
@@ -112,30 +118,29 @@ struct HUDView: View {
             GeometryReader { geometry in
                 let showsMetrics = Self.showsMetrics(forHeight: geometry.size.height)
                 let showsBox = Self.showsBox(forHeight: geometry.size.height)
-                HStack(alignment: .top, spacing: 6) {
-                    VStack(alignment: .leading, spacing: 5) {
-                        battleHeader(
-                            encounter: encounter,
-                            rival: rival,
-                            companion: companion,
-                            form: form,
-                            panelHeight: geometry.size.height
-                        )
-                        if showsMetrics {
-                            Divider()
-                            metricsStrip
-                        }
-                        if showsBox {
-                            Divider()
-                            boxSection
-                        }
+                VStack(alignment: .leading, spacing: 5) {
+                    battleHeader(
+                        encounter: encounter,
+                        rival: rival,
+                        companion: companion,
+                        form: form,
+                        panelHeight: geometry.size.height
+                    )
+                    if showsMetrics {
+                        Divider()
+                        metricsStrip
                     }
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-                    resizeHandle(expanded: showsMetrics || showsBox)
+                    if showsBox {
+                        Divider()
+                        boxSection
+                    }
                 }
                 .padding(.horizontal, 9)
                 .padding(.vertical, 7)
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+                .overlay(alignment: .topTrailing) {
+                    resizeHandle(expanded: showsMetrics || showsBox)
+                }
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(.regularMaterial)
@@ -252,7 +257,7 @@ struct HUDView: View {
                         MatchupBadge(matchup: store.currentMatchup, compact: true)
                     }
                 }
-                Spacer(minLength: 2)
+                Spacer(minLength: Self.headerInset)
             }
             HPBar(fraction: encounter.hpFraction, height: 8)
             Text("\(Fmt.tokens(encounter.currentHP)) / \(Fmt.tokens(encounter.maxHP)) HP")
@@ -265,15 +270,24 @@ struct HUDView: View {
         Self.showsMetrics(forHeight: height) || Self.showsBox(forHeight: height)
     }
 
-    /// El mando de plegar y desplegar: su propia columna en el borde derecho,
-    /// para no competir por el ancho con el nombre del rival como cuando
-    /// vivía dentro de la cabecera (y en los paneles de jefe, ni existía).
+    /// El mando de plegar y desplegar: en la esquina de arriba a la derecha de
+    /// los cuatro paneles, encima del contenido en vez de en una columna
+    /// propia, que le robaba 28 px de ancho a la barra de HP, a las métricas y
+    /// a la rejilla. El hueco lo reserva solo la primera fila.
     ///
     /// Mide lo mismo plegado que desplegado: es el mismo mando en el mismo
     /// sitio, y solo cambia hacia dónde apuntan las flechas.
     private static let handleSide: CGFloat = 22
+    /// Lo que la primera fila deja libre para el mando.
+    static let headerInset: CGFloat = handleSide + 4
 
     private func resizeHandle(expanded: Bool) -> some View {
+        handleButton(expanded: expanded)
+            .padding(.top, 7)
+            .padding(.trailing, 9)
+    }
+
+    private func handleButton(expanded: Bool) -> some View {
         Button {
             if expanded {
                 store.collapseHUD()
@@ -301,24 +315,23 @@ struct HUDView: View {
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
         GeometryReader { geometry in
-            HStack(alignment: .top, spacing: 6) {
-                VStack(alignment: .leading, spacing: 5) {
-                    content()
-                    if Self.showsMetrics(forHeight: geometry.size.height) {
-                        Divider()
-                        metricsStrip
-                    }
-                    if Self.showsBox(forHeight: geometry.size.height) {
-                        Divider()
-                        boxSection
-                    }
+            VStack(alignment: .leading, spacing: 5) {
+                content()
+                if Self.showsMetrics(forHeight: geometry.size.height) {
+                    Divider()
+                    metricsStrip
                 }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
-                resizeHandle(expanded: expandedFor(height: geometry.size.height))
+                if Self.showsBox(forHeight: geometry.size.height) {
+                    Divider()
+                    boxSection
+                }
             }
             .padding(.horizontal, 9)
             .padding(.vertical, 7)
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+            .overlay(alignment: .topTrailing) {
+                resizeHandle(expanded: expandedFor(height: geometry.size.height))
+            }
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(.regularMaterial)
@@ -356,24 +369,23 @@ struct HUDView: View {
     /// Mismo marco que el combate normal, con la tarjeta de gimnasio dentro.
     private func gymPanel(gym: Gym, battle: ActiveGymBattle) -> some View {
         GeometryReader { geometry in
-            HStack(alignment: .top, spacing: 6) {
-                VStack(alignment: .leading, spacing: 5) {
-                    GymCardView(gym: gym, battle: battle, compact: true)
-                    if Self.showsMetrics(forHeight: geometry.size.height) {
-                        Divider()
-                        metricsStrip
-                    }
-                    if Self.showsBox(forHeight: geometry.size.height) {
-                        Divider()
-                        boxSection
-                    }
+            VStack(alignment: .leading, spacing: 5) {
+                GymCardView(gym: gym, battle: battle, compact: true, headerInset: Self.headerInset)
+                if Self.showsMetrics(forHeight: geometry.size.height) {
+                    Divider()
+                    metricsStrip
                 }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
-                resizeHandle(expanded: expandedFor(height: geometry.size.height))
+                if Self.showsBox(forHeight: geometry.size.height) {
+                    Divider()
+                    boxSection
+                }
             }
             .padding(.horizontal, 9)
             .padding(.vertical, 7)
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+            .overlay(alignment: .topTrailing) {
+                resizeHandle(expanded: expandedFor(height: geometry.size.height))
+            }
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(.regularMaterial)
