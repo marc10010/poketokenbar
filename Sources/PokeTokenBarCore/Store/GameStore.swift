@@ -935,11 +935,13 @@ public final class GameStore: ObservableObject {
 
         state.gyms.tokensSinceLastGym += damage
 
-        guard let tokens = resolveOpenBosses(tokens: damage, now: event.timestamp) else {
-            creditActiveCompanion(tokens: damage, now: event.timestamp)
+        let bosses = resolveOpenBosses(tokens: damage, now: event.timestamp)
+        guard bosses.leftover > 0 else {
+            creditActiveCompanion(hp: bosses.hpRemoved, now: event.timestamp)
             persist()
             return nil
         }
+        let tokens = bosses.leftover
 
         // Se resuelve por rival dentro del motor: un evento grande puede
         // encadenar capturas y cambiar el cruce de tipos a mitad.
@@ -977,7 +979,7 @@ public final class GameStore: ObservableObject {
         // Al final y no al principio: si se acreditara antes, el compañero
         // podría evolucionar a mitad del evento y pegar con la etapa nueva, así
         // que el ritmo real no coincidiría con el que la UI acaba de mostrar.
-        creditActiveCompanion(tokens: damage, now: event.timestamp)
+        creditActiveCompanion(hp: bosses.hpRemoved + result.damageApplied, now: event.timestamp)
 
         persist()
         return result
@@ -1117,14 +1119,15 @@ public final class GameStore: ObservableObject {
     /// salvajes en medio, que es lo que hace de esto un gauntlet. Al caer el
     /// último, la liga se gana y su recompensa abre región o corona.
     @discardableResult
-    private func resolveLeagueBattle(tokens: Int, now: Date) -> Int {
+    private func resolveLeagueBattle(tokens: Int, now: Date) -> BossOutcome {
         var remaining = tokens
+        var removed = 0
 
         while remaining > 0 {
             guard var run = state.leagues.current,
                   let league = leagueCatalog[run.leagueID],
                   let member = league.member(at: run.memberIndex)
-            else { return remaining }
+            else { return BossOutcome(leftover: remaining, hpRemoved: removed) }
 
             let needed: Int
             switch hit(member, hp: run.currentHP, tokens: remaining) {
@@ -1132,16 +1135,18 @@ public final class GameStore: ObservableObject {
                 // El HP no se mueve, los tokens se gastan igual: es la regla.
                 run.tokensSpent += remaining
                 state.leagues.current = run
-                return 0
+                return BossOutcome(leftover: 0, hpRemoved: removed)
             case .survived(let hp):
+                removed += run.currentHP - hp
                 run.currentHP = hp
                 run.tokensSpent += remaining
                 state.leagues.current = run
-                return 0
+                return BossOutcome(leftover: 0, hpRemoved: removed)
             case .fell(let spent):
                 needed = spent
             }
 
+            removed += run.currentHP
             remaining -= needed
             run.tokensSpent += needed
 
@@ -1151,7 +1156,7 @@ public final class GameStore: ObservableObject {
                 state.leagues.award(league.id)
                 lastLeague = league
                 ensureEncounter()
-                return remaining
+                return BossOutcome(leftover: remaining, hpRemoved: removed)
             }
 
             run.memberIndex += 1
@@ -1165,29 +1170,31 @@ public final class GameStore: ObservableObject {
             )
         }
 
-        return 0
+        return BossOutcome(leftover: 0, hpRemoved: removed)
     }
 
     /// Aplica tokens al legendario del hito y devuelve los que sobren si cae.
     /// Al vencerlo **sí se captura**: es la excepción a "un jefe no se queda",
     /// porque el objetivo del juego es la Pokédex.
     @discardableResult
-    private func resolveMilestoneBattle(tokens: Int, now: Date) -> Int {
+    private func resolveMilestoneBattle(tokens: Int, now: Date) -> BossOutcome {
         guard var battleState = state.milestones.current,
               let milestone = milestoneCatalog[battleState.milestoneID]
-        else { return tokens }
+        else { return BossOutcome(leftover: tokens, hpRemoved: 0) }
 
+        let removed = battleState.currentHP
         let needed: Int
         switch hit(milestone, hp: battleState.currentHP, tokens: tokens) {
         case .blocked:
             battleState.tokensSpent += tokens
             state.milestones.current = battleState
-            return 0
+            return BossOutcome(leftover: 0, hpRemoved: 0)
         case .survived(let hp):
+            let hit = battleState.currentHP - hp
             battleState.currentHP = hp
             battleState.tokensSpent += tokens
             state.milestones.current = battleState
-            return 0
+            return BossOutcome(leftover: 0, hpRemoved: hit)
         case .fell(let spent):
             needed = spent
         }
@@ -1196,7 +1203,7 @@ public final class GameStore: ObservableObject {
         state.milestones.award(battleState.milestoneID)
         captureLegendary(speciesID: milestone.speciesID, at: now)
         ensureEncounter()
-        return tokens - needed
+        return BossOutcome(leftover: tokens - needed, hpRemoved: removed)
     }
 
     /// Mete el legendario en la caja. No pasa por la regla de líneas repetidas
@@ -1230,40 +1237,47 @@ public final class GameStore: ObservableObject {
     /// Vivía dentro de `ingest` con la misma guarda escrita tres veces. Y
     /// además `ingest` se había hecho tan grande que el compilador de Swift
     /// 6.3.3 petaba generando su IR.
-    private func resolveOpenBosses(tokens: Int, now: Date) -> Int? {
-        var tokens = tokens
-        if state.leagues.current != nil {
-            tokens = resolveLeagueBattle(tokens: tokens, now: now)
-            guard tokens > 0 else { return nil }
+    private func resolveOpenBosses(tokens: Int, now: Date) -> BossOutcome {
+        var outcome = BossOutcome(leftover: tokens, hpRemoved: 0)
+        for resolve in [resolveLeagueBattle, resolveMilestoneBattle, resolveGymBattle] {
+            guard outcome.leftover > 0 else { break }
+            outcome.absorb(resolve(outcome.leftover, now))
         }
-        if state.milestones.current != nil {
-            tokens = resolveMilestoneBattle(tokens: tokens, now: now)
-            guard tokens > 0 else { return nil }
+        return outcome
+    }
+
+    /// Qué ha dejado un jefe: los tokens que no ha necesitado y el HP que se le
+    /// ha quitado de verdad. Lo segundo es lo que se le acredita al compañero.
+    private struct BossOutcome {
+        var leftover: Int
+        var hpRemoved: Int
+
+        mutating func absorb(_ other: BossOutcome) {
+            leftover = other.leftover
+            hpRemoved += other.hpRemoved
         }
-        if state.gyms.current != nil {
-            tokens = resolveGymBattle(tokens: tokens, now: now)
-            guard tokens > 0 else { return nil }
-        }
-        return tokens
     }
 
     /// Aplica tokens al líder y devuelve los que sobren si cae. Si el cruce de
     /// tipos no basta, el HP no se mueve pero los tokens se gastan igual.
     @discardableResult
-    private func resolveGymBattle(tokens: Int, now: Date) -> Int {
-        guard var battleState = state.gyms.current, let gym = gymCatalog[battleState.gymID] else { return tokens }
+    private func resolveGymBattle(tokens: Int, now: Date) -> BossOutcome {
+        guard var battleState = state.gyms.current, let gym = gymCatalog[battleState.gymID]
+        else { return BossOutcome(leftover: tokens, hpRemoved: 0) }
 
+        let removed = battleState.currentHP
         let needed: Int
         switch hit(gym, hp: battleState.currentHP, tokens: tokens) {
         case .blocked:
             battleState.tokensSpent += tokens
             state.gyms.current = battleState
-            return 0
+            return BossOutcome(leftover: 0, hpRemoved: 0)
         case .survived(let hp):
+            let hit = battleState.currentHP - hp
             battleState.currentHP = hp
             battleState.tokensSpent += tokens
             state.gyms.current = battleState
-            return 0
+            return BossOutcome(leftover: 0, hpRemoved: hit)
         case .fell(let spent):
             needed = spent
         }
@@ -1283,7 +1297,7 @@ public final class GameStore: ObservableObject {
         // Un salvaje nuevo ya: si no, al cerrar el gimnasio sin tokens de
         // sobra el jugador se queda sin rival hasta el evento siguiente.
         ensureEncounter()
-        return tokens - needed
+        return BossOutcome(leftover: tokens - needed, hpRemoved: removed)
     }
 
     /// Publica la celebración y la retira sola: una medalla es el hito del
@@ -1316,14 +1330,22 @@ public final class GameStore: ObservableObject {
         lastMedal = nil
     }
 
-    /// Acredita el consumo al compañero equipado: es lo que le hace subir de
-    /// etapa, y por eso una evolución no se pierde al cambiar de compañero.
-    private func creditActiveCompanion(tokens: Int, now: Date = Date()) {
-        guard tokens > 0,
+    /// Acredita al compañero equipado el **HP que ha quitado**, no los tokens
+    /// gastados: es lo que le hace subir de etapa, y por eso una evolución no
+    /// se pierde al cambiar de compañero.
+    ///
+    /// Acreditar tokens premiaba jugar mal. Contra Misty, un Gloom la tumba con
+    /// la mitad de tokens que un Charmander, así que el que hacía el trabajo
+    /// bien subía la mitad; y un compañero **bloqueado**, que no le quita ni un
+    /// punto de vida, subía a pleno rendimiento. Con el HP, vencer a un rival
+    /// vale exactamente su vida lleves a quien lleves: lo que cambia es lo que
+    /// te cuesta en tokens, que es el recurso de verdad.
+    private func creditActiveCompanion(hp: Int, now: Date = Date()) {
+        guard hp > 0,
               let companionID = state.activeCompanion?.id,
               let index = state.box.firstIndex(where: { $0.id == companionID })
         else { return }
-        state.box[index].tokensEarned += tokens
+        state.box[index].tokensEarned += hp
         resolveEvolutions(at: index, now: now)
     }
 

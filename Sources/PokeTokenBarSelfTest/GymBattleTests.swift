@@ -14,7 +14,9 @@ enum GymBattleTests: TestSuite {
         ("cambiar de compañero desbloquea el combate", testSwitchingCompanionUnblocks),
         ("los contadores se reinician al terminar", testCountersResetOnGymEnd),
         ("las medallas abren los tiers", testMedalsUnlockTiers),
-        ("los tokens del gimnasio cuentan para el ledger y la evolución", testGymTokensStillCount),
+        ("los tokens del gimnasio cuentan para el ledger, el HP para la evolución", testGymTokensStillCount),
+        ("el compañero cobra el HP que quita, no los tokens que gasta", testCreditIsWorkDoneNotFuelBurnt),
+        ("un compañero bloqueado no gana nada", testBlockedCompanionEarnsNothing),
         ("la medalla se celebra y dice qué desbloquea", testMedalCelebration),
         ("el ritmo es el que muestra la UI, sin evolucionar a mitad", testRateDoesNotChangeMidEvent),
         ("la métrica de daño apunta al líder, no al salvaje que no hay", testCurrentTargetIsTheBoss),
@@ -311,13 +313,78 @@ enum GymBattleTests: TestSuite {
 
     static func testGymTokensStillCount() throws {
         let store = primed(wildHP: 10)
-        try enterGym(store)
+        let battle = try enterGym(store)
         let earnedBefore = store.activeTokensEarned
         let totalBefore = store.totalTokens
+        let hpBefore = battle.currentHP
 
         store.ingest(event("pega", tokens: 50_000))
+        let after = try unwrap(store.activeGym).battle
         expectEqual(store.totalTokens, totalBefore + 50_000, "el ledger cuenta los tokens del gimnasio")
-        expectEqual(store.activeTokensEarned, earnedBefore + 50_000, "y el compañero también evoluciona con ellos")
+        expectEqual(
+            store.activeTokensEarned - earnedBefore,
+            hpBefore - after.currentHP,
+            "y el compañero sube lo que le ha quitado al líder"
+        )
+    }
+
+    /// La incoherencia que tenía el juego: contra el mismo líder, el compañero
+    /// que hacía bien el trabajo subía **menos**, porque acababa antes y por
+    /// tanto gastaba menos tokens. Ahora tumbarlo vale su vida, se lleve a
+    /// quien se lleve; lo que cambia es lo que cuesta en tokens.
+    static func testCreditIsWorkDoneNotFuelBurnt() throws {
+        func run(starter: Int) throws -> (earned: Int, spent: Int, hp: Int) {
+            let store = primed(starter: starter)
+            store.updateSettings { $0.typeEffectivenessEnabled = true }
+            let battle = try enterGym(store)
+            let gym = try unwrap(store.activeGym).gym
+            let rate = store.damagePerToken(against: gym)
+            expectGreaterThan(rate, 0, "#\(starter) no puede estar bloqueado en este test")
+
+            // Los justos para tumbarlo: si sobraran, el resto iría a salvajes
+            // y el HP del líder no sería lo único acreditado.
+            let hp = battle.currentHP
+            let needed = Int((Double(hp) / rate).rounded(.up))
+            let earnedBefore = store.activeTokensEarned
+            store.ingest(event("tumba", tokens: needed))
+            expectTrue(store.activeGym == nil, "#\(starter) debería haberlo tumbado")
+            return (store.activeTokensEarned - earnedBefore, needed, hp)
+        }
+
+        // Squirtle contra Brock, que saca a Onix (roca/tierra): agua ×4.
+        // Charmander: fuego ×0,5 contra roca y ×1 contra tierra, o sea ×0,5.
+        let bueno = try run(starter: 7)
+        let malo = try run(starter: 4)
+        expectEqual(bueno.earned, bueno.hp, "tumbar al líder vale su vida")
+        expectEqual(malo.earned, malo.hp, "y la misma vida para el otro compañero")
+        expectTrue(
+            malo.spent > bueno.spent * 5,
+            "al mal cruce le cuesta mucho más caro en tokens: \(malo.spent) vs \(bueno.spent)"
+        )
+    }
+
+    /// El caso extremo de lo mismo: bloqueado no quita HP, así que no sube.
+    /// Antes subía a pleno rendimiento sin tocar al líder.
+    static func testBlockedCompanionEarnsNothing() throws {
+        let store = primed()
+        store.updateSettings { $0.typeEffectivenessEnabled = true }
+        let battle = try enterGym(store)
+        let gym = try unwrap(store.activeGym).gym
+
+        // Mareep (eléctrico) contra el Onix de Brock: el rayo no le llega al
+        // tipo tierra, así que cae al suelo de ×0,25 y la absorción se lo come.
+        store.debugCapture(speciesID: 179)
+        let mareep = try unwrap(store.state.box.last)
+        store.setActiveCompanion(mareep.id)
+        expectTrue(store.isBlocked(against: gym), "hace falta un cruce bloqueado para este test")
+
+        let earnedBefore = store.activeTokensEarned
+        let totalBefore = store.totalTokens
+        store.ingest(event("contra-un-muro", tokens: 900_000))
+
+        expectEqual(store.activeTokensEarned, earnedBefore, "no ha quitado ni un punto de vida")
+        expectEqual(store.totalTokens, totalBefore + 900_000, "pero los tokens se han gastado igual")
+        expectEqual(try unwrap(store.activeGym).battle.currentHP, battle.currentHP, "y el líder sigue entero")
     }
 
     /// El compañero cobra los tokens DESPUÉS de resolver el combate. Si cobrara
@@ -330,9 +397,9 @@ enum GymBattleTests: TestSuite {
         let rateShown = store.damagePerToken(against: active.gym)
         expectEqual(rateShown, 0.75, accuracy: 0.001, "etapa base: 1 − 0,25 de absorción")
 
-        // Un evento que evoluciona al compañero de sobra (>200k) pero no llega
-        // a tumbar al líder.
-        let tokens = 250_000
+        // Un evento cuyo daño evoluciona al compañero de sobra (>200k de HP
+        // quitado) pero no llega a tumbar al líder.
+        let tokens = 300_000
         store.ingest(event("evoluciona-a-mitad", tokens: tokens))
 
         let after = try unwrap(store.activeGym).battle

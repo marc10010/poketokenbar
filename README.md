@@ -243,7 +243,7 @@ son Hada aunque en Gen 1 y 2 no existiera ese tipo.
   contra jefes, una Pokédex avanzada anularía su absorción y dejarían de ser un
   problema de cobertura de tipos para ser uno de acumulación.
 - **La evolución es de cada Pokémon, no del jugador.** Cada capturado acumula
-  `tokensEarned`: los tokens gastados **mientras lo llevabas equipado**. Los
+  `tokensEarned`: el **HP que ha quitado** mientras lo llevabas equipado. Los
   umbrales son los del spec (base ≤ 200.000 · etapa 1 200.001–1.000.000 ·
   etapa 2 > 1.000.000) pero aplicados a ese contador propio.
   - Un Pineco capturado hoy sigue siendo Pineco aunque lleves 300.000 tokens:
@@ -252,6 +252,13 @@ son Hada aunque en Gen 1 y 2 no existiera ese tipo.
     al cambiar de compañero: puedes tener Wartortle y Marowak evolucionados a
     la vez en la caja.
   - Las líneas de dos formas se quedan en su última forma.
+  - **Cuenta el trabajo hecho, no los tokens gastados.** Acreditar tokens
+    premiaba jugar mal: contra Brock, un Squirtle lo tumba con 144.622 tokens
+    y un Charmander necesita 2.169.328, así que el que hacía bien el trabajo
+    subía quince veces menos; y un compañero **bloqueado**, que no le quita ni
+    un punto de vida, subía a pleno rendimiento. Ahora vencer a un rival vale
+    exactamente su vida, lleves a quien lleves. Lo que cambia según el cruce es
+    lo que te cuesta en tokens, que es el recurso de verdad.
 - El daño sobrante de una captura se arrastra al rival siguiente: ningún token
   se pierde, y un evento grande puede encadenar varias capturas.
 
@@ -466,7 +473,7 @@ tabla escrita a mano.
 ## 10. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 206 tests, ~25k comprobaciones
+swift run PokeTokenBarSelfTest     # 211 tests, ~43k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 
