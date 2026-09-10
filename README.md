@@ -217,6 +217,13 @@ agua contra fuego ×2, fuego contra agua ×0,5, roca contra fuego/volador ×4.
 - Al capturar en cadena, los tokens que sobran se re-escalan con el
   multiplicador del **rival nuevo**, que puede ser otro tipo.
 - Se puede apagar desde el popover (vuelve a 1 token = 1 HP).
+- **La caja marca el cruce de cada ejemplar con un punto de color**: verde si
+  pega fuerte contra el rival de ahora, naranja si le hace cosquillas, rojo si
+  es inmune, y nada cuando es neutro. Neutro no se pinta a propósito: si todas
+  las celdas llevaran color, el color dejaría de señalar. La leyenda de la
+  cabecera dice contra quién se está midiendo, y el rival puede ser un salvaje
+  o un jefe — es siempre el de la pelea abierta. Con la efectividad apagada no
+  hay puntos.
 
 La tabla se genera de PokeAPI (`tools/generate_typechart.mjs`) e incluye Hada:
 la Pokédex embebida trae los tipos actuales, así que Clefairy, Togepi o Marill
@@ -430,9 +437,14 @@ después, ahora recordado entre sesiones.
 
 <p align="center">
   <img src="docs/screenshots/popover-progreso.png" width="240" alt="Progreso: medallas, ligas y legendarios">
-  <img src="docs/screenshots/popover-caja.png" width="240" alt="Caja en rejilla con tramos por generación">
+  <img src="docs/screenshots/popover-caja.png" width="240" alt="Caja en rejilla con tramos por región y puntos de eficacia">
   <img src="docs/screenshots/popover-caja-lista.png" width="240" alt="Caja en modo lista, con los números de cada hueco">
 </p>
+
+Las celdas de la rejilla **no llevan números**. Tenían el contador de victorias
+de la línea, que de un vistazo no dice nada y encima se leía como "tengo dos de
+este Pokémon"; los números viven en la ficha y en el modo lista, y el hueco lo
+ocupa el punto de eficacia, que sí se lee de golpe.
 
 La pestaña de Progreso incluye la **escalera de desbloqueo**, que existía en los
 datos pero en ninguna pantalla: qué abre cada cantidad de medallas, la puerta de
@@ -443,7 +455,7 @@ tabla escrita a mano.
 ## 10. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 60 tests, ~19k comprobaciones
+swift run PokeTokenBarSelfTest     # 189 tests, ~25k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 

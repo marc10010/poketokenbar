@@ -176,6 +176,12 @@ struct PokemonDetailView: View {
 
     private var stats: some View {
         VStack(alignment: .leading, spacing: 3) {
+            // El punto de la rejilla solo tiene color; aquí va con número y
+            // nombre, incluido el neutro, que en la rejilla no se pinta.
+            if let rival = store.matchupLegendRival,
+               let matchup = store.matchupAgainstCurrentTarget(group) {
+                row("Contra \(rival)", "\(matchup.badge) \(matchup.label)")
+            }
             row("Combates ganados", Fmt.tokens(captured.wildDefeats))
             row("Gimnasios ganados", Fmt.tokens(captured.gymsWon))
             row("Veces vencido en libertad", Fmt.tokens(store.timesDefeated(familyOf: group.species.id)))

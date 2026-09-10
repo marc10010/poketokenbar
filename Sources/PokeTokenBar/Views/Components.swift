@@ -86,6 +86,61 @@ struct RarityBadge: View {
 
 /// Multiplicador de tipos del combate actual. Neutro no se pinta: si no cambia
 /// nada, no merece espacio.
+/// Punto de color con el cruce de tipos contra lo que hay delante. Sirve para
+/// barrer la caja con la vista y ver a quién llevar: verde pega más, naranja
+/// menos, rojo no le hace nada. Neutro no pinta nada, para que solo destaque
+/// lo que decide algo.
+struct MatchupDot: View {
+    let matchup: TypeMatchup?
+    var size: CGFloat = 7
+
+    /// Neutro no pinta nada: si todo llevara punto, el color dejaría de
+    /// señalar. Solo se marca lo que cambia la decisión.
+    static func tint(_ matchup: TypeMatchup?) -> Color? {
+        guard let matchup, !matchup.isNeutral else { return nil }
+        if matchup.isImmune { return .red }
+        return matchup.raw > 1 ? .green : .orange
+    }
+
+    private var tint: Color? { Self.tint(matchup) }
+
+    var body: some View {
+        if let tint, let matchup {
+            Circle()
+                .fill(tint)
+                .frame(width: size, height: size)
+                .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: 0.5))
+                .help("\(matchup.badge) \(matchup.label) contra el rival de ahora")
+        }
+    }
+}
+
+/// Los puntos de la caja no se explican solos, así que la leyenda dice qué es
+/// cada color y contra quién se está midiendo.
+struct MatchupLegend: View {
+    let rival: String
+    private static let samples = [
+        TypeMatchup(raw: 2, multiplier: 2, attacking: nil),
+        TypeMatchup(raw: 0.5, multiplier: 0.5, attacking: nil),
+    ]
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("Contra \(rival):")
+            ForEach(Array(Self.samples.enumerated()), id: \.element.raw) { index, sample in
+                HStack(spacing: 3) {
+                    if index > 0 { Text("·") }
+                    MatchupDot(matchup: sample, size: 6)
+                    Text(sample.label)
+                }
+            }
+        }
+        .font(.system(size: 9))
+        .foregroundStyle(.tertiary)
+        .lineLimit(1)
+    }
+}
+
 struct MatchupBadge: View {
     let matchup: TypeMatchup
     var compact = false

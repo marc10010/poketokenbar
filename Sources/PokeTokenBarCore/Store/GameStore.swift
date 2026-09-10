@@ -587,6 +587,9 @@ public final class GameStore: ObservableObject {
         public let rate: Double
         public let matchup: TypeMatchup
         public let isBoss: Bool
+        /// Tipos del que hay delante, para poder medir **cualquier** ejemplar de
+        /// la caja contra él y no solo el equipado.
+        public let defenderTypes: [String]
     }
 
     public var currentTarget: CurrentTarget? {
@@ -595,7 +598,8 @@ public final class GameStore: ObservableObject {
                 label: active.member.name,
                 rate: damagePerToken(against: active.member),
                 matchup: matchup(against: active.member),
-                isBoss: true
+                isBoss: true,
+                defenderTypes: pokedex[active.member.opponentSpeciesID]?.types ?? []
             )
         }
         if let active = activeMilestone {
@@ -603,7 +607,8 @@ public final class GameStore: ObservableObject {
                 label: pokedex[active.milestone.speciesID]?.localizedName ?? active.milestone.place,
                 rate: damagePerToken(against: active.milestone),
                 matchup: matchup(against: active.milestone),
-                isBoss: true
+                isBoss: true,
+                defenderTypes: pokedex[active.milestone.speciesID]?.types ?? []
             )
         }
         if let active = activeGym {
@@ -611,7 +616,8 @@ public final class GameStore: ObservableObject {
                 label: active.gym.leader,
                 rate: damagePerToken(against: active.gym),
                 matchup: matchup(against: active.gym),
-                isBoss: true
+                isBoss: true,
+                defenderTypes: pokedex[active.gym.opponentSpeciesID]?.types ?? []
             )
         }
         if let rival = rivalSpecies {
@@ -619,10 +625,39 @@ public final class GameStore: ObservableObject {
                 label: rival.localizedName,
                 rate: wildDamagePerToken,
                 matchup: currentMatchup,
-                isBoss: false
+                isBoss: false,
+                defenderTypes: rival.types
             )
         }
         return nil
+    }
+
+    /// Cruce de un ejemplar de la caja contra lo que hay delante ahora mismo.
+    ///
+    /// Es lo que contesta de un vistazo "¿a quién llevo a esta pelea?", que
+    /// hasta ahora había que ir mirando ficha por ficha. `nil` cuando no hay
+    /// rival o cuando la efectividad está desactivada en ajustes.
+    public func matchupAgainstCurrentTarget(_ attackerTypes: [String]) -> TypeMatchup? {
+        guard state.settings.typeEffectivenessEnabled,
+              let target = currentTarget,
+              !target.defenderTypes.isEmpty,
+              !attackerTypes.isEmpty
+        else { return nil }
+        return typeChart.matchup(attacker: attackerTypes, defender: target.defenderTypes)
+    }
+
+    public func matchupAgainstCurrentTarget(_ group: BoxGroup) -> TypeMatchup? {
+        matchupAgainstCurrentTarget(group.displayForm.types)
+    }
+
+    /// Nombre del rival contra el que se están midiendo los puntos de la caja,
+    /// o `nil` cuando no hay ninguno y por tanto no hay nada que explicar.
+    public var matchupLegendRival: String? {
+        guard state.settings.typeEffectivenessEnabled,
+              let target = currentTarget,
+              !target.defenderTypes.isEmpty
+        else { return nil }
+        return target.label
     }
 
     public var rivalSpecies: Pokemon? {

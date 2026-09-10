@@ -25,10 +25,57 @@ enum GameStoreTests: TestSuite {
         ("la migración acredita al equipado", testMigrationCreditsTheEquippedCompanion),
         ("el multiplicador de tipos escala el daño real", testTypeMultiplierScalesDamage),
         ("la colección suma daño solo a los salvajes", testCollectionBonus),
+        ("el cruce de cada ejemplar contra el rival de ahora", testMatchupAgainstCurrentTarget),
         ("las secciones plegadas se recuerdan", testCollapsedSectionsPersist),
         ("abrir una ficha no cambia el tamaño del HUD", testOpeningDetailNeverResizesTheHUD),
         ("plegar el HUD cierra la ficha y la caja", testCollapsingTheHUDClosesEverything),
     ]
+
+    /// El dato del punto de color de la caja: cómo le va a **cada** ejemplar
+    /// contra lo que hay delante, no solo al equipado.
+    static func testMatchupAgainstCurrentTarget() throws {
+        let store = makeStore()
+        store.chooseStarter(speciesID: 7)              // Squirtle, agua
+        store.debugCapture(speciesID: 152)             // Chikorita, planta
+        store.debugCapture(speciesID: 43)              // Oddish, planta/veneno
+
+        // Rival de fuego: el agua pega ×2, la planta ×0,5 y el fuego ×0,5.
+        store.debugSetEncounter(WildEncounter(speciesID: 58, isShiny: false, rarity: .common, maxHP: 1_000))
+        expectEqual(store.matchupAgainstCurrentTarget(["water"])?.raw, 2)
+        expectEqual(store.matchupAgainstCurrentTarget(["grass"])?.raw, 0.5)
+        expectEqual(store.matchupAgainstCurrentTarget(["fire"])?.raw, 0.5)
+
+        // Por grupo de la caja, que es como lo pide la rejilla.
+        let squirtle = try unwrap(store.boxGroups.first { $0.species.id == 7 })
+        expectEqual(store.matchupAgainstCurrentTarget(squirtle)?.raw, 2, "el Squirtle es el que hay que llevar")
+        let chikorita = try unwrap(store.boxGroups.first { $0.species.id == 152 })
+        expectEqual(store.matchupAgainstCurrentTarget(chikorita)?.raw, 0.5)
+        // De un doble tipo cuenta el mejor de los dos, así que el veneno de
+        // Oddish le salva la planta y el punto no se pinta.
+        let oddish = try unwrap(store.boxGroups.first { $0.species.id == 43 })
+        expectTrue(store.matchupAgainstCurrentTarget(oddish)?.isNeutral == true)
+
+        // Contra un jefe se mide contra el jefe, no contra un salvaje que ya
+        // no está: es el rival de ahora, sea quien sea.
+        store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
+        store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
+        store.ingest(event("abre", input: 10, output: 0))
+        let gym = try unwrap(store.availableGym)
+        expectTrue(store.startGym(gym.id))
+        let defender = try unwrap(store.pokedex[gym.signatureSpeciesID])
+        expectEqual(
+            store.matchupAgainstCurrentTarget(squirtle)?.raw,
+            store.typeChart.matchup(attacker: ["water"], defender: defender.types).raw,
+            "mide contra el líder"
+        )
+
+        expectEqual(store.matchupLegendRival, gym.leader, "la leyenda nombra al rival de ahora")
+
+        // Y sin efectividad de tipos no hay punto que pintar ni leyenda.
+        store.updateSettings { $0.typeEffectivenessEnabled = false }
+        expectNil(store.matchupAgainstCurrentTarget(squirtle))
+        expectNil(store.matchupLegendRival)
+    }
 
     static func testCollapsedSectionsPersist() {
         let url = temporaryStateURL()

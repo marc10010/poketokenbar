@@ -70,6 +70,10 @@ struct BoxToolbar: View {
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
             }
+
+            if let rival = store.matchupLegendRival {
+                MatchupLegend(rival: rival)
+            }
         }
     }
 
