@@ -27,35 +27,30 @@ public struct BattleEngine {
     }
 
     public func freshEncounter<R: RandomProvider>(
+        zone: Zone,
         rank: TrainerRank,
-        access: ZoneAccess = ZoneAccess(medals: 0),
-        focus: Zone? = nil,
         using rng: inout R,
         now: Date = Date()
     ) -> WildEncounter {
-        spawner.spawn(rank: rank, access: access, focus: focus, using: &rng, now: now)
+        spawner.spawn(zone: zone, rank: rank, using: &rng, now: now)
     }
 
     /// - Parameters:
     ///   - damage: tokens del evento. 1 token = 1 HP salvo multiplicador de tipos.
-    ///   - totalTokensAfter: histórico del jugador YA incluyendo este evento,
-    ///     que es lo que abre los tiers raro/legendario para el siguiente rival.
     ///   - multiplier: se pide por rival, no una vez: si una captura hace
     ///     aparecer otro de tipo distinto, los tokens que sobran se escalan con
     ///     el multiplicador nuevo.
     public func apply<R: RandomProvider>(
         damage: Int,
         to encounter: WildEncounter?,
-        totalTokensAfter: Int,
+        zone: Zone,
         rank: TrainerRank = .campeon,
-        access: ZoneAccess = ZoneAccess(medals: 16, openRegions: ["kanto", "johto"], isChampion: true),
-        focus: Zone? = nil,
         multiplier: (WildEncounter) -> Double = { _ in 1 },
         using rng: inout R,
         now: Date = Date()
     ) -> BattleResult {
         var result = BattleResult()
-        var current = encounter ?? freshEncounter(rank: rank, access: access, focus: focus, using: &rng, now: now)
+        var current = encounter ?? freshEncounter(zone: zone, rank: rank, using: &rng, now: now)
         var remainingTokens = max(0, damage)
 
         while remainingTokens > 0 {
@@ -81,7 +76,7 @@ public struct BattleEngine {
             current.currentHP = 0
 
             result.defeated.append(current)
-            current = freshEncounter(rank: rank, access: access, focus: focus, using: &rng, now: now)
+            current = freshEncounter(zone: zone, rank: rank, using: &rng, now: now)
         }
 
         result.encounter = current

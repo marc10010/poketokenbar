@@ -104,18 +104,20 @@ enum UIRender {
         store.toggleSection("Legendarios")
         store.toggleSection("Zonas")
 
-        // Con una zona enfocada: es lo que hace visible el tamaño del bombo.
-        if let small = store.unlockedZones.min(by: { store.focusSummary($0).pool < store.focusSummary($1).pool }) {
-            store.focus(zoneID: small.id)
-            store.toggleSection("Rango")
-            store.toggleSection("Ligas")
-            store.toggleSection("Legendarios")
-            write("popover-zonas", hosted(RootView(), size: popoverSize))
-            store.toggleSection("Rango")
-            store.toggleSection("Ligas")
-            store.toggleSection("Legendarios")
-            store.focus(zoneID: nil)
+        // La lista de zonas con la de en medio como sitio actual: se ve el
+        // salto de HP de una a otra, que es de lo que va la pantalla.
+        let volver = store.currentZone.id
+        if let otra = store.unlockedZones.dropFirst().first {
+            store.move(toZone: otra.id)
         }
+        store.toggleSection("Rango")
+        store.toggleSection("Ligas")
+        store.toggleSection("Legendarios")
+        write("popover-zonas", hosted(RootView(), size: popoverSize))
+        store.toggleSection("Rango")
+        store.toggleSection("Ligas")
+        store.toggleSection("Legendarios")
+        store.move(toZone: volver)
 
         // Clic en el compañero y clic en el rival, desde la pestaña de combate.
         store.selectedTab = "combate"

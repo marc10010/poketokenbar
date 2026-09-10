@@ -244,22 +244,23 @@ enum GymBattleTests: TestSuite {
         expectNotNil(store.state.encounter, "y vuelve a haber salvaje")
     }
 
-    static func testMedalsUnlockTiers() {
+    static func testMedalsUnlockTiers() throws {
         let store = makeStore(seed: 5)
         store.chooseStarter(speciesID: 7)
+        let zone = try unwrap(ZoneCatalog.shared["rutas-kanto-sur"])
         expectEqual(store.rank, TrainerRank.novato)
-        expectEqual(SpawnService().availableTiers(rank: store.rank), [.common, .uncommon])
+        expectEqual(SpawnService().availableTiers(rank: store.rank, in: zone), [.common, .uncommon])
 
         store.debugDefeatGyms(upTo: 2)
         expectEqual(store.medals, 2)
         expectEqual(store.rank, TrainerRank.entrenador)
-        expectTrue(SpawnService().availableTiers(rank: store.rank).contains(.rare))
-        expectFalse(SpawnService().availableTiers(rank: store.rank).contains(.legendary))
+        expectTrue(SpawnService().availableTiers(rank: store.rank, in: zone).contains(.rare))
+        expectFalse(SpawnService().availableTiers(rank: store.rank, in: zone).contains(.legendary))
 
         store.debugDefeatGyms(upTo: 8)
         expectEqual(store.rank, TrainerRank.ace)
         expectFalse(
-            SpawnService().availableTiers(rank: store.rank).contains(.legendary),
+            SpawnService().availableTiers(rank: store.rank, in: zone).contains(.legendary),
             "los legendarios pasaron a ser hitos: el rango As ya no los saca en libertad"
         )
     }

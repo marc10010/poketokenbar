@@ -234,35 +234,48 @@ public final class GameStore: ObservableObject {
 
     public var unlockedZones: [Zone] { zoneCatalog.unlocked(zoneAccess) }
 
-    /// Zona enfocada, si está puesta **y** abierta. Una zona que se enfocó y
-    /// luego dejó de estar abierta no puede seguir mandando en el sorteo.
-    public var focusedZone: Zone? {
-        guard let id = state.settings.focusedZoneID, let zone = zoneCatalog[id], zoneAccess.opens(zone)
-        else { return nil }
-        return zone
-    }
-
-    /// Enfoca una zona abierta, o quita el enfoque con `nil`. El rival en curso
-    /// se queda: enfocar no le quita el HP que ya le has hecho.
-    public func focus(zoneID: String?) {
-        guard let zoneID else {
-            updateSettings { $0.focusedZoneID = nil }
-            return
+    /// Dónde estás cazando. **Siempre** hay una: el bombo es el de la zona, no
+    /// la mezcla de todo lo abierto, que es lo que hacía que el juego se
+    /// volviera más fácil según avanzabas.
+    ///
+    /// Si la guardada ya no vale —partida vieja, o una zona que dejó de estar
+    /// abierta— se cae a la más profunda que tengas abierta, que es donde
+    /// estabas jugando.
+    public var currentZone: Zone {
+        if let id = state.settings.currentZoneID, let zone = zoneCatalog[id], zoneAccess.opens(zone) {
+            return zone
         }
-        guard let zone = zoneCatalog[zoneID], zoneAccess.opens(zone), !spawner.focusPool(zone).isEmpty
-        else { return }
-        updateSettings { $0.focusedZoneID = zone.id }
+        return deepestOpenZone
     }
 
-    /// Lo que se puede cazar en una zona y cuánto te falta de ahí, que es lo
-    /// que hace visible si enfocarla sirve para algo: en una zona de 2 la que
-    /// buscas sale en 2 apariciones, en una ruta de 46 no la vas a ver.
-    public func focusSummary(_ zone: Zone) -> (pool: Int, missing: Int) {
-        let pool = spawner.focusPool(zone)
+    /// La más profunda de las abiertas: la frontera, que es donde se juega.
+    public var deepestOpenZone: Zone {
+        zoneCatalog.inUnlockOrder.last { zoneAccess.opens($0) } ?? zoneCatalog.inUnlockOrder[0]
+    }
+
+    /// Cambia de zona. El rival en curso se queda: moverte no le quita el HP
+    /// que ya le has hecho.
+    @discardableResult
+    public func move(toZone zoneID: String) -> Bool {
+        guard let zone = zoneCatalog[zoneID], zoneAccess.opens(zone), !spawner.pool(zone).isEmpty
+        else { return false }
+        updateSettings { $0.currentZoneID = zone.id }
+        return true
+    }
+
+    /// Lo que se puede cazar en una zona y cuánto te falta de ahí: en una zona
+    /// de 2 lo que buscas sale en 2 apariciones, en una ruta de 46 no.
+    public func zoneSummary(_ zone: Zone) -> (pool: Int, missing: Int) {
+        let pool = spawner.pool(zone)
         let owned = ownedFamilies
         let missing = pool.filter { !owned.contains(familyKey(baseFormID: $0.baseFormID, shiny: false)) }
         return (pool.count, missing.count)
     }
+
+    /// Vida de los salvajes de una zona, para poder enseñar lo que cuesta
+    /// antes de mudarte.
+    public func zoneHP(_ zone: Zone) -> Int { zoneCatalog.hp(of: zone) }
+    public func zoneDepth(_ zone: Zone) -> Int { zoneCatalog.depth(of: zone) }
 
     /// Zonas donde vive una especie, con su estado de apertura.
     public func zones(for speciesID: Int) -> [(zone: Zone, open: Bool)] {
@@ -912,7 +925,7 @@ public final class GameStore: ObservableObject {
               state.leagues.current == nil
         else { return nil }
         if state.encounter == nil || state.encounter?.isFainted == true {
-            state.encounter = battle.freshEncounter(rank: rank, access: zoneAccess, focus: focusedZone, using: &rng)
+            state.encounter = battle.freshEncounter(zone: currentZone, rank: rank, using: &rng)
         }
         return state.encounter
     }
@@ -959,10 +972,8 @@ public final class GameStore: ObservableObject {
         let result = battle.apply(
             damage: tokens,
             to: state.encounter,
-            totalTokensAfter: state.ledger.total,
+            zone: currentZone,
             rank: rank,
-            access: zoneAccess,
-            focus: focusedZone,
             multiplier: { encounter in
                 guard typesEnabled, !attackerTypes.isEmpty,
                       let defender = pokedex[encounter.speciesID]

@@ -16,6 +16,9 @@ enum BattleEngineTests: TestSuite {
     ]
 
     private static let engine = BattleEngine()
+    /// La primera zona: el motor necesita una para saber de dónde saca el
+    /// rival siguiente cuando cae el de ahora.
+    private static let zone = ZoneCatalog.shared.inUnlockOrder[0]
 
     private static func encounter(hp: Int, speciesID: Int = 19) -> WildEncounter {
         WildEncounter(speciesID: speciesID, isShiny: false, rarity: .common, maxHP: hp)
@@ -23,7 +26,7 @@ enum BattleEngineTests: TestSuite {
 
     static func testOneTokenIsOnePointOfDamage() {
         var rng = SeededRandomProvider(seed: 1)
-        let result = engine.apply(damage: 1_500, to: encounter(hp: 10_000), totalTokensAfter: 1_500, rank: .campeon, using: &rng)
+        let result = engine.apply(damage: 1_500, to: encounter(hp: 10_000), zone: zone, rank: .campeon, using: &rng)
         expectEqual(result.damageApplied, 1_500)
         expectEqual(result.encounter?.currentHP, 8_500)
         expectTrue(result.defeated.isEmpty)
@@ -31,7 +34,7 @@ enum BattleEngineTests: TestSuite {
 
     static func testExactKillCapturesAndRespawns() {
         var rng = SeededRandomProvider(seed: 2)
-        let result = engine.apply(damage: 10_000, to: encounter(hp: 10_000), totalTokensAfter: 10_000, rank: .campeon, using: &rng)
+        let result = engine.apply(damage: 10_000, to: encounter(hp: 10_000), zone: zone, rank: .campeon, using: &rng)
         expectEqual(result.defeated.count, 1)
         expectEqual(result.defeated.first?.speciesID, 19, "quedárselo o no lo decide la caja, no el motor")
         expectEqual(result.encounter?.currentHP, result.encounter?.maxHP, "el rival nuevo aparece intacto")
@@ -40,7 +43,7 @@ enum BattleEngineTests: TestSuite {
 
     static func testOverkillCarriesOverIntoTheNextRival() {
         var rng = SeededRandomProvider(seed: 3)
-        let result = engine.apply(damage: 10_500, to: encounter(hp: 10_000), totalTokensAfter: 10_500, rank: .campeon, using: &rng)
+        let result = engine.apply(damage: 10_500, to: encounter(hp: 10_000), zone: zone, rank: .campeon, using: &rng)
         expectEqual(result.damageApplied, 10_500, "ningún token se pierde")
         expectEqual(result.defeated.count, 1)
         let next = try? unwrap(result.encounter)
@@ -49,7 +52,7 @@ enum BattleEngineTests: TestSuite {
 
     static func testASingleHugeEventCanCaptureSeveralRivals() {
         var rng = SeededRandomProvider(seed: 4)
-        let result = engine.apply(damage: 400_000, to: encounter(hp: 10_000), totalTokensAfter: 400_000, rank: .campeon, using: &rng)
+        let result = engine.apply(damage: 400_000, to: encounter(hp: 10_000), zone: zone, rank: .campeon, using: &rng)
         expectGreaterThan(result.defeated.count, 1)
         expectEqual(result.damageApplied, 400_000)
     }
@@ -57,13 +60,13 @@ enum BattleEngineTests: TestSuite {
     static func testShinyIsPreservedOnCapture() {
         var rng = SeededRandomProvider(seed: 5)
         let shiny = WildEncounter(speciesID: 25, isShiny: true, rarity: .uncommon, maxHP: 100)
-        let result = engine.apply(damage: 100, to: shiny, totalTokensAfter: 100, rank: .campeon, using: &rng)
+        let result = engine.apply(damage: 100, to: shiny, zone: zone, rank: .campeon, using: &rng)
         expectEqual(result.defeated.first?.isShiny, true)
     }
 
     static func testNilEncounterSpawnsBeforeTakingDamage() {
         var rng = SeededRandomProvider(seed: 6)
-        let result = engine.apply(damage: 10, to: nil, totalTokensAfter: 10, rank: .campeon, using: &rng)
+        let result = engine.apply(damage: 10, to: nil, zone: zone, rank: .campeon, using: &rng)
         expectNotNil(result.encounter)
         expectEqual(result.damageApplied, 10)
     }
@@ -72,7 +75,7 @@ enum BattleEngineTests: TestSuite {
         var rng = SeededRandomProvider(seed: 7)
         let start = encounter(hp: 10_000)
         for damage in [0, -50] {
-            let result = engine.apply(damage: damage, to: start, totalTokensAfter: 0, rank: .campeon, using: &rng)
+            let result = engine.apply(damage: damage, to: start, zone: zone, rank: .campeon, using: &rng)
             expectEqual(result.damageApplied, 0)
             expectEqual(result.encounter?.currentHP, 10_000)
             expectTrue(result.defeated.isEmpty)
