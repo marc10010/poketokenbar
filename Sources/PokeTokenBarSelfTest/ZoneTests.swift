@@ -11,6 +11,9 @@ enum ZoneTests: TestSuite {
         ("el desbloqueo va por medallas, región y campeón", testUnlockRules),
         ("la disponibilidad crece con el progreso y nunca baja", testAvailabilityGrows),
         ("una zona cerrada no ofrece sus especies", testClosedZoneIsNotOffered),
+        ("con cualquier progreso, nada sale de una zona cerrada", testNothingLeaksFromClosedZones),
+        ("el tier de legendarios no se sortea con ningún rango", testLegendaryTierIsNeverRolled),
+        ("sorteando de verdad tampoco se cuela nada cerrado", testSpawnStaysInsideOpenZones),
         ("solo Mew se queda sin ruta ni precursor", testOnlyMewIsOrphan),
         ("lo que no tiene zona se ofrece en el tier más difícil", testFallbackTier),
         ("ningún tier se queda sin candidatas", testNoTierEverStarves),
@@ -209,6 +212,61 @@ enum ZoneTests: TestSuite {
             let ofrecidas = Set(spawner.candidates(rarity: rarity, access: cerrado).map(\.id))
             for id in exclusivos where !catalog.unassigned.contains(id) {
                 expectFalse(ofrecidas.contains(id), "#\(id) sale con la Senda Helada cerrada")
+            }
+        }
+    }
+
+    /// La forma general de lo anterior: no una zona concreta, sino **todas**
+    /// con **cualquier** progreso. Es el invariante que se le pide al bombo.
+    static func testNothingLeaksFromClosedZones() {
+        for medals in 0...16 {
+            for kanto in [false, true] {
+                let estado = access(medals, kanto: kanto)
+                // Solo los tiers que se sortean. El de legendarios sí devuelve
+                // los suyos con las zonas cerradas —viven en zonas de campeón,
+                // así que el bombo sale vacío y salta la red de "ningún tier
+                // sin candidatas"—, pero `availableTiers` no lo ofrece nunca,
+                // que es lo que se comprueba justo debajo.
+                for rarity in Rarity.allCases where rarity.spawnsInTheWild {
+                    for species in spawner.candidates(rarity: rarity, access: estado) {
+                        // La red de seguridad de las que no tienen zona es
+                        // aparte: no vienen de ninguna ruta.
+                        guard !catalog.unassigned.contains(species.id) else { continue }
+                        expectTrue(
+                            catalog.zones(for: species.id).contains { estado.opens($0) },
+                            "#\(species.id) \(species.name) se ofrece con \(medals) medallas y todas sus zonas cerradas"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /// El cortafuegos del que depende lo de arriba: por muchas medallas que
+    /// tengas, el tier de legendarios no entra en el sorteo.
+    static func testLegendaryTierIsNeverRolled() {
+        for rank in TrainerRank.allCases {
+            expectFalse(
+                spawner.availableTiers(rank: rank).contains(.legendary),
+                "\(rank.label) puede sortear el tier de legendarios"
+            )
+        }
+    }
+
+    /// Y por el camino que recorre la app: sorteando rivales de verdad, con
+    /// tier incluido, no solo mirando el bombo.
+    static func testSpawnStaysInsideOpenZones() {
+        var rng = SeededRandomProvider(seed: 4)
+        for medals in [0, 2, 4] {
+            let estado = access(medals, kanto: false)
+            let rank = TrainerRank.rank(forMedals: medals)
+            for _ in 0..<5_000 {
+                let encounter = spawner.spawn(rank: rank, access: estado, using: &rng)
+                guard !catalog.unassigned.contains(encounter.speciesID) else { continue }
+                expectTrue(
+                    catalog.zones(for: encounter.speciesID).contains { estado.opens($0) },
+                    "#\(encounter.speciesID) aparece con \(medals) medallas y sin zona abierta"
+                )
             }
         }
     }
