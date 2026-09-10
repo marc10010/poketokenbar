@@ -42,6 +42,28 @@ public enum HUDPlacement {
         return inside(host.visible, candidate)
     }
 
+    /// Un cambio de tamaño deja quieta la esquina de **arriba a la
+    /// izquierda**: desplegar cae hacia abajo y a la derecha, plegar vuelve al
+    /// mismo sitio de donde salió. Con el origen de Cocoa abajo a la
+    /// izquierda, mantener el origen hacía justo lo contrario —crecer hacia
+    /// arriba—, que es como si la ventana se escapara del cursor.
+    ///
+    /// Si al crecer se sale de la pantalla, se desliza lo justo para caber:
+    /// redimensionar es el momento en el que recolocar se espera, al revés que
+    /// arrastrar. Y si no cabe de ninguna manera, manda la esquina de arriba.
+    public static func resized(_ current: CGRect, to size: CGSize, screens: [Screen]) -> CGRect {
+        let anchored = CGRect(
+            x: current.minX,
+            y: current.maxY - size.height,
+            width: size.width,
+            height: size.height
+        )
+        guard let host = host(of: current, screens: screens) ?? host(of: anchored, screens: screens) else {
+            return anchored
+        }
+        return inside(host.visible, anchored)
+    }
+
     /// La pantalla que más ventana enseña. Con la que "toca primero" bastaría
     /// si no hubiera solapes, pero el caso que importa es justo el del solape.
     private static func host(of candidate: CGRect, screens: [Screen]) -> Screen? {
@@ -52,13 +74,16 @@ public enum HUDPlacement {
         return nil
     }
 
+    /// Desliza el marco dentro del área sin cambiarle el tamaño. Cuando no
+    /// cabe, gana el borde de arriba a la izquierda, que es de donde se lee.
     private static func inside(_ area: CGRect, _ candidate: CGRect) -> CGRect {
-        CGRect(
-            x: min(max(candidate.minX, area.minX), max(area.minX, area.maxX - candidate.width)),
-            y: min(max(candidate.minY, area.minY), max(area.minY, area.maxY - candidate.height)),
-            width: candidate.width,
-            height: candidate.height
-        )
+        let x = candidate.width > area.width
+            ? area.minX
+            : min(max(candidate.minX, area.minX), area.maxX - candidate.width)
+        let y = candidate.height > area.height
+            ? area.maxY - candidate.height
+            : min(max(candidate.minY, area.minY), area.maxY - candidate.height)
+        return CGRect(x: x, y: y, width: candidate.width, height: candidate.height)
     }
 
     private static func area(_ rect: CGRect) -> CGFloat { rect.width * rect.height }

@@ -272,8 +272,12 @@ Colocación:
   porque con varios monitores anclarlo solo a la principal lo deja donde no
   estás mirando.
 - **Arrastrado a mano**: al moverlo se guarda la posición y pasa a haber una
-  sola ventana. Si desconectas ese monitor, vuelve al anclaje por esquina en
-  vez de quedarse en el limbo.
+  sola ventana. La posición se respeta tal cual mientras se vea lo bastante
+  (80×30 pt) en **alguna** pantalla, así que se puede llevar a un segundo
+  monitor y dejarla medio bajo la barra de menú si quieres. Reencuadrar es el
+  rescate de cuando el sitio ya no existe: si desconectas ese monitor, vuelve al
+  anclaje por esquina en vez de quedarse en el limbo. La regla vive en
+  `HUDPlacement`, sin AppKit, para poder probar dos monitores sin tenerlos.
 
 Tamaño (las cifras salen de `HUDController`, no de la memoria: 268×104 base,
 umbrales 140 y 248, techo 620×760):
@@ -287,6 +291,13 @@ umbrales 140 y 248, techo 620×760):
   botón de la esquina despliega/pliega a **380×460** sin buscar el borde, que en
   una ventana sin marco no se ve, y al plegar cierra la ficha y la caja. Acotado
   a **620×760** y persistido.
+
+**La esquina de arriba a la izquierda se queda quieta** al cambiar de tamaño:
+desplegar cae hacia abajo y a la derecha, y plegar recoge hacia esa misma
+esquina. El origen de Cocoa es la de abajo, así que mantenerlo hacía lo
+contrario —la ventana crecía hacia arriba, escapándose del cursor—. Si al
+crecer no cabe, se desliza lo justo para caber: eso sí mueve el borde de
+arriba, y plegar entonces no vuelve al punto exacto de partida.
 
 **El panel no se agranda solo:** crecer y plegarse es cosa del botón, no de un
 clic. El botón va **encima de la esquina de arriba a la derecha**, mide 22×22
@@ -455,7 +466,7 @@ tabla escrita a mano.
 ## 10. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 189 tests, ~25k comprobaciones
+swift run PokeTokenBarSelfTest     # 206 tests, ~25k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 

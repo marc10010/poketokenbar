@@ -527,6 +527,26 @@ enum UISmokeTest {
         print("  posición libre: \(panels.count) panel(es) alojado=\(hosted)")
         ok = panels.count == 1 && hosted && ok
 
+        // Desplegar y plegar en posición libre: la esquina de arriba a la
+        // izquierda se queda quieta y plegar devuelve la ventana justo a donde
+        // estaba, con el origen guardado al día para que aguante un reinicio.
+        store.updateSettings { $0.hudSize = nil }
+        let beforeExpand = NSApp.windows.compactMap { $0 as? NSPanel }.filter(\.isVisible).first?.frame ?? .zero
+        store.updateSettings { $0.hudSize = HUDSize(width: 380, height: 460) }
+        let afterExpand = NSApp.windows.compactMap { $0 as? NSPanel }.filter(\.isVisible).first?.frame ?? .zero
+        // El origen se guarda al turno siguiente, así que hay que dejar
+        // correr el bucle antes de mirarlo.
+        RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        let stored = store.state.settings.hudFreeOrigin
+        store.collapseHUD()
+        let afterCollapse = NSApp.windows.compactMap { $0 as? NSPanel }.filter(\.isVisible).first?.frame ?? .zero
+        let topStays = abs(afterExpand.maxY - beforeExpand.maxY) < 1 && abs(afterExpand.minX - beforeExpand.minX) < 1
+        let grewDown = afterExpand.minY < beforeExpand.minY && afterExpand.maxX > beforeExpand.maxX
+        let roundTrip = abs(afterCollapse.minY - beforeExpand.minY) < 1 && abs(afterCollapse.minX - beforeExpand.minX) < 1
+        let originSaved = stored.map { abs($0.y - afterExpand.minY) < 1 } ?? false
+        print("  desplegar libre: arriba quieto=\(topStays) baja=\(grewDown) vuelve=\(roundTrip) origen guardado=\(originSaved) · \(Int(beforeExpand.minY)) → \(Int(afterExpand.minY)) → \(Int(afterCollapse.minY))")
+        ok = topStays && grewDown && roundTrip && originSaved && ok
+
         // Fuera de toda pantalla: vuelve al anclaje por esquina en vez de perderse.
         store.updateSettings { $0.hudFreeOrigin = HUDOrigin(x: -99_000, y: -99_000) }
         panels = NSApp.windows.compactMap { $0 as? NSPanel }.filter { $0.isVisible }

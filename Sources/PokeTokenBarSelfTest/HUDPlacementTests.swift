@@ -18,6 +18,11 @@ enum HUDPlacementTests: TestSuite {
         ("si casi no se ve, vuelve a lo visible", testSliverIsRescued),
         ("sin pantalla que la aguante, no hay sitio", testOffAllScreens),
         ("sin pantallas devuelve nil", testNoScreens),
+        ("desplegar baja y ensancha, sin subir", testResizeGrowsDownAndRight),
+        ("plegar deja la ventana donde estaba", testCollapseReturnsToTheSameCorner),
+        ("desplegar pegado al borde de abajo sube lo justo", testResizeSlidesUpToFit),
+        ("desplegar en el monitor no salta al portátil", testResizeStaysOnItsScreen),
+        ("más alto que la pantalla manda el borde de arriba", testResizeTallerThanTheScreen),
     ]
 
     private static let laptop = HUDPlacement.Screen(
@@ -85,6 +90,45 @@ enum HUDPlacementTests: TestSuite {
     static func testOffAllScreens() {
         // El monitor que la tenía, desconectado: su sitio ya no existe.
         expectNil(HUDPlacement.free(hud(-495, 2301), screens: [laptop]))
+    }
+
+    private static let expanded = CGSize(width: 380, height: 460)
+
+    static func testResizeGrowsDownAndRight() {
+        let collapsed = hud(400, 600)
+        let grown = HUDPlacement.resized(collapsed, to: expanded, screens: screens)
+        expectEqual(grown.minX, collapsed.minX, "el borde izquierdo no se mueve")
+        expectEqual(grown.maxY, collapsed.maxY, "el borde de arriba no se mueve")
+        expectEqual(grown.size, expanded)
+        expectTrue(grown.minY < collapsed.minY, "crece hacia abajo, no hacia arriba")
+        expectTrue(grown.maxX > collapsed.maxX, "y hacia la derecha")
+    }
+
+    static func testCollapseReturnsToTheSameCorner() {
+        let collapsed = hud(400, 600)
+        let grown = HUDPlacement.resized(collapsed, to: expanded, screens: screens)
+        expectEqual(HUDPlacement.resized(grown, to: size, screens: screens), collapsed, "ida y vuelta")
+    }
+
+    static func testResizeSlidesUpToFit() {
+        // A 40 pt del suelo no caben 460 de alto hacia abajo: se sube lo justo
+        // para caber, no se devuelve a ninguna esquina.
+        let grown = HUDPlacement.resized(hud(400, 40), to: expanded, screens: screens)
+        expectEqual(grown.minY, laptop.visible.minY)
+        expectEqual(grown.minX, 400, "el borde izquierdo sigue sin moverse")
+        expectEqual(grown.size, expanded)
+    }
+
+    static func testResizeStaysOnItsScreen() {
+        let grown = HUDPlacement.resized(hud(-495, 2301), to: expanded, screens: screens)
+        expectTrue(external.visible.contains(grown), "se despliega en el monitor donde está")
+        expectEqual(grown.maxY, 2301 + size.height, "y sigue anclada por arriba")
+    }
+
+    static func testResizeTallerThanTheScreen() {
+        // Nada de lo que hay cabe en 950 pt de alto útil si pides 1200.
+        let grown = HUDPlacement.resized(hud(400, 300), to: CGSize(width: 380, height: 1200), screens: screens)
+        expectEqual(grown.maxY, laptop.visible.maxY, "el borde de arriba se queda a la vista")
     }
 
     static func testNoScreens() {
