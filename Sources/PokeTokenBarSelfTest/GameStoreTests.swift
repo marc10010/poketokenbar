@@ -309,10 +309,15 @@ enum GameStoreTests: TestSuite {
     static func testOnlyTheActiveCompanionShowsEvolved() throws {
         let store = makeStore(seed: 5)
         store.chooseStarter(speciesID: 7)
-        store.ingest(event("evoluciona", input: 400_000, output: 0))
+        let result = try unwrap(store.ingest(event("evoluciona", input: 500_000, output: 0)))
 
+        expectGreaterThan(result.damageApplied, 200_000, "el evento tiene que dar para evolucionar")
         expectEqual(store.stage, EvolutionStage.one)
-        expectEqual(store.activeTokensEarned, 400_000)
+        expectEqual(
+            store.activeTokensEarned,
+            result.damageApplied,
+            "sube el HP que ha quitado, no los tokens que ha gastado"
+        )
         expectEqual(store.activeForm?.id, 8, "Squirtle equipado se ve como Wartortle")
 
         let others = store.boxGroups.filter { $0.id != store.activeGroupID }
@@ -328,19 +333,25 @@ enum GameStoreTests: TestSuite {
     static func testEvolutionSticksAfterSwitchingCompanion() throws {
         let store = makeStore(seed: 21)
         store.chooseStarter(speciesID: 7)
-        store.ingest(event("sube-squirtle", input: 250_000, output: 0))
+        let first = try unwrap(store.ingest(event("sube-squirtle", input: 500_000, output: 0)))
+        expectGreaterThan(first.damageApplied, 200_000, "el evento tiene que dar para evolucionar")
         expectEqual(store.activeForm?.id, 8, "Wartortle")
 
         // Equipamos otro capturado y le damos sus propios tokens.
         let other = try unwrap(store.state.box.first { $0.id != store.state.activeCompanion?.id })
         store.setActiveCompanion(other.id)
         expectEqual(store.activeTokensEarned, 0, "el nuevo empieza de cero")
-        store.ingest(event("sube-otro", input: 250_000, output: 0))
+        let second = try unwrap(store.ingest(event("sube-otro", input: 500_000, output: 0)))
+        expectGreaterThan(second.damageApplied, 200_000, "y el segundo también")
         expectEqual(store.stage, EvolutionStage.one)
 
         let squirtleGroup = try unwrap(store.boxGroups.first { $0.species.id == 7 })
         expectEqual(squirtleGroup.displayForm.id, 8, "el Squirtle sigue siendo Wartortle")
-        expectEqual(squirtleGroup.representative.tokensEarned, 250_000, "su progreso no se toca")
+        expectEqual(
+            squirtleGroup.representative.tokensEarned,
+            first.damageApplied,
+            "su progreso no se toca"
+        )
 
         // Puede haber varios grupos de esa especie (uno por etapa): hay que
         // buscar el del ejemplar que equipamos, no el primero.
