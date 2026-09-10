@@ -879,7 +879,8 @@ quedan porque explican **por qué** cada regla es como es:
 | `docs/spec-gimnasios-medallas.md` | implementada |
 | `docs/spec-liga-zonas-hitos.md` | fases 1-4 implementadas; 5 y 6 pendientes |
 | `docs/spec-ramas-y-cola.md` | ramas por condición **implementadas**; el resto (regiones, misiones, logros) sigue en borrador |
-| `docs/spec-salto-a-kanto.md` | **borrador para decidir**: el requisito para abrir Kanto, si Kanto pesa más, y el momento del salto |
+| `docs/spec-salto-a-kanto.md` | **borrador para decidir**: el requisito para abrir Kanto, si Kanto pesa más, y el momento del salto. Su decisión K4 (no escalar el HP) la sustituye la spec de abajo |
+| `docs/spec-zona-como-unidad.md` | **borrador para decidir**: el HP sale de la zona y no del tier, como en PokéClicker, para que el juego deje de volverse un 36 % más fácil según avanzas |
 
 ## 21. Límites conocidos del MVP
 
