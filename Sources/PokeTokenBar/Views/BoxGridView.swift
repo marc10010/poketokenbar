@@ -250,7 +250,7 @@ struct BoxGridView: View {
             }
             Spacer(minLength: 4)
             VStack(alignment: .trailing, spacing: 1) {
-                Text("\(Fmt.compact(group.representative.tokensEarned)) tk")
+                Text("\(Fmt.compact(group.representative.tokensEarned)) dmg")
                     .font(.system(size: 9, design: .monospaced))
                 Text(wins > 0 ? "\(wins)⚔" : "—")
                     .font(.system(size: 9, design: .monospaced))

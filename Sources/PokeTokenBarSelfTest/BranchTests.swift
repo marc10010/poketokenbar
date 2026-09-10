@@ -16,6 +16,9 @@ enum BranchTests: TestSuite {
         ("una línea de la región que juegas sí evoluciona", testSameRegionLinesAreNeverBlocked),
         ("Eevee espera por las ramas de la región 2", testEeveeWaitsForTheBranchesOfTheSecondRegion),
         ("once evoluciones cruzan a la región cerrada", testExactlyElevenEdgesCross),
+        ("con una sola rama alcanzable, se coge esa", testSingleReachableBranchIsTaken),
+        ("y en cuanto abre la región vuelve a mandar la hora", testTheClockRulesAgainOnceTheRegionOpens),
+        ("la ficha dice qué rama está fuera de alcance", testBranchOptionsSayWhatIsOutOfReach),
     ]
 
     private static let dex = Pokedex.shared
@@ -111,6 +114,55 @@ enum BranchTests: TestSuite {
         deNoche.debugSetEncounter(WildEncounter(speciesID: 129, isShiny: false, rarity: .common, maxHP: 10))
         deNoche.ingest(UsageEvent(id: "agua", inputTokens: 20, outputTokens: 0, timestamp: at(23)))
         expectEqual(activeForm(deNoche), 134, "Vaporeon, que no cruza de región")
+    }
+
+    /// Gloom se bifurca por la hora: de día Bellossom, de noche Vileplume.
+    /// Bellossom es de Johto, así que antes del barco la rama de día pedía una
+    /// forma inalcanzable y el Gloom se quedaba parado hasta la noche. Como
+    /// solo queda **una** alcanzable, y Vileplume es de su propia región,
+    /// esperar no tenía sentido: ahora se coge esa a cualquier hora.
+    static func testSingleReachableBranchIsTaken() throws {
+        for hour in [10, 23] {
+            let store = try primed(species: 44, rival: 19, hour: hour)
+            store.ingest(UsageEvent(id: "sube", inputTokens: 1_100_000, outputTokens: 0, timestamp: at(hour)))
+            expectEqual(activeForm(store), 45, "Vileplume a las \(hour):00")
+            expectNil(
+                store.blockedRegion(for: try unwrap(store.state.activeCompanion)),
+                "y la ficha no puede decir que esté bloqueado, porque no lo está"
+            )
+        }
+    }
+
+    /// Con las dos alcanzables la condición vuelve a decidir: es lo que separa
+    /// "no hay elección" de "la elección es tuya".
+    static func testTheClockRulesAgainOnceTheRegionOpens() throws {
+        let deDia = try primed(species: 44, rival: 19, hour: 10)
+        deDia.debugGrandfatherRegion("johto")
+        deDia.ingest(UsageEvent(id: "dia", inputTokens: 1_100_000, outputTokens: 0, timestamp: at(10)))
+        expectEqual(activeForm(deDia), 182, "Bellossom de día")
+
+        let deNoche = try primed(species: 44, rival: 19, hour: 23)
+        deNoche.debugGrandfatherRegion("johto")
+        deNoche.ingest(UsageEvent(id: "noche", inputTokens: 1_100_000, outputTokens: 0, timestamp: at(23)))
+        expectEqual(activeForm(deNoche), 45, "Vileplume de noche")
+
+        // Y con varias alcanzables sí se espera: Eevee en Kanto de noche pide
+        // Umbreon, que es de Johto, y le quedan tres ramas de Kanto.
+        let eevee = try primed(species: 133, rival: 19, hour: 23)
+        eevee.ingest(UsageEvent(id: "espera", inputTokens: 260_000, outputTokens: 0, timestamp: at(23)))
+        expectEqual(activeForm(eevee), 133, "sigue siendo Eevee")
+    }
+
+    static func testBranchOptionsSayWhatIsOutOfReach() throws {
+        let store = try primed(species: 44, rival: 19, hour: 10)
+        let gloom = try unwrap(store.state.activeCompanion)
+        let options = store.branchOptions(for: gloom)
+        let bellossom = try unwrap(options.first { $0.form.id == 182 })
+        let vileplume = try unwrap(options.first { $0.form.id == 45 })
+        expectEqual(bellossom.blockedRegion, "Johto")
+        expectNil(vileplume.blockedRegion)
+        expectTrue(vileplume.isNext, "la que saldría ahora mismo es la alcanzable")
+        expectFalse(bellossom.isNext)
     }
 
     /// Cuántos casos toca la regla, contados sobre los datos: si un cambio de
