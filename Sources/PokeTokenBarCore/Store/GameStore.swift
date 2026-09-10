@@ -1030,6 +1030,8 @@ public final class GameStore: ObservableObject {
         public let registered: Bool
         /// La que saldría si evolucionara ahora mismo.
         public let isNext: Bool
+        /// Región por abrir donde vive esta rama, si es de otra región.
+        public let blockedRegion: String?
 
         public var id: Int { form.id }
     }
@@ -1038,14 +1040,15 @@ public final class GameStore: ObservableObject {
         let current = evolution.currentForm(of: captured).id
         let rules = BranchRules.branches(of: current)
         guard !rules.isEmpty else { return [] }
-        let now = evolution.branch(for: captured, defeatedTypes: lastDefeatedTypes, at: Date(), calendar: calendar)
+        let next = resolvedBranch(for: captured)
         return rules.compactMap { rule in
             guard let form = pokedex[rule.form] else { return nil }
             return BranchOption(
                 form: form,
                 condition: rule.condition,
                 registered: state.registeredSpeciesIDs.contains(form.id),
-                isNext: now?.id == form.id
+                isNext: next?.form.id == form.id,
+                blockedRegion: closedRegion(of: form, from: captured)
             )
         }
     }
@@ -1368,14 +1371,38 @@ public final class GameStore: ObservableObject {
     /// porque las rutas de Johto están llenas de especies de Kanto. Esa no es
     /// una regla, es un muro.
     public func blockedRegion(for captured: CapturedPokemon) -> String? {
-        guard let next = evolution.branch(
+        resolvedBranch(for: captured)?.blocked
+    }
+
+    /// A qué forma evolucionaría ahora mismo, y qué región lo impide si alguna.
+    ///
+    /// Cuando la rama que toca vive en una región cerrada pero solo queda
+    /// **una** alternativa alcanzable, se coge esa: esperar a Johto para tener
+    /// un Vileplume, que es de Kanto, no tiene sentido. Con dos o más
+    /// alcanzables sí se espera, porque ahí la elección sigue siendo tuya y
+    /// darte una al azar sería quitártela.
+    private func resolvedBranch(
+        for captured: CapturedPokemon,
+        now: Date = Date()
+    ) -> (form: Pokemon, blocked: String?)? {
+        guard let wanted = evolution.branch(
             for: captured,
             defeatedTypes: lastDefeatedTypes,
-            at: Date(),
+            at: now,
             calendar: calendar
         ) else { return nil }
+        guard let blocked = closedRegion(of: wanted, from: captured) else { return (wanted, nil) }
+
+        let reachable = evolution.options(for: captured).filter { closedRegion(of: $0, from: captured) == nil }
+        guard reachable.count == 1 else { return (wanted, blocked) }
+        return (reachable[0], nil)
+    }
+
+    /// Región de una forma que todavía no has abierto, si su línea viene de
+    /// otra: una evolución de tu propia región nunca está cerrada.
+    private func closedRegion(of form: Pokemon, from captured: CapturedPokemon) -> String? {
         let home = pokedex.require(captured.speciesID).homeRegion
-        let target = next.homeRegion
+        let target = form.homeRegion
         guard target != home, !isOpen(region: target.lowercased()) else { return nil }
         return target
     }
@@ -1385,20 +1412,15 @@ public final class GameStore: ObservableObject {
     /// dar para dos saltos: los dos usan el mismo rival y la misma hora, que es
     /// el instante en que llegaron esos tokens.
     private func resolveEvolutions(at index: Int, now: Date) {
-        let types = lastDefeatedTypes
         for _ in 0..<EvolutionStage.allCases.count {
             guard evolution.canEvolve(state.box[index]),
-                  let next = evolution.branch(
-                      for: state.box[index],
-                      defeatedTypes: types,
-                      at: now,
-                      calendar: calendar
-                  )
+                  let branch = resolvedBranch(for: state.box[index], now: now)
             else { return }
-            // La forma siguiente vive en una región que no has abierto: espera.
-            // No se cae a otra rama, que sería darte la que no pediste.
-            let home = pokedex.require(state.box[index].speciesID).homeRegion
-            if next.homeRegion != home, !isOpen(region: next.homeRegion.lowercased()) { return }
+            // La forma siguiente vive en una región que no has abierto y hay
+            // más de una alcanzable: espera. Darte otra sería darte la que no
+            // pediste.
+            guard branch.blocked == nil else { return }
+            let next = branch.form
             state.box[index].evolvedForms.append(next.id)
             state.registeredSpeciesIDs.insert(next.id)
             groupCache = nil
