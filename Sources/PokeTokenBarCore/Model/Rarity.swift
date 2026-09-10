@@ -80,6 +80,13 @@ public enum GameRules {
     /// muro.
     public static let regionTransferSpecies = 70
 
+    /// Inicial de cada región. No se elige: **cada región regala el suyo al
+    /// llegar**, como el profesor de su pueblo. Elegir entre seis no aportaba
+    /// una decisión —cualquiera sirve igual, porque lo que decide un combate es
+    /// el cruce de tipos del rival de turno— y además ofrecía los tres de Johto
+    /// para empezar en Kanto, que es la región 1.
+    public static let starterByRegion = ["kanto": 4, "johto": 155]   // Charmander · Cyndaquil
+
     /// 1 token = 1 punto de daño.
     public static let damagePerToken = 1
     public static let shinyProbability = 0.01

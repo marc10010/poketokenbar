@@ -12,6 +12,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hud: HUDController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Los iniciales no se eligen: cada región regala el suyo, y al arrancar
+        // se reparten los de las regiones que ya estén abiertas.
+        store.ensureStarters()
+
         NSApp.setActivationPolicy(.accessory)
         store.ensureEncounter()
         statusItem = StatusItemController(store: store, sprites: sprites, sources: sources)
@@ -50,8 +54,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             _ = sprites.image(speciesID: encounter.speciesID, shiny: encounter.isShiny)
             _ = sprites.image(speciesID: encounter.speciesID, shiny: encounter.isShiny, animated: true)
         }
-        for starter in store.pokedex.starters {
+        if let starter = store.regionStarter {
             _ = sprites.image(speciesID: starter.id, shiny: false)
+            _ = sprites.image(speciesID: starter.id, shiny: false, animated: true)
         }
     }
 }

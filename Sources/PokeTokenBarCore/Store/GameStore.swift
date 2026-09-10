@@ -205,6 +205,16 @@ public final class GameStore: ObservableObject {
                   !state.celebratedRegions.contains(region)
             else { continue }
             state.celebratedRegions.insert(region)
+            // El inicial de la región llega con ella.
+            if let starter = starter(of: region),
+               !state.box.contains(where: { pokedex[$0.speciesID]?.baseFormID == starter.baseFormID }) {
+                state.box.append(
+                    CapturedPokemon(speciesID: starter.id, isShiny: false, capturedAtTotalTokens: totalTokens)
+                )
+                state.registeredSpeciesIDs.insert(starter.id)
+                groupCache = nil
+                dexCache = nil
+            }
             // Las partidas que ya la tenían abierta no reciben confeti por algo
             // que pasó hace semanas.
             guard !state.grandfatheredRegions.contains(region) else { continue }
@@ -695,6 +705,48 @@ public final class GameStore: ObservableObject {
 
     // MARK: - Acciones
 
+    /// Inicial de una región, si tiene uno asignado.
+    public func starter(of region: String) -> Pokemon? {
+        GameRules.starterByRegion[region].flatMap { pokedex[$0] }
+    }
+
+    /// El de la región en la que se empieza, para precargar su sprite.
+    public var regionStarter: Pokemon? { gymCatalog.regions.first.flatMap { starter(of: $0) } }
+
+    /// Reparte los iniciales de las regiones **abiertas**: cada región regala
+    /// el suyo al llegar, así que abrir Johto trae su inicial igual que trae
+    /// sus zonas y sus gimnasios.
+    ///
+    /// Nunca duplica una línea: si ya tienes ese Pokémon —porque lo capturaste,
+    /// o porque tu partida arrancó cuando la región 1 era la otra— no te dan
+    /// otro. Es un regalo, no un cambio: no toca nada de lo que ya tenías.
+    @discardableResult
+    public func ensureStarters() -> [CapturedPokemon] {
+        var nuevos: [CapturedPokemon] = []
+        for region in gymCatalog.regions where isOpen(region: region) {
+            guard let starter = starter(of: region),
+                  !state.box.contains(where: { pokedex[$0.speciesID]?.baseFormID == starter.baseFormID })
+            else { continue }
+            let captured = CapturedPokemon(
+                speciesID: starter.id,
+                isShiny: false,
+                capturedAtTotalTokens: totalTokens
+            )
+            state.box.append(captured)
+            if state.activeCompanionID == nil { state.activeCompanionID = captured.id }
+            state.registeredSpeciesIDs.insert(captured.speciesID)
+            nuevos.append(captured)
+        }
+        guard !nuevos.isEmpty else { return [] }
+        groupCache = nil
+        dexCache = nil
+        ensureEncounter()
+        persist()
+        return nuevos
+    }
+
+    /// Mete un inicial concreto. Se conserva para los tests y el arnés de
+    /// render, que necesitan partidas con una línea determinada.
     public func chooseStarter(speciesID: Int) {
         guard state.box.isEmpty, let species = pokedex[speciesID], species.isBaseForm else { return }
         let starter = CapturedPokemon(speciesID: speciesID, isShiny: false, capturedAtTotalTokens: totalTokens)
@@ -777,6 +829,7 @@ public final class GameStore: ObservableObject {
         selectedBoxGroupID = nil
         inspectingRival = false
         boxFilter.reset()
+        ensureStarters()
         flush()
     }
 

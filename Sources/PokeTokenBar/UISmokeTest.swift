@@ -63,9 +63,12 @@ enum UISmokeTest {
         }
 
         print("▸ UI smoke test")
-        var ok = layout("selector de inicial")
+        var ok = layout("sin compañero todavía")
 
-        store.chooseStarter(speciesID: 155)
+        // El inicial lo reparte la app, no una pantalla de elegir.
+        let granted = store.ensureStarters()
+        print("  inicial repartido: \(granted.map(\.speciesID)) · región 1 = \(store.regionStarter?.localizedName ?? "—")")
+        ok = (granted.first?.speciesID == store.regionStarter?.id) && ok
         store.ingest(UsageEvent(id: "smoke-1", inputTokens: 5_000, outputTokens: 1_000))
         ok = layout("combate") && ok
 
@@ -344,18 +347,21 @@ enum UISmokeTest {
         ok = layout("ficha de gimnasio") && ok
         store.selectedGymID = nil
 
-        // Reinicio: deja el juego como recién instalado y conserva ajustes.
+        // Reinicio: deja el juego como recién instalado —con el inicial de la
+        // región 1, que se repone— y conserva ajustes.
         let settingsBefore = store.state.settings
         store.resetGame()
-        if store.state.box.isEmpty, store.totalTokens == 0, store.medals == 0,
+        let starter = store.regionStarter?.id
+        if store.state.box.map(\.speciesID) == [starter].compactMap({ $0 }),
+           store.totalTokens == 0, store.medals == 0,
            store.state.settings == settingsBefore {
-            print("  reinicio: caja vacía, 0 tokens, ajustes intactos")
+            print("  reinicio: solo el inicial (#\(starter ?? 0)), 0 tokens, ajustes intactos")
         } else {
-            print("  ✗ el reinicio no dejó el estado limpio")
+            print("  ✗ el reinicio no dejó el estado limpio: \(store.state.box.map(\.speciesID))")
             ok = false
         }
-        ok = layout("tras reiniciar (selector de inicial)") && ok
-        store.chooseStarter(speciesID: 155)
+        ok = layout("tras reiniciar") && ok
+        if let companion = store.state.box.first { store.setActiveCompanion(companion.id) }
         store.ingest(UsageEvent(id: "post-reset", inputTokens: 5_000, outputTokens: 0))
 
         // Ficha de un Pokémon de la caja, que es lo que abre un clic.

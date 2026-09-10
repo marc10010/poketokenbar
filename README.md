@@ -112,6 +112,18 @@ al mismo sitio, aunque la cadena tenga cinco salidas.
 
 ## 3. Reglas
 
+**El inicial no se elige: cada región regala el suyo al llegar**, como el
+profesor de su pueblo. Kanto (la región 1) da **Charmander** y Johto da
+**Cyndaquil**, así que abrir la región 2 trae su inicial igual que trae sus
+zonas y sus gimnasios — y hasta que aparezca una tercera región no hay ninguno
+más que esperar.
+
+Antes había una pantalla para elegir entre los seis clásicos, y sobraba por dos
+motivos: no era una decisión (lo que decide un combate es el cruce de tipos del
+rival de turno, no con quién empezaste) y ofrecía los tres de Johto para empezar
+en Kanto. Nunca duplica una línea: si ya tienes ese Pokémon, no te dan otro.
+
+
 | Tier | Prob. | HP | Requiere | Ejemplos |
 |---|---|---|---|---|
 | Común | 60 % | 10.000 – 50.000 | — | Rattata, Sentret |

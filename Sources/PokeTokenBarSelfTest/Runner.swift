@@ -10,6 +10,7 @@ struct SelfTestRunner {
             BattleEngineTests.self,
             EvolutionServiceTests.self,
             BranchTests.self,
+            StarterTests.self,
             BoxGroupTests.self,
             BoxFilterTests.self,
             BoxSectionTests.self,
