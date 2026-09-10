@@ -216,8 +216,12 @@ final class HUDController {
         guard abs(free.x - frame.minX) > 0.5 || abs(free.y - frame.minY) > 0.5 else { return }
         let origin = HUDOrigin(x: frame.minX, y: frame.minY)
         RunLoop.main.perform { [weak self] in
-            guard let self, self.store.state.settings.hudFreeOrigin != nil else { return }
-            self.store.updateSettings { $0.hudFreeOrigin = origin }
+            // `perform` corre en el hilo principal, pero su cierre es
+            // `@Sendable` y el compilador no lo sabe.
+            MainActor.assumeIsolated {
+                guard let self, self.store.state.settings.hudFreeOrigin != nil else { return }
+                self.store.updateSettings { $0.hudFreeOrigin = origin }
+            }
         }
     }
 
