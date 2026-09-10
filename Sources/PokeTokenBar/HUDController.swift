@@ -76,11 +76,16 @@ final class HUDController {
         let interactive = interactive(state)
         let acceptsMouse = acceptsMouse(state)
         let frames = targetFrames(state)
+        rememberFreeOrigin(frames.first, state)
         if panels.count != frames.count {
             teardown()
             panels = frames.map { _ in makePanel() }
         }
 
+        // Guardar el sitio nuevo vuelve a entrar aquí, así que la bandera se
+        // restaura en vez de apagarse: apagarla dejaría al que llamó fuera de
+        // su propia protección.
+        let wasRepositioning = isRepositioning
         isRepositioning = true
         let minimum = battleSize(state)
         for (panel, frame) in zip(panels, frames) {
@@ -91,7 +96,7 @@ final class HUDController {
             if panel.frame != frame { panel.setFrame(frame, display: true) }
             panel.orderFrontRegardless()
         }
-        isRepositioning = false
+        isRepositioning = wasRepositioning
 
         Diagnostics.append(
             "hud: \(panels.count) panel(es) · interactivo=\(interactive) · movible=\(acceptsMouse && !interactive) · "
@@ -189,9 +194,31 @@ final class HUDController {
     /// Una posición si está arrastrado a mano; una por pantalla si está anclado.
     private func targetFrames(_ state: GameState) -> [NSRect] {
         if let free = state.settings.hudFreeOrigin, let frame = clamped(free, state) {
+            // Desplegar y plegar dejan quieta la esquina de arriba a la
+            // izquierda. Sin esto la ventana crece hacia arriba, porque el
+            // origen de Cocoa es la esquina de abajo.
+            if let panel = panels.first, panel.frame.size != frame.size {
+                return [HUDPlacement.resized(panel.frame, to: frame.size, screens: screenList())]
+            }
             return [frame]
         }
         return NSScreen.screens.map { cornerFrame(on: $0, state) }
+    }
+
+    /// Guarda el sitio que deja un despliegue: si no, al reiniciar la ventana
+    /// volvería al origen viejo, el de antes de desplegar.
+    ///
+    /// El salto de turno no es adorno: `@Published` emite en `willSet`, así que
+    /// escribir aquí mismo se pierde cuando aterriza la asignación que nos
+    /// trajo. Al turno siguiente el estado ya es el nuevo y la escritura pega.
+    private func rememberFreeOrigin(_ frame: NSRect?, _ state: GameState) {
+        guard let frame, let free = state.settings.hudFreeOrigin else { return }
+        guard abs(free.x - frame.minX) > 0.5 || abs(free.y - frame.minY) > 0.5 else { return }
+        let origin = HUDOrigin(x: frame.minX, y: frame.minY)
+        RunLoop.main.perform { [weak self] in
+            guard let self, self.store.state.settings.hudFreeOrigin != nil else { return }
+            self.store.updateSettings { $0.hudFreeOrigin = origin }
+        }
     }
 
     /// Mantiene la ventana dentro de alguna pantalla: si desconectas el
@@ -199,10 +226,11 @@ final class HUDController {
     /// `HUDPlacement`, sin AppKit, para poder probarla.
     private func clamped(_ origin: HUDOrigin, _ state: GameState) -> NSRect? {
         let candidate = NSRect(origin: NSPoint(x: origin.x, y: origin.y), size: size(state))
-        return HUDPlacement.free(
-            candidate,
-            screens: NSScreen.screens.map { .init(frame: $0.frame, visible: $0.visibleFrame) }
-        )
+        return HUDPlacement.free(candidate, screens: screenList())
+    }
+
+    private func screenList() -> [HUDPlacement.Screen] {
+        NSScreen.screens.map { .init(frame: $0.frame, visible: $0.visibleFrame) }
     }
 
     /// `visibleFrame` ya descuenta barra de menú y Dock de esa pantalla.
