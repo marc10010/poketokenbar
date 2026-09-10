@@ -25,6 +25,7 @@ struct SelfTestRunner {
             GymBattleTests.self,
             GameStoreTests.self,
             IngestTests.self,
+            HUDPlacementTests.self,
         ]
 
         var executed = 0

@@ -195,15 +195,14 @@ final class HUDController {
     }
 
     /// Mantiene la ventana dentro de alguna pantalla: si desconectas el
-    /// monitor donde la dejaste, no se queda en el limbo.
+    /// monitor donde la dejaste, no se queda en el limbo. La regla está en
+    /// `HUDPlacement`, sin AppKit, para poder probarla.
     private func clamped(_ origin: HUDOrigin, _ state: GameState) -> NSRect? {
         let candidate = NSRect(origin: NSPoint(x: origin.x, y: origin.y), size: size(state))
-        let host = NSScreen.screens.first { $0.frame.intersects(candidate) }
-        guard let host else { return nil }
-        let area = host.visibleFrame
-        let x = min(max(candidate.minX, area.minX), area.maxX - candidate.width)
-        let y = min(max(candidate.minY, area.minY), area.maxY - candidate.height)
-        return NSRect(x: x, y: y, width: candidate.width, height: candidate.height)
+        return HUDPlacement.free(
+            candidate,
+            screens: NSScreen.screens.map { .init(frame: $0.frame, visible: $0.visibleFrame) }
+        )
     }
 
     /// `visibleFrame` ya descuenta barra de menú y Dock de esa pantalla.
