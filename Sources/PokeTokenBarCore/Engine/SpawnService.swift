@@ -1,7 +1,8 @@
 import Foundation
 
-/// Sortea rivales: primero el tier (con gates por tokens globales), luego la
-/// especie dentro del tier, luego HP y shiny.
+/// Sortea rivales dentro de la zona en la que estás: primero el tier con los
+/// pesos de rareza, luego la especie dentro del tier, luego el shiny. La vida
+/// no se sortea: es la de la zona.
 public struct SpawnService {
     private let pokedex: Pokedex
     private let zones: ZoneCatalog
@@ -11,19 +12,21 @@ public struct SpawnService {
         self.zones = zones
     }
 
-    /// Tiers disponibles según el rango. Acumular tokens no desbloquea nada:
-    /// hacen falta medallas.
-    public func availableTiers(rank: TrainerRank) -> [Rarity] {
-        Rarity.allCases.filter { $0.spawnsInTheWild && rank >= $0.requiredRank }
+    /// Tiers que puede sortear una zona con este rango: los que tienen especies
+    /// suyas y ya están abiertos por medallas.
+    public func availableTiers(rank: TrainerRank, in zone: Zone) -> [Rarity] {
+        let present = Set(pool(zone).map(\.rarity))
+        return Rarity.allCases.filter { $0.spawnsInTheWild && rank >= $0.requiredRank && present.contains($0) }
     }
 
-    /// Elige tier respetando los ratios del spec. Si un tier está bloqueado,
-    /// su peso se redistribuye entre los disponibles en vez de reintentar.
-    public func rollTier<R: RandomProvider>(rank: TrainerRank, using rng: inout R) -> Rarity {
-        let tiers = availableTiers(rank: rank)
-        guard !tiers.isEmpty else { return .common }
-        let weightTotal = tiers.reduce(0.0) { $0 + $1.spawnWeight }
-        var roll = rng.nextUnit() * weightTotal
+    /// Elige tier entre los que la zona puede dar, con los pesos
+    /// renormalizados: si una zona no tiene raros, su peso se reparte entre
+    /// los demás en vez de sortear en vacío.
+    public func rollTier<R: RandomProvider>(rank: TrainerRank, in zone: Zone, using rng: inout R) -> Rarity? {
+        let tiers = availableTiers(rank: rank, in: zone)
+        guard !tiers.isEmpty else { return nil }
+        let total = tiers.reduce(0.0) { $0 + $1.spawnWeight }
+        var roll = rng.nextUnit() * total
         for tier in tiers {
             roll -= tier.spawnWeight
             if roll <= 0 { return tier }
@@ -31,77 +34,41 @@ public struct SpawnService {
         return tiers[tiers.count - 1]
     }
 
-    /// Tier en el que se ofrece una especie sin zona: el más difícil entre
-    /// "raro" y el suyo. `sortIndex` es menor cuanto más raro, así que el más
-    /// difícil es el de índice más bajo.
-    public func fallbackTier(for species: Pokemon) -> Rarity {
-        species.rarity.sortIndex <= Rarity.rare.sortIndex ? species.rarity : .rare
-    }
-
-    /// Candidatas de un tier con las zonas abiertas de por medio.
-    ///
-    /// Una especie sin zona (sin encuentro salvaje en Gen 1/2) entra en el tier
-    /// más difícil entre "raro" y el suyo: así ninguna se vuelve incompletable
-    /// por un hueco del reparto, pero un legendario no se abarata a raro.
-    public func candidates(rarity: Rarity, access: ZoneAccess) -> [Pokemon] {
-        let tierPool = pokedex.spawnCandidates(rarity: rarity)
-        var available = tierPool.filter { zones.isAvailable($0.id, access) }
-
-        for id in zones.unassigned {
-            guard let species = pokedex[id], species.isBaseForm, !species.isLegendary else { continue }
-            guard fallbackTier(for: species) == rarity else { continue }
-            if !available.contains(where: { $0.id == id }) { available.append(species) }
-        }
-
-        // Nunca dejar un tier sin candidatas: el combate no puede quedarse sin
-        // rival por un hueco de datos.
-        return available.isEmpty ? tierPool : available.sorted { $0.id < $1.id }
-    }
-
-    /// Lo que puede aparecer en una zona enfocada: **todas** sus especies a
-    /// partes iguales, sin sortear tier ni filtrar por rango.
-    ///
-    /// Fuera quedan las formas evolucionadas (un salvaje arranca su línea) y
-    /// los legendarios, que no es un filtro de esta mecánica: no aparecen en
-    /// libertad en ningún caso, son hitos con sitio y requisito.
-    public func focusPool(_ zone: Zone) -> [Pokemon] {
+    /// Lo que vive en una zona y puede salir: formas base y nada legendario.
+    /// Un salvaje arranca su línea, y los legendarios son hitos con sitio y
+    /// requisito.
+    public func pool(_ zone: Zone) -> [Pokemon] {
         zone.species
             .compactMap { pokedex[$0] }
             .filter { $0.isBaseForm && $0.rarity.spawnsInTheWild }
             .sorted { $0.id < $1.id }
     }
 
+    /// Un rival de la zona en la que estás. La zona decide **quién** sale
+    /// (con la rareza como peso) y **cuánto aguanta**: dentro de una zona
+    /// todos los salvajes tienen la misma vida, como las rutas de PokéClicker.
     public func spawn<R: RandomProvider>(
+        zone: Zone,
         rank: TrainerRank,
-        access: ZoneAccess = ZoneAccess(medals: 0),
-        focus: Zone? = nil,
         using rng: inout R,
         now: Date = Date()
     ) -> WildEncounter {
-        // Zona enfocada: sale cualquiera de las suyas, a partes iguales. La
-        // probabilidad de una concreta es su tamaño y nada más, así que no hay
-        // constante que ajustar ni que explicar.
-        if let focus, access.opens(focus) {
-            let pool = focusPool(focus)
-            if !pool.isEmpty {
-                let species = pool[rng.nextInt(in: 0...(pool.count - 1))]
-                let hp = rng.nextInt(in: species.rarity.hpRange)
-                let shiny = rng.nextUnit() < GameRules.shinyProbability
-                return WildEncounter(
-                    speciesID: species.id,
-                    isShiny: shiny,
-                    rarity: species.rarity,
-                    maxHP: hp,
-                    spawnedAt: now
-                )
-            }
+        var candidates = pool(zone)
+        if let tier = rollTier(rank: rank, in: zone, using: &rng) {
+            candidates = candidates.filter { $0.rarity == tier }
         }
-
-        let tier = rollTier(rank: rank, using: &rng)
-        let pool = candidates(rarity: tier, access: access)
-        let species = pool[rng.nextInt(in: 0...(pool.count - 1))]
-        let hp = rng.nextInt(in: tier.hpRange)
+        // Sin candidatas no hay combate, así que una zona vacía cae a la
+        // primera. No debería pasar nunca —hay un test que lo fija— pero un
+        // hueco de datos no puede dejar al jugador sin rival.
+        if candidates.isEmpty { candidates = pool(zones.inUnlockOrder[0]) }
+        let species = candidates[rng.nextInt(in: 0...(candidates.count - 1))]
         let shiny = rng.nextUnit() < GameRules.shinyProbability
-        return WildEncounter(speciesID: species.id, isShiny: shiny, rarity: tier, maxHP: hp, spawnedAt: now)
+        return WildEncounter(
+            speciesID: species.id,
+            isShiny: shiny,
+            rarity: species.rarity,
+            maxHP: zones.hp(of: zone),
+            spawnedAt: now
+        )
     }
 }

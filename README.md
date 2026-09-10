@@ -159,7 +159,7 @@ piedras, ni amistad, ni intercambios; hay reloj y rivales con tipo):
 
 **El tipo manda sobre el reloj**: si no, de noche no habría manera de sacar a
 Vaporeon. Así el reloj es el camino por defecto y el tipo es el que se busca a
-propósito — y para eso está la zona enfocada (§13).
+propósito — y para eso está elegir zona (§13).
 
 Y como una línea solo se captura una vez, para las otras ramas hay una
 excepción a esa regla: **puedes capturar otro ejemplar de una línea que bifurca
@@ -656,50 +656,69 @@ La curva medida, en formas base (las únicas que aparecen en libertad):
 | Kanto abierta | 23 | 163 | 109 |
 | Campeón | 32 | 193 | 128 |
 
-**Red de seguridad**: 58 especies no tienen ningún encuentro salvaje en Gen 1/2.
-55 son formas evolucionadas, que aquí se consiguen evolucionando, y de las tres
-restantes dos eran el bug de las cadenas con raíz fuera de rango. Queda **Mew**.
-Una especie sin zona se ofrece en el tier **más difícil entre "raro" y el suyo**,
-así que ninguna se vuelve incompletable por un hueco del reparto y un legendario
-no se abarata a raro. Y ningún tier se queda nunca sin candidatas: si el filtro
-vaciara uno, se usa el pool completo antes que dejar el combate sin rival.
+**Sin zona no se caza.** 58 especies no tienen ningún encuentro salvaje en Gen
+1/2: 57 son formas evolucionadas, que aquí se consiguen evolucionando, y la que
+queda es **Mew**, que es un hito. Antes había una red que las ofrecía en el tier
+más difícil entre "raro" y el suyo; con la zona como bombo único esa red no
+tiene dónde engancharse, y no se pierde nada porque no pescaba a nadie.
 
-### Zona enfocada: cómo se caza algo concreto
+### La zona es la unidad de dificultad
 
-Con las zonas como desbloqueo puro, el bombo solo crece: con todas abiertas, ver
-una especie **concreta** cuesta ~59 apariciones si es común, ~118 si es rara y
-**~245 si es poco común** (unos 25M de tokens). Los últimos huecos de la Pokédex
-eran una lotería, y peor cuanto más avanzas.
+**Siempre estás en una zona**, y el rival sale de su bombo. No hay modo "todo
+mezclado": era lo que hacía que el juego se volviera **más fácil** según
+avanzabas, porque el HP esperado de un salvaje era constante (101.020 desde la
+segunda medalla) mientras el bonus de colección subía. De la medalla 2 al final
+una captura pasaba de 91.870 tokens a 58.831.
 
-Así que una zona abierta se puede **enfocar**: mientras lo esté, el rival sale
-de ella y **sale cualquiera de sus especies, a partes iguales**. Sin sortear
-tier, sin filtrar por tipo ni por rareza, sin porcentajes que ajustar: la
-probabilidad de la que buscas **es el tamaño de la zona**.
+Dos cosas salen de la zona y no del tier:
 
-| Zona enfocada | Especies | Apariciones para una concreta |
+- **Cuánto aguanta.** `HP(d) = 60.000 · 1,0595^(d−1)`, donde `d` es la
+  profundidad: el puesto de la zona en el orden de apertura. De las Rutas del
+  sur de Kanto (60.000) al Monte Plateado (359.982) hay **×6**. Dentro de una
+  zona todos aguantan lo mismo: un raro sale menos, no pesa más.
+- **Quién sale.** La rareza pasa a ser **probabilidad**: 45 % común, 33 % poco
+  común, 22 % raro entre las especies de esa zona, y el peso de un tier que la
+  zona no tiene se reparte entre los demás.
+
+Es la forma en que lo hace PokéClicker, medida en su código
+(`(100·ruta^2,2/12)^1,15 · (1 + región/20)`): una **curva continua sobre el
+índice de ruta**, que sigue contando al cambiar de región, con un factor de
+región del +5 % que es ruido. Cruzar a Johto es un escalón del 16 %; lo que
+multiplica por 1.971 es recorrer Kanto entero. Allí pueden permitirse ×2.000
+porque su ataque crece igual de bruto; aquí el daño crece ×4 como mucho, así
+que se copia la forma y no la pendiente.
+
+**El techo del bonus de colección sube a +3** para acompañarla. Es la otra mitad
+de la carrera: sin eso, volver a una zona vieja costaría casi lo mismo que la
+primera vez. Con las dos piezas, la frontera se mantiene en 1,3–2,4 h por
+captura de principio a fin y una zona vieja sale **3,4× más barata** que cuando
+la estrenaste. Solo cuenta contra salvajes, así que los jefes no se enteran.
+
+### Cómo se caza algo concreto
+
+La zona es también la respuesta a "me falta **este**". La probabilidad de una
+especie concreta es el tamaño de su zona y el peso de su rareza, nada más:
+
+| Zona | Especies | Apariciones para una concreta |
 |---|---|---|
+| Cueva Diglett | 1 | 1 |
 | Guarida Dragón | 2 | 2 |
-| Torre Quemada | 3 | 3 |
-| mediana de las 33 | ~7 | ~7 |
+| mediana de las 32 | ~7 | ~7 |
 | Rutas del sur de Johto | 46 | 46 |
 
-Por eso la lista de zonas enseña **"faltan N de M"** (con la palabra delante: un
-"41 de 45" a secas no dice si son las que tienes o las que te faltan): se ve solo que enfocar
-la Guarida Dragón es un láser y enfocar las Rutas del sur no sirve de nada, sin
-que nadie lo explique.
+Por eso la lista enseña **"faltan N de M"** (con la palabra delante: un "41 de
+45" a secas no dice si son las que tienes o las que te faltan) y el **HP** de
+cada zona: se ve de un vistazo que la Guarida Dragón es un láser, que las Rutas
+del sur no sirven para buscar nada concreto, y lo que cuesta cada sitio.
 
-Lo que el enfoque **no** hace:
+Lo que la zona **no** hace:
 
 - no cuela legendarios (son hitos, no salvajes) ni formas evolucionadas (un
   salvaje arranca su línea), que es lo que nunca aparece en libertad;
 - no toca el disparador del gimnasio, que cuenta **victorias** de cualquier
   sitio: volver a una zona vieja a por lo que falta nunca frena el progreso;
-- no filtra por rango. Enfocar una zona con raras las da siendo Novato, y es a
-  propósito: la zona ya está cerrada hasta sus medallas, así que el gate está
-  antes. Con 0 medallas la única zona con raras son las Rutas del sur, y sus
-  tres raras son **los iniciales**.
-
-Se persiste: cazar algo concreto lleva sesiones.
+- no se salta el rango: de Novato no salen raros ni en su zona. La puerta de la
+  zona dice dónde puedes ir; el rango, qué se te pone delante al llegar.
 
 ## 14. Pokédex completa
 

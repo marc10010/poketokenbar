@@ -52,6 +52,23 @@ public final class ZoneCatalog: @unchecked Sendable {
         }
     }()
 
+    /// Profundidad de una zona: su puesto en el orden de apertura, empezando
+    /// por 1. Es el equivalente al índice de ruta de PokéClicker, que sigue
+    /// contando al cambiar de región en vez de reiniciarse.
+    public func depth(of zone: Zone) -> Int {
+        (depths[zone.id] ?? 1)
+    }
+
+    /// Vida de un salvaje de esta zona. La rareza no la toca: dentro de una
+    /// zona, un raro cuesta lo mismo que un común, solo sale menos.
+    public func hp(of zone: Zone) -> Int {
+        Int((GameRules.zoneBaseHP * pow(GameRules.zoneHPGrowth, Double(depth(of: zone) - 1))).rounded())
+    }
+
+    private lazy var depths: [String: Int] = {
+        Dictionary(uniqueKeysWithValues: inUnlockOrder.enumerated().map { ($0.element.id, $0.offset + 1) })
+    }()
+
     public func zones(for speciesID: Int) -> [Zone] { zonesBySpecies[speciesID] ?? [] }
 
     public func unlocked(_ access: ZoneAccess) -> [Zone] {
