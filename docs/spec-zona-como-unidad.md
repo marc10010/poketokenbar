@@ -1,6 +1,11 @@
 # Spec: la zona como unidad de dificultad
 
-Estado: **propuesta**. Sustituye la decisión **K4** de
+Estado: **implementada** en #47 con la curva **B** (HP ×6 de punta a punta y
+techo del bonus de colección a +3) y **Z1 ponderado 45/33/22**. Las demás
+decisiones quedaron como se proponen aquí salvo **Z5**, que se decidió al
+revés: el gate de rango se queda (ver la nota en esa decisión).
+
+Estado original: propuesta. Sustituye la decisión **K4** de
 [spec-salto-a-kanto](spec-salto-a-kanto.md) ("no escalamos el HP por región"),
 que se tomó con Johto como región 1 y con el supuesto de que la alternativa era
 un multiplicador por región. Ninguna de las dos cosas se sostiene ya: el orden
@@ -238,6 +243,12 @@ exactamente lo que rompe la curva; dejarlo como ajuste sería dejar dos juegos.
 de la zona ya es el gate. Efecto: un raro de la primera ruta pasa a poder salir
 con 0 medallas, cuando hoy pide 2. Es coherente —está en la ruta 1, tan
 alcanzable como el resto— pero es un cambio de sensación en la primera hora.
+
+**Decidido al implementar: se quedan.** Quitarlos se llevaba por delante lo que
+anuncia la celebración de medalla ("ahora salen raros"), que es contenido real
+de una pantalla, y hacía que las tres raras de la primera ruta —los iniciales—
+salieran desde el primer minuto. La puerta de la zona dice **dónde** puedes ir;
+el rango, **qué** se te pone delante al llegar.
 
 **Z6 — ¿Qué HP tienen las zonas de campeón?** Propuesta: las últimas de la
 curva (31 y 32), sin trato especial. Cueva Celeste ya es donde vive Mewtwo.
