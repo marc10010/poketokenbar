@@ -473,7 +473,7 @@ tabla escrita a mano.
 ## 10. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 211 tests, ~43k comprobaciones
+swift run PokeTokenBarSelfTest     # 212 tests, ~43k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 
@@ -723,6 +723,12 @@ generaciones conviven en el mapa.
 | Registrada | a color, algo apagada: fue tuya y evolucionó |
 | Visto | en gris: le has ganado en libertad pero no se quedó |
 | Sin ver | silueta y solo su número |
+
+La ficha del rival dice **lo que va a pasar al vencerlo**, y lo saca de la misma
+función que lo decide (`captureOutcome`): nuevo, repetido —cuenta la victoria y
+no se queda— o el caso de la rama, que es el único en que una línea que ya
+tienes acepta otro ejemplar. El aviso vivía en la vista y decía "no se queda"
+también en ese tercer caso.
 
 **La Pokédex es un registro, no una foto de la caja.** Cuenta la especie con la
 que capturaste, la forma en la que se ve ahora **y todas las etapas por las que

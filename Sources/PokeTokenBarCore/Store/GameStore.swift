@@ -1016,6 +1016,25 @@ public final class GameStore: ObservableObject {
         return mine.allSatisfy { evolution.options(for: $0).isEmpty }
     }
 
+    /// Qué pasaría si venciera al rival de ahora. Lo decide `collect`, así que
+    /// vivir aquí y no en la vista es lo que evita que el aviso y la regla se
+    /// separen: el aviso decía "no se queda" también en las líneas que sí
+    /// aceptan un segundo ejemplar.
+    public enum CaptureOutcome: Sendable, Equatable {
+        /// Línea nueva: entra en la caja.
+        case newLine
+        /// Ya la tienes y no admite otro: cuenta la victoria y nada más.
+        case repeated
+        /// Ya la tienes, pero bifurca y le falta una rama: entra otro ejemplar.
+        case anotherForTheBranch
+    }
+
+    public func captureOutcome(of speciesID: Int, shiny: Bool) -> CaptureOutcome {
+        guard let base = pokedex[speciesID]?.baseFormID else { return .newLine }
+        guard ownedFamilies.contains(familyKey(baseFormID: base, shiny: shiny)) else { return .newLine }
+        return acceptsAnother(baseFormID: base, shiny: shiny) ? .anotherForTheBranch : .repeated
+    }
+
     public func ownsFamily(of speciesID: Int, shiny: Bool) -> Bool {
         guard let base = pokedex[speciesID]?.baseFormID else { return false }
         return ownedFamilies.contains(familyKey(baseFormID: base, shiny: shiny))

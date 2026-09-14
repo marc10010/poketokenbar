@@ -12,7 +12,49 @@ enum CollectionTests: TestSuite {
         ("dos iguales en el mismo evento solo dejan uno", testTwoOfTheSameFamilyInOneEvent),
         ("las victorias se apuntan al compañero", testDefeatsCreditTheCompanion),
         ("alternar shiny solo va en los shiny", testShinyDisplayToggle),
+        ("el aviso dice lo que de verdad va a pasar", testCaptureOutcomeMatchesWhatHappens),
     ]
+
+    /// El aviso de la ficha del rival sale de aquí, así que tiene que decir lo
+    /// mismo que hace `collect`. Decía "no se queda" también en las líneas que
+    /// bifurcan y sí aceptan un segundo ejemplar.
+    static func testCaptureOutcomeMatchesWhatHappens() throws {
+        let store = primed()
+        store.debugGrandfatherRegion("johto")
+
+        // Línea nueva.
+        expectEqual(store.captureOutcome(of: 43, shiny: false), GameStore.CaptureOutcome.newLine)
+        store.debugCapture(speciesID: 43)                       // Oddish
+
+        // Ya la tienes y todavía puede evolucionar: no se queda otro.
+        expectEqual(store.captureOutcome(of: 43, shiny: false), GameStore.CaptureOutcome.repeated)
+        func oddishEnLaCaja() -> Int {
+            store.state.box.filter { store.pokedex[$0.speciesID]?.baseFormID == 43 }.count
+        }
+        let antes = oddishEnLaCaja()
+        store.debugSetEncounter(wild(43, hp: 200))
+        store.ingest(event("repetido", tokens: 200))
+        expectEqual(oddishEnLaCaja(), antes, "no debería haberse quedado")
+
+        // El shiny de una línea que tienes es otra cosa.
+        expectEqual(store.captureOutcome(of: 43, shiny: true), GameStore.CaptureOutcome.newLine)
+
+        // Evolucionado hasta el final y con una rama sin registrar: sí se queda.
+        let oddish = try unwrap(store.state.box.first { $0.speciesID == 43 })
+        store.setActiveCompanion(oddish.id)
+        store.ingest(event("sube", tokens: 1_200_000))
+        let evolucionado = try unwrap(store.state.box.first { $0.id == oddish.id })
+        expectTrue(
+            [45, 182].contains(evolucionado.evolvedForms.last ?? 43),
+            "el Oddish tiene que haber llegado a Vileplume o Bellossom: \(evolucionado.evolvedForms)"
+        )
+        expectEqual(store.captureOutcome(of: 43, shiny: false), GameStore.CaptureOutcome.anotherForTheBranch)
+
+        let antesDeLaRama = oddishEnLaCaja()
+        store.debugSetEncounter(wild(43, hp: 200))
+        store.ingest(event("segunda-rama", tokens: 200))
+        expectEqual(oddishEnLaCaja(), antesDeLaRama + 1, "el segundo de la rama sí se queda")
+    }
 
     private static func makeStore(seed: UInt64 = 4) -> GameStore {
         GameStore(
