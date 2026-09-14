@@ -1,22 +1,28 @@
 import Foundation
 
-/// Tiers de aparición. Cada tier define su probabilidad, su rango de HP y el
-/// gate de tokens globales que el jugador debe superar para que aparezca.
+/// Tiers de aparición. La rareza dice **cada cuánto** sale una especie dentro
+/// de su zona; lo que aguanta lo dice la zona.
 public enum Rarity: String, Codable, CaseIterable, Sendable {
     case common
     case uncommon
     case rare
     case legendary
 
+    /// Peso dentro de la zona. Más plano que el 60/28/10 de cuando el sorteo
+    /// era global: con la zona como bombo único, un reparto muy sesgado hace
+    /// eternas las cacerías concretas, y uno plano del todo deja la rareza sin
+    /// significado.
     public var spawnWeight: Double {
         switch self {
-        case .common: return 0.60
-        case .uncommon: return 0.28
-        case .rare: return 0.10
-        case .legendary: return 0.02
+        case .common: return 0.45
+        case .uncommon: return 0.33
+        case .rare: return 0.22
+        case .legendary: return 0
         }
     }
 
+    /// HP de los jefes de este tier. Los salvajes ya no lo usan: su vida sale
+    /// de la profundidad de la zona.
     public var hpRange: ClosedRange<Int> {
         switch self {
         case .common: return 10_000...50_000
@@ -95,9 +101,22 @@ public enum GameRules {
     public static let stageTwoThreshold = 1_000_001
     /// Cuántos IDs de evento guardamos para idempotencia entre reinicios.
     public static let processedEventWindow = 20_000
-    /// Techo del bonus por Pokédex completada. Con las 251, +1,0 al
+    /// Techo del bonus por Pokédex completada. Con las 251, +3,0 al
     /// multiplicador contra salvajes.
-    public static let collectionBonusCap = 1.0
+    ///
+    /// Sube con la curva de HP por zona: es la mitad de la carrera. Si el HP
+    /// se multiplica por seis de la primera zona a la última y el daño solo
+    /// por dos, volver a una zona vieja nunca se notaría barato. Solo cuenta
+    /// contra salvajes, así que no toca el equilibrio de los jefes.
+    public static let collectionBonusCap = 3.0
+
+    /// Vida de un salvaje en la zona menos profunda. Las demás salen de aquí
+    /// multiplicando por `zoneHPGrowth` una vez por escalón.
+    public static let zoneBaseHP = 60_000.0
+    /// Cuánto pesa más cada zona que la anterior. Con 32 zonas, ×6 de punta a
+    /// punta. PokéClicker usa ~×1,27 por ruta porque allí el ataque crece
+    /// miles de veces; aquí el daño crece ×4 como mucho.
+    public static let zoneHPGrowth = 1.0595
     /// Límites del multiplicador de sprites: por debajo no se distingue nada y
     /// por encima el popover se va de la pantalla.
     public static let minimumSpriteScale = 0.75

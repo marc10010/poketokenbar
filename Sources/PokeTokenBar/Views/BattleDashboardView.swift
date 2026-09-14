@@ -112,7 +112,9 @@ struct EncounterCard: View {
     @EnvironmentObject private var store: GameStore
 
     var body: some View {
-        SectionCard(title: "Combate") {
+        // Con el título: dónde estás es ahora la mitad de la dificultad, y sin
+        // decirlo aquí habría que abrir la lista de zonas para saberlo.
+        SectionCard(title: "Combate · \(store.currentZone.name)") {
             if let encounter = store.state.encounter, let rival = store.rivalSpecies,
                store.inspectingRival {
                 RivalDetailView(encounter: encounter, species: rival)

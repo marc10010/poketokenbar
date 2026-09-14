@@ -132,18 +132,20 @@ enum GymTests: TestSuite {
         expectNil(TrainerRank.campeon.next(medals: 16), "no hay rango por encima")
     }
 
-    static func testSpawnGateByRank() {
+    static func testSpawnGateByRank() throws {
         let spawner = SpawnService()
-        expectEqual(spawner.availableTiers(rank: .novato), [.common, .uncommon])
-        expectEqual(spawner.availableTiers(rank: .entrenador), [.common, .uncommon, .rare])
-        expectEqual(spawner.availableTiers(rank: .veterano), [.common, .uncommon, .rare])
+        // Una ruta con los tres tiers, para que el gate se lea.
+        let zone = try unwrap(ZoneCatalog.shared["rutas-kanto-sur"])
+        expectEqual(spawner.availableTiers(rank: .novato, in: zone), [.common, .uncommon])
+        expectEqual(spawner.availableTiers(rank: .entrenador, in: zone), [.common, .uncommon, .rare])
+        expectEqual(spawner.availableTiers(rank: .veterano, in: zone), [.common, .uncommon, .rare])
         // El tier legendario no está: los legendarios son hitos, no sorteo.
-        expectEqual(spawner.availableTiers(rank: .ace), [.common, .uncommon, .rare])
+        expectEqual(spawner.availableTiers(rank: .ace, in: zone), [.common, .uncommon, .rare])
         expectFalse(Rarity.legendary.spawnsInTheWild)
 
         // Lo que cambia respecto a hoy: los tokens ya no abren nada por su cuenta.
         expectEqual(
-            spawner.availableTiers(rank: TrainerRank.rank(forMedals: 0)),
+            spawner.availableTiers(rank: TrainerRank.rank(forMedals: 0), in: zone),
             [.common, .uncommon],
             "sin medallas no hay raros ni legendarios, por muchos tokens que lleves"
         )
