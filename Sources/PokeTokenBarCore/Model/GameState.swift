@@ -40,8 +40,11 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
     public var gymsWon: Int
     public var nickname: String?
 
-    /// Cómo se dibuja: shiny solo si lo tienes shiny y así lo quieres.
-    public var displaysShiny: Bool { isShiny && prefersShiny }
+    /// Cómo se dibuja: con la paleta que tengas, y si tienes las dos, la que
+    /// hayas pedido. La preferencia guardada no basta por sí sola: una partida
+    /// que la dejó en "normal" cuando el cambio aún no pedía tener las dos
+    /// seguiría dibujando un Pokémon que no está en la caja.
+    public var displaysShiny: Bool { isShiny && (prefersShiny || !caughtNormal) }
 
     /// Con las dos paletas capturadas se puede cambiar de una a otra. Con una
     /// sola no: enseñaría un Pokémon que no tienes.

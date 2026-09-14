@@ -12,6 +12,7 @@ enum CollectionTests: TestSuite {
         ("dos iguales en el mismo evento solo dejan uno", testTwoOfTheSameFamilyInOneEvent),
         ("las victorias se apuntan al compañero", testDefeatsCreditTheCompanion),
         ("alternar shiny solo va en los shiny", testShinyDisplayToggle),
+        ("con una sola paleta se dibuja esa, diga lo que diga la preferencia", testStoredPreferenceCannotShowWhatYouLack),
         ("el aviso dice lo que de verdad va a pasar", testCaptureOutcomeMatchesWhatHappens),
     ]
 
@@ -138,6 +139,25 @@ enum CollectionTests: TestSuite {
         store.debugSetEncounter(wild(19, shiny: true))
         store.ingest(event("shiny-2", tokens: 100))
         expectEqual(store.state.box.count, after)
+    }
+
+    /// La preferencia guardada no manda sobre lo que tienes. Una partida que
+    /// quedó con `prefersShiny = false` en un shiny sin su normal —el cambio de
+    /// paleta no pedía tener las dos hasta que se arregló— seguiría dibujando
+    /// un Pokémon que no está en la caja.
+    static func testStoredPreferenceCannotShowWhatYouLack() {
+        let soloShiny = CapturedPokemon(
+            speciesID: 21,
+            isShiny: true,
+            capturedAtTotalTokens: 0,
+            prefersShiny: false
+        )
+        expectFalse(soloShiny.caughtNormal)
+        expectTrue(soloShiny.displaysShiny, "sin el normal se dibuja shiny aunque pida lo otro")
+
+        var conLasDos = soloShiny
+        conLasDos.caughtNormal = true
+        expectFalse(conLasDos.displaysShiny, "con las dos, manda la preferencia")
     }
 
     static func testTwoOfTheSameFamilyInOneEvent() throws {
