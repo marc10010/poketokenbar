@@ -926,13 +926,14 @@ quedan porque explican **por qué** cada regla es como es:
 - **Ficha grande**, en la caja, en el rival y en cada gimnasio: sprite a tamaño,
   tipos, etapa, progreso hacia la siguiente forma y sus números (combates
   ganados, gimnasios, veces vencido en libertad, cuándo se capturó). Desde ahí
-  se envía a luchar, y un variocolor puede alternar a su paleta normal **si
-también tienes el normal de esa línea**: con el shiny como único ejemplar,
-dibujarlo en normal enseñaría un Pokémon que no está en la caja, y la caja tiene
-que decir la verdad sobre lo que has conseguido.
-- La caja PC apila por especie + variante + etapa alcanzada, y como no se
-  repiten líneas evolutivas su techo real son **258 huecos** (129 líneas × normal
-  y shiny). A ese tamaño una rejilla plana no se navega, así que la caja tiene:
+  se envía a luchar, y se puede **cambiar de paleta en las dos direcciones si
+tienes las dos**: con una sola, dibujar la otra enseñaría un Pokémon que no has
+conseguido, y la caja tiene que decir la verdad.
+- La caja PC apila por especie + etapa alcanzada, y como no se repiten líneas
+  evolutivas su techo real son **129 huecos**, uno por línea. **El shiny no
+  ocupa hueco**: cazar el variocolor de una línea que ya tienes le desbloquea la
+  paleta al ejemplar que tienes, y al revés igual. Antes eran 258 y la mitad
+  eran el mismo Pokémon repintado. A ese tamaño una rejilla plana no se navega, así que la caja tiene:
   búsqueda y filtros (nombre en español o inglés, nº de Pokédex, tipo,
   generación, shiny, evolucionados), **cuatro órdenes que además parten la caja
   en tramos con cabecera pegajosa** (generación, rareza, mes de captura o banda

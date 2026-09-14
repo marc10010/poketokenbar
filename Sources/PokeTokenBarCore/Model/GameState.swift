@@ -5,7 +5,10 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
     public let id: UUID
     /// Especie con la que se capturó (normalmente la forma base de su línea).
     public let speciesID: Int
-    public let isShiny: Bool
+    /// Si tienes su paleta shiny. Deja de ser `let` porque cazar el shiny de
+    /// una línea que ya tienes la desbloquea en el ejemplar de la caja en vez
+    /// de ocupar otro hueco.
+    public var isShiny: Bool
     public let capturedAt: Date
     /// Tokens acumulados del jugador en el momento de la captura.
     public let capturedAtTotalTokens: Int
@@ -27,14 +30,25 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
     /// Si se muestra con su paleta shiny. Solo significa algo cuando
     /// `isShiny`: quien captura un shiny puede querer el look clásico.
     public var prefersShiny: Bool
+    /// Si la paleta normal de esta línea también está capturada. Un shiny no
+    /// ocupa un hueco propio en la caja: desbloquea la paleta del que ya
+    /// tienes, y hacen falta las dos para poder cambiar de una a otra.
+    public var caughtNormal: Bool
     /// Salvajes vencidos llevándolo equipado.
     public var wildDefeats: Int
     /// Medallas ganadas llevándolo equipado.
     public var gymsWon: Int
     public var nickname: String?
 
-    /// Cómo se dibuja: shiny solo si lo es y así lo quiere.
-    public var displaysShiny: Bool { isShiny && prefersShiny }
+    /// Cómo se dibuja: con la paleta que tengas, y si tienes las dos, la que
+    /// hayas pedido. La preferencia guardada no basta por sí sola: una partida
+    /// que la dejó en "normal" cuando el cambio aún no pedía tener las dos
+    /// seguiría dibujando un Pokémon que no está en la caja.
+    public var displaysShiny: Bool { isShiny && (prefersShiny || !caughtNormal) }
+
+    /// Con las dos paletas capturadas se puede cambiar de una a otra. Con una
+    /// sola no: enseñaría un Pokémon que no tienes.
+    public var hasBothPalettes: Bool { isShiny && caughtNormal }
 
     public init(
         id: UUID = UUID(),
@@ -45,6 +59,7 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         evolutionSeed: UInt64 = UInt64.random(in: 0..<UInt64.max),
         tokensEarned: Int = 0,
         prefersShiny: Bool = true,
+        caughtNormal: Bool? = nil,
         wildDefeats: Int = 0,
         gymsWon: Int = 0,
         nickname: String? = nil,
@@ -58,6 +73,7 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         self.evolutionSeed = evolutionSeed
         self.tokensEarned = tokensEarned
         self.prefersShiny = prefersShiny
+        self.caughtNormal = caughtNormal ?? !isShiny
         self.wildDefeats = wildDefeats
         self.gymsWon = gymsWon
         self.nickname = nickname
@@ -76,6 +92,9 @@ public struct CapturedPokemon: Codable, Hashable, Identifiable, Sendable {
         evolutionSeed = try container.decode(UInt64.self, forKey: .evolutionSeed)
         tokensEarned = try container.decodeIfPresent(Int.self, forKey: .tokensEarned) ?? 0
         prefersShiny = try container.decodeIfPresent(Bool.self, forKey: .prefersShiny) ?? true
+        // Antes un shiny era un hueco aparte, así que quien no traiga la clave
+        // tiene exactamente la paleta con la que se capturó.
+        caughtNormal = try container.decodeIfPresent(Bool.self, forKey: .caughtNormal) ?? !isShiny
         wildDefeats = try container.decodeIfPresent(Int.self, forKey: .wildDefeats) ?? 0
         gymsWon = try container.decodeIfPresent(Int.self, forKey: .gymsWon) ?? 0
         nickname = try container.decodeIfPresent(String.self, forKey: .nickname)

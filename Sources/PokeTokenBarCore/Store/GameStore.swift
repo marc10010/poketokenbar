@@ -260,7 +260,7 @@ public final class GameStore: ObservableObject {
     public func focusSummary(_ zone: Zone) -> (pool: Int, missing: Int) {
         let pool = spawner.focusPool(zone)
         let owned = ownedFamilies
-        let missing = pool.filter { !owned.contains(familyKey(baseFormID: $0.baseFormID, shiny: false)) }
+        let missing = pool.filter { !owned.contains($0.baseFormID) }
         return (pool.count, missing.count)
     }
 
@@ -825,8 +825,7 @@ public final class GameStore: ObservableObject {
     /// que no está en tu caja: la caja dejaría de decir la verdad sobre lo que
     /// has conseguido.
     public func canToggleShinyDisplay(_ captured: CapturedPokemon) -> Bool {
-        guard captured.isShiny else { return false }
-        return ownsFamily(of: captured.speciesID, shiny: false)
+        captured.hasBothPalettes
     }
 
     public func toggleShinyDisplay(_ capturedID: UUID) {
@@ -991,13 +990,11 @@ public final class GameStore: ObservableObject {
 
     /// Líneas evolutivas ya conseguidas, separando shiny: un Wartortle
     /// bloquea al Squirtle, pero un Squirtle shiny sigue siendo otra cosa.
-    public var ownedFamilies: Set<String> {
-        Set(state.box.compactMap { captured in
-            pokedex[captured.speciesID].map { familyKey(baseFormID: $0.baseFormID, shiny: captured.isShiny) }
-        })
+    /// Líneas que ya tienes. Sin la paleta: un shiny de una línea tuya no ocupa
+    /// otro hueco, desbloquea su paleta en el que ya tienes.
+    public var ownedFamilies: Set<Int> {
+        Set(state.box.compactMap { pokedex[$0.speciesID]?.baseFormID })
     }
-
-    private func familyKey(baseFormID: Int, shiny: Bool) -> String { "\(baseFormID)-\(shiny)" }
 
     /// Veces que se ha vencido a esa línea en libertad, con captura o sin ella.
     /// Si ya tienes esa línea (en esa variante de color).
@@ -1007,12 +1004,12 @@ public final class GameStore: ObservableObject {
     /// solo si los que ya tienes están al final de su evolución. Lo último es
     /// la secuencia: evolucionas el Eevee que tienes y entonces puede salir
     /// otro, en vez de acumular cinco Eevees sin evolucionar.
-    public func acceptsAnother(baseFormID: Int, shiny: Bool) -> Bool {
+    public func acceptsAnother(baseFormID: Int) -> Bool {
         let line = pokedex.all.filter { $0.baseFormID == baseFormID }
         guard line.contains(where: { !BranchRules.branches(of: $0.id).isEmpty }) else { return false }
         guard line.contains(where: { !state.registeredSpeciesIDs.contains($0.id) }) else { return false }
 
-        let mine = state.box.filter { pokedex[$0.speciesID]?.baseFormID == baseFormID && $0.isShiny == shiny }
+        let mine = state.box.filter { pokedex[$0.speciesID]?.baseFormID == baseFormID }
         return mine.allSatisfy { evolution.options(for: $0).isEmpty }
     }
 
@@ -1027,17 +1024,23 @@ public final class GameStore: ObservableObject {
         case repeated
         /// Ya la tienes, pero bifurca y le falta una rama: entra otro ejemplar.
         case anotherForTheBranch
+        /// Ya la tienes, pero no con esta paleta: no ocupa un hueco nuevo,
+        /// desbloquea la paleta en los que tienes.
+        case newPalette
     }
 
     public func captureOutcome(of speciesID: Int, shiny: Bool) -> CaptureOutcome {
         guard let base = pokedex[speciesID]?.baseFormID else { return .newLine }
-        guard ownedFamilies.contains(familyKey(baseFormID: base, shiny: shiny)) else { return .newLine }
-        return acceptsAnother(baseFormID: base, shiny: shiny) ? .anotherForTheBranch : .repeated
+        let mine = state.box.filter { pokedex[$0.speciesID]?.baseFormID == base }
+        guard !mine.isEmpty else { return .newLine }
+        if shiny, !mine.contains(where: \.isShiny) { return .newPalette }
+        if !shiny, !mine.contains(where: \.caughtNormal) { return .newPalette }
+        return acceptsAnother(baseFormID: base) ? .anotherForTheBranch : .repeated
     }
 
-    public func ownsFamily(of speciesID: Int, shiny: Bool) -> Bool {
+    public func ownsFamily(of speciesID: Int) -> Bool {
         guard let base = pokedex[speciesID]?.baseFormID else { return false }
-        return ownedFamilies.contains(familyKey(baseFormID: base, shiny: shiny))
+        return ownedFamilies.contains(base)
     }
 
     /// Siguiente forma de un capturado concreto, para su ficha.
@@ -1111,9 +1114,13 @@ public final class GameStore: ObservableObject {
             state.gyms.capturesSinceLastGym += 1
             creditCompanionWildDefeat()
 
-            let key = familyKey(baseFormID: base, shiny: wild.isShiny)
-            if owned.contains(key), !acceptsAnother(baseFormID: base, shiny: wild.isShiny) { continue }
-            owned.insert(key)
+            if owned.contains(base) {
+                // La paleta que faltaba no ocupa hueco: la desbloquea en los
+                // que ya tienes de esa línea.
+                if unlockPalette(shiny: wild.isShiny, ofLine: base) { continue }
+                guard acceptsAnother(baseFormID: base) else { continue }
+            }
+            owned.insert(base)
 
             let captured = CapturedPokemon(
                 speciesID: wild.speciesID,
@@ -1125,6 +1132,30 @@ public final class GameStore: ObservableObject {
             state.lastCaptureSpeciesID = wild.speciesID
             lastCapture = captured
         }
+    }
+
+    /// Apunta la paleta en todos los ejemplares de la línea, porque es de la
+    /// línea y no de uno: si tienes dos Eevees por sus ramas, el shiny que
+    /// cazas vale para los dos. Devuelve si había algo que desbloquear.
+    private func unlockPalette(shiny: Bool, ofLine baseFormID: Int) -> Bool {
+        let indices = state.box.indices.filter { pokedex[state.box[$0].speciesID]?.baseFormID == baseFormID }
+        let already = shiny
+            ? indices.allSatisfy { state.box[$0].isShiny }
+            : indices.allSatisfy { state.box[$0].caughtNormal }
+        guard !already else { return false }
+
+        for index in indices {
+            if shiny {
+                state.box[index].isShiny = true
+                // Un shiny se enseña: es lo que tiene de gracia.
+                state.box[index].prefersShiny = true
+            } else {
+                state.box[index].caughtNormal = true
+            }
+        }
+        groupCache = nil
+        dexCache = nil
+        return true
     }
 
     private func creditCompanionWildDefeat() {

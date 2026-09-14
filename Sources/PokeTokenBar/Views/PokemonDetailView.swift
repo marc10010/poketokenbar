@@ -270,6 +270,10 @@ struct RivalDetailView: View {
         case .repeated:
             let color = encounter.isShiny ? " shiny" : ""
             return "Ya tienes esta línea\(color): al vencerlo contará la victoria (\(defeats) hasta ahora) pero no se queda."
+        case .newPalette:
+            return encounter.isShiny
+                ? "Ya tienes esta línea, pero no en shiny: no ocupará otro hueco, le desbloquea la paleta."
+                : "De esta línea solo tienes el shiny: vencerlo desbloquea la paleta normal, sin ocupar otro hueco."
         case .anotherForTheBranch:
             return "Ya tienes esta línea, pero le falta una rama y los tuyos ya no evolucionan: este sí se queda."
         case .newLine:
