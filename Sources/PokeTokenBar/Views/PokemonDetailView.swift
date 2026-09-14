@@ -98,6 +98,12 @@ struct PokemonDetailView: View {
                             .font(.system(size: 9))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                        if let region = option.blockedRegion {
+                            Text("· necesita \(region)")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.orange)
+                                .lineLimit(1)
+                        }
                         Spacer(minLength: 0)
                         if option.registered {
                             Text("✓")
@@ -140,11 +146,11 @@ struct PokemonDetailView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.orange)
             } else if let remaining, !branches.isEmpty {
-                Text("\(Fmt.tokens(remaining)) tokens para evolucionar")
+                Text("\(Fmt.tokens(remaining)) de daño para evolucionar")
                     .font(.caption)
                 HPBar(fraction: fraction(earned: earned), height: 8)
             } else if let remaining, let next = store.nextForm(of: captured) {
-                Text("\(Fmt.tokens(remaining)) tokens para \(next.localizedName)")
+                Text("\(Fmt.tokens(remaining)) de daño para \(next.localizedName)")
                     .font(.caption)
                 HPBar(fraction: fraction(earned: earned), height: 8)
             } else if remaining != nil {
@@ -156,7 +162,7 @@ struct PokemonDetailView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Text("\(Fmt.tokens(earned)) tokens ganados llevándolo equipado")
+            Text("\(Fmt.tokens(earned)) de daño hecho llevándolo equipado")
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
         }

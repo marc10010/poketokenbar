@@ -74,15 +74,21 @@ enum MilestoneTests: TestSuite {
 
     static func testLegendariesDoNotSpawn() {
         let spawner = SpawnService()
-        let access = ZoneAccess(medals: 16, openRegions: Set(GymCatalog.shared.regions), isChampion: true)
-        for rarity in Rarity.allCases where rarity.spawnsInTheWild {
-            let pool = spawner.candidates(rarity: rarity, access: access)
-            expectFalse(pool.contains(where: \.isLegendary), "\(rarity) ofrece legendarios")
+        for zone in ZoneCatalog.shared.all {
+            expectFalse(
+                spawner.pool(zone).contains(where: \.isLegendary),
+                "\(zone.name) ofrece legendarios"
+            )
         }
+        // Y por el camino que recorre la app, en las zonas donde viven: Cueva
+        // Celeste tiene a Mewtwo y la Central a Zapdos.
         var rng = SeededRandomProvider(seed: 3)
-        for _ in 0..<3_000 {
-            let encounter = spawner.spawn(rank: .campeon, access: access, using: &rng)
-            expectFalse(dex[encounter.speciesID]?.isLegendary == true, "salió un legendario salvaje")
+        for id in ["cueva-celeste", "central-electrica"] {
+            guard let zone = ZoneCatalog.shared[id] else { continue }
+            for _ in 0..<1_500 {
+                let encounter = spawner.spawn(zone: zone, rank: .campeon, using: &rng)
+                expectFalse(dex[encounter.speciesID]?.isLegendary == true, "salió un legendario salvaje")
+            }
         }
     }
 

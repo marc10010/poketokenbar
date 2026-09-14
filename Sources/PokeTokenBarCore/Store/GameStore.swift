@@ -234,35 +234,48 @@ public final class GameStore: ObservableObject {
 
     public var unlockedZones: [Zone] { zoneCatalog.unlocked(zoneAccess) }
 
-    /// Zona enfocada, si está puesta **y** abierta. Una zona que se enfocó y
-    /// luego dejó de estar abierta no puede seguir mandando en el sorteo.
-    public var focusedZone: Zone? {
-        guard let id = state.settings.focusedZoneID, let zone = zoneCatalog[id], zoneAccess.opens(zone)
-        else { return nil }
-        return zone
-    }
-
-    /// Enfoca una zona abierta, o quita el enfoque con `nil`. El rival en curso
-    /// se queda: enfocar no le quita el HP que ya le has hecho.
-    public func focus(zoneID: String?) {
-        guard let zoneID else {
-            updateSettings { $0.focusedZoneID = nil }
-            return
+    /// Dónde estás cazando. **Siempre** hay una: el bombo es el de la zona, no
+    /// la mezcla de todo lo abierto, que es lo que hacía que el juego se
+    /// volviera más fácil según avanzabas.
+    ///
+    /// Si la guardada ya no vale —partida vieja, o una zona que dejó de estar
+    /// abierta— se cae a la más profunda que tengas abierta, que es donde
+    /// estabas jugando.
+    public var currentZone: Zone {
+        if let id = state.settings.currentZoneID, let zone = zoneCatalog[id], zoneAccess.opens(zone) {
+            return zone
         }
-        guard let zone = zoneCatalog[zoneID], zoneAccess.opens(zone), !spawner.focusPool(zone).isEmpty
-        else { return }
-        updateSettings { $0.focusedZoneID = zone.id }
+        return deepestOpenZone
     }
 
-    /// Lo que se puede cazar en una zona y cuánto te falta de ahí, que es lo
-    /// que hace visible si enfocarla sirve para algo: en una zona de 2 la que
-    /// buscas sale en 2 apariciones, en una ruta de 46 no la vas a ver.
-    public func focusSummary(_ zone: Zone) -> (pool: Int, missing: Int) {
-        let pool = spawner.focusPool(zone)
+    /// La más profunda de las abiertas: la frontera, que es donde se juega.
+    public var deepestOpenZone: Zone {
+        zoneCatalog.inUnlockOrder.last { zoneAccess.opens($0) } ?? zoneCatalog.inUnlockOrder[0]
+    }
+
+    /// Cambia de zona. El rival en curso se queda: moverte no le quita el HP
+    /// que ya le has hecho.
+    @discardableResult
+    public func move(toZone zoneID: String) -> Bool {
+        guard let zone = zoneCatalog[zoneID], zoneAccess.opens(zone), !spawner.pool(zone).isEmpty
+        else { return false }
+        updateSettings { $0.currentZoneID = zone.id }
+        return true
+    }
+
+    /// Lo que se puede cazar en una zona y cuánto te falta de ahí: en una zona
+    /// de 2 lo que buscas sale en 2 apariciones, en una ruta de 46 no.
+    public func zoneSummary(_ zone: Zone) -> (pool: Int, missing: Int) {
+        let pool = spawner.pool(zone)
         let owned = ownedFamilies
         let missing = pool.filter { !owned.contains($0.baseFormID) }
         return (pool.count, missing.count)
     }
+
+    /// Vida de los salvajes de una zona, para poder enseñar lo que cuesta
+    /// antes de mudarte.
+    public func zoneHP(_ zone: Zone) -> Int { zoneCatalog.hp(of: zone) }
+    public func zoneDepth(_ zone: Zone) -> Int { zoneCatalog.depth(of: zone) }
 
     /// Zonas donde vive una especie, con su estado de apertura.
     public func zones(for speciesID: Int) -> [(zone: Zone, open: Bool)] {
@@ -911,7 +924,7 @@ public final class GameStore: ObservableObject {
               state.leagues.current == nil
         else { return nil }
         if state.encounter == nil || state.encounter?.isFainted == true {
-            state.encounter = battle.freshEncounter(rank: rank, access: zoneAccess, focus: focusedZone, using: &rng)
+            state.encounter = battle.freshEncounter(zone: currentZone, rank: rank, using: &rng)
         }
         return state.encounter
     }
@@ -958,10 +971,8 @@ public final class GameStore: ObservableObject {
         let result = battle.apply(
             damage: tokens,
             to: state.encounter,
-            totalTokensAfter: state.ledger.total,
+            zone: currentZone,
             rank: rank,
-            access: zoneAccess,
-            focus: focusedZone,
             multiplier: { encounter in
                 guard typesEnabled, !attackerTypes.isEmpty,
                       let defender = pokedex[encounter.speciesID]
@@ -1052,6 +1063,8 @@ public final class GameStore: ObservableObject {
         public let registered: Bool
         /// La que saldría si evolucionara ahora mismo.
         public let isNext: Bool
+        /// Región por abrir donde vive esta rama, si es de otra región.
+        public let blockedRegion: String?
 
         public var id: Int { form.id }
     }
@@ -1060,14 +1073,15 @@ public final class GameStore: ObservableObject {
         let current = evolution.currentForm(of: captured).id
         let rules = BranchRules.branches(of: current)
         guard !rules.isEmpty else { return [] }
-        let now = evolution.branch(for: captured, defeatedTypes: lastDefeatedTypes, at: Date(), calendar: calendar)
+        let next = resolvedBranch(for: captured)
         return rules.compactMap { rule in
             guard let form = pokedex[rule.form] else { return nil }
             return BranchOption(
                 form: form,
                 condition: rule.condition,
                 registered: state.registeredSpeciesIDs.contains(form.id),
-                isNext: now?.id == form.id
+                isNext: next?.form.id == form.id,
+                blockedRegion: closedRegion(of: form, from: captured)
             )
         }
     }
@@ -1418,14 +1432,38 @@ public final class GameStore: ObservableObject {
     /// porque las rutas de Johto están llenas de especies de Kanto. Esa no es
     /// una regla, es un muro.
     public func blockedRegion(for captured: CapturedPokemon) -> String? {
-        guard let next = evolution.branch(
+        resolvedBranch(for: captured)?.blocked
+    }
+
+    /// A qué forma evolucionaría ahora mismo, y qué región lo impide si alguna.
+    ///
+    /// Cuando la rama que toca vive en una región cerrada pero solo queda
+    /// **una** alternativa alcanzable, se coge esa: esperar a Johto para tener
+    /// un Vileplume, que es de Kanto, no tiene sentido. Con dos o más
+    /// alcanzables sí se espera, porque ahí la elección sigue siendo tuya y
+    /// darte una al azar sería quitártela.
+    private func resolvedBranch(
+        for captured: CapturedPokemon,
+        now: Date = Date()
+    ) -> (form: Pokemon, blocked: String?)? {
+        guard let wanted = evolution.branch(
             for: captured,
             defeatedTypes: lastDefeatedTypes,
-            at: Date(),
+            at: now,
             calendar: calendar
         ) else { return nil }
+        guard let blocked = closedRegion(of: wanted, from: captured) else { return (wanted, nil) }
+
+        let reachable = evolution.options(for: captured).filter { closedRegion(of: $0, from: captured) == nil }
+        guard reachable.count == 1 else { return (wanted, blocked) }
+        return (reachable[0], nil)
+    }
+
+    /// Región de una forma que todavía no has abierto, si su línea viene de
+    /// otra: una evolución de tu propia región nunca está cerrada.
+    private func closedRegion(of form: Pokemon, from captured: CapturedPokemon) -> String? {
         let home = pokedex.require(captured.speciesID).homeRegion
-        let target = next.homeRegion
+        let target = form.homeRegion
         guard target != home, !isOpen(region: target.lowercased()) else { return nil }
         return target
     }
@@ -1435,20 +1473,15 @@ public final class GameStore: ObservableObject {
     /// dar para dos saltos: los dos usan el mismo rival y la misma hora, que es
     /// el instante en que llegaron esos tokens.
     private func resolveEvolutions(at index: Int, now: Date) {
-        let types = lastDefeatedTypes
         for _ in 0..<EvolutionStage.allCases.count {
             guard evolution.canEvolve(state.box[index]),
-                  let next = evolution.branch(
-                      for: state.box[index],
-                      defeatedTypes: types,
-                      at: now,
-                      calendar: calendar
-                  )
+                  let branch = resolvedBranch(for: state.box[index], now: now)
             else { return }
-            // La forma siguiente vive en una región que no has abierto: espera.
-            // No se cae a otra rama, que sería darte la que no pediste.
-            let home = pokedex.require(state.box[index].speciesID).homeRegion
-            if next.homeRegion != home, !isOpen(region: next.homeRegion.lowercased()) { return }
+            // La forma siguiente vive en una región que no has abierto y hay
+            // más de una alcanzable: espera. Darte otra sería darte la que no
+            // pediste.
+            guard branch.blocked == nil else { return }
+            let next = branch.form
             state.box[index].evolvedForms.append(next.id)
             state.registeredSpeciesIDs.insert(next.id)
             groupCache = nil

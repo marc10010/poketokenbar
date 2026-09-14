@@ -10,17 +10,18 @@ enum ZoneTests: TestSuite {
         ("las especies de una zona existen y son de Gen 1 o 2", testSpeciesAreReal),
         ("el desbloqueo va por medallas, región y campeón", testUnlockRules),
         ("la disponibilidad crece con el progreso y nunca baja", testAvailabilityGrows),
-        ("una zona cerrada no ofrece sus especies", testClosedZoneIsNotOffered),
-        ("con cualquier progreso, nada sale de una zona cerrada", testNothingLeaksFromClosedZones),
+        ("no se puede cazar en una zona cerrada", testYouCannotHuntInAClosedZone),
+        ("con cualquier progreso, la zona actual está abierta", testCurrentZoneIsAlwaysOpen),
         ("el tier de legendarios no se sortea con ningún rango", testLegendaryTierIsNeverRolled),
-        ("sorteando de verdad tampoco se cuela nada cerrado", testSpawnStaysInsideOpenZones),
+        ("sorteando de verdad, todo lo que sale vive donde estás", testSpawnStaysInsideTheZone),
         ("solo Mew se queda sin ruta ni precursor", testOnlyMewIsOrphan),
-        ("lo que no tiene zona se ofrece en el tier más difícil", testFallbackTier),
-        ("ningún tier se queda sin candidatas", testNoTierEverStarves),
-        ("la zona enfocada saca todo lo suyo a partes iguales", testFocusIsUniformOverTheZone),
-        ("enfocar no cuela legendarios ni formas evolucionadas", testFocusExcludesWhatNeverSpawns),
-        ("una zona cerrada no se puede enfocar", testFocusNeedsAnOpenZone),
-        ("el enfoque se persiste y se puede quitar", testFocusPersists),
+        ("lo que no tiene zona no se caza", testWhatHasNoZoneIsNotHuntable),
+        ("una zona de una sola rareza reparte a partes iguales", testUniformInsideASingleTierZone),
+        ("una zona no cuela legendarios ni formas evolucionadas", testZoneExcludesWhatNeverSpawns),
+        ("no se puede ir a una zona cerrada", testMovingNeedsAnOpenZone),
+        ("sin elegir, estás en la más profunda abierta", testDefaultsToTheDeepestOpenZone),
+        ("la partida vieja conserva su zona", testLegacyFocusedZoneIsRead),
+        ("la zona se persiste", testCurrentZonePersists),
     ]
 
     private static let catalog = ZoneCatalog.shared
@@ -48,24 +49,21 @@ enum ZoneTests: TestSuite {
         return store
     }
 
-    /// Lo que hace que la mecánica no tenga constantes que ajustar: la
-    /// probabilidad de una especie concreta **es** el tamaño de la zona.
-    static func testFocusIsUniformOverTheZone() throws {
-        let zone = try unwrap(catalog["guarida-dragon"] ?? catalog.all.first { spawner.focusPool($0).count == 2 })
-        let pool = spawner.focusPool(zone)
+    /// Dentro de una zona con especies de una sola rareza el sorteo es
+    /// uniforme, que es lo que hace legible el tamaño del bombo: en una zona
+    /// de dos, lo que buscas sale una de cada dos.
+    static func testUniformInsideASingleTierZone() throws {
+        // Bosque Verde: Caterpie, Weedle y Pidgey, los tres comunes.
+        let zone = try unwrap(catalog["bosque-verde"])
+        let pool = spawner.pool(zone)
         expectGreaterThan(pool.count, 1)
+        expectEqual(Set(pool.map(\.rarity)).count, 1, "el test necesita una zona de una sola rareza")
 
         var rng = SeededRandomProvider(seed: 99)
         var counts: [Int: Int] = [:]
         let rolls = 20_000
         for _ in 0..<rolls {
-            let wild = spawner.spawn(
-                rank: .campeon,
-                access: access(16, kanto: true, champion: true),
-                focus: zone,
-                using: &rng
-            )
-            counts[wild.speciesID, default: 0] += 1
+            counts[spawner.spawn(zone: zone, rank: .campeon, using: &rng).speciesID, default: 0] += 1
         }
         expectEqual(Set(counts.keys), Set(pool.map(\.id)), "solo salen las de la zona")
         let expected = Double(rolls) / Double(pool.count)
@@ -74,66 +72,87 @@ enum ZoneTests: TestSuite {
             expectTrue(drift < 0.1, "#\(id) salió \(count) veces, se esperaba ~\(Int(expected))")
         }
 
-        // Y el HP sale de la rareza de la especie, no del tier sorteado.
-        for (id, _) in counts {
-            let species = dex.require(id)
-            var local = SeededRandomProvider(seed: 5)
-            let wild = spawner.spawn(rank: .novato, access: access(16, kanto: true, champion: true), focus: zone, using: &local)
-            if wild.speciesID == id {
-                expectTrue(species.rarity.hpRange.contains(wild.maxHP), "HP fuera del rango de \(species.name)")
-            }
+        // Y todos aguantan lo mismo: la vida es de la zona.
+        var local = SeededRandomProvider(seed: 5)
+        for _ in 0..<200 {
+            expectEqual(spawner.spawn(zone: zone, rank: .campeon, using: &local).maxHP, catalog.hp(of: zone))
         }
     }
 
     /// Enfocar no filtra por tipo ni por rareza —sale todo lo de la zona— pero
     /// lo que **nunca** aparece en libertad sigue sin aparecer: los legendarios
     /// son hitos, y un salvaje arranca su línea evolutiva.
-    static func testFocusExcludesWhatNeverSpawns() throws {
+    static func testZoneExcludesWhatNeverSpawns() throws {
         let electrica = try unwrap(catalog.all.first { $0.species.contains(145) })
-        let pool = spawner.focusPool(electrica)
+        let pool = spawner.pool(electrica)
         expectTrue(!pool.contains { $0.id == 145 }, "Zapdos es un hito, no un salvaje")
         expectTrue(pool.allSatisfy { $0.isBaseForm }, "solo formas base")
         expectTrue(pool.allSatisfy { $0.rarity.spawnsInTheWild })
 
-        // Pero sin filtro de rango: una zona con raras las da igual de novato.
+        // El rango sí gatea dentro de la zona: de novato, una zona con raras
+        // no las da. La puerta de la zona dice dónde puedes ir; el rango, qué
+        // se te pone delante cuando llegas.
         let withRare = try unwrap(catalog.all.first { zone in
-            spawner.focusPool(zone).contains { $0.rarity == .rare } && spawner.focusPool(zone).count <= 3
+            let pool = spawner.pool(zone)
+            return pool.contains { $0.rarity == .rare } && pool.contains { $0.rarity != .rare }
         })
         var rng = SeededRandomProvider(seed: 4)
         var sawRare = false
-        for _ in 0..<200 {
-            let wild = spawner.spawn(rank: .novato, access: access(16, kanto: true, champion: true), focus: withRare, using: &rng)
-            if wild.rarity == .rare { sawRare = true }
+        for _ in 0..<500 where spawner.spawn(zone: withRare, rank: .novato, using: &rng).rarity == .rare {
+            sawRare = true
         }
-        expectTrue(sawRare, "enfocar no filtra por rareza: el rango no gatea la zona")
+        expectFalse(sawRare, "de novato no salen raros ni en su zona")
     }
 
-    static func testFocusNeedsAnOpenZone() throws {
+    static func testMovingNeedsAnOpenZone() throws {
         let store = store(medals: 0, kanto: false, champion: false)
+        let here = store.currentZone.id
         let closed = try unwrap(store.zoneCatalog.all.first { !store.zoneAccess.opens($0) })
-        store.focus(zoneID: closed.id)
-        expectEqual(store.focusedZone, nil, "no se enfoca lo que no está abierto")
+        expectFalse(store.move(toZone: closed.id), "no se va a donde no está abierto")
+        expectEqual(store.currentZone.id, here)
 
         let open = try unwrap(store.unlockedZones.first)
-        store.focus(zoneID: open.id)
-        expectEqual(store.focusedZone?.id, open.id)
+        expectTrue(store.move(toZone: open.id))
+        expectEqual(store.currentZone.id, open.id)
 
-        store.focus(zoneID: "no-existe")
-        expectEqual(store.focusedZone?.id, open.id, "un id inventado no cambia nada")
+        expectFalse(store.move(toZone: "no-existe"))
+        expectEqual(store.currentZone.id, open.id, "un id inventado no cambia nada")
     }
 
-    static func testFocusPersists() throws {
+    /// Sin haber elegido nunca, estás en la más profunda que tengas abierta:
+    /// la frontera, que es donde se juega.
+    static func testDefaultsToTheDeepestOpenZone() throws {
+        let novato = store(medals: 0, kanto: false, champion: false)
+        expectEqual(novato.currentZone.id, novato.deepestOpenZone.id)
+        expectTrue(novato.zoneAccess.opens(novato.currentZone))
+
+        let veterano = store(medals: 6, kanto: false, champion: false)
+        expectGreaterThan(
+            veterano.zoneDepth(veterano.currentZone),
+            novato.zoneDepth(novato.currentZone),
+            "con más medallas la frontera está más lejos"
+        )
+    }
+
+    static func testCurrentZonePersists() throws {
         let url = TemporaryFiles.uniqueDirectory().appendingPathComponent("state.json")
         let first = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 8))
         first.chooseStarter(speciesID: 7)
         let zone = try unwrap(first.unlockedZones.first)
-        first.focus(zoneID: zone.id)
+        expectTrue(first.move(toZone: zone.id))
         first.flush()
 
         let reopened = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 8))
-        expectEqual(reopened.focusedZone?.id, zone.id, "cazar algo concreto lleva sesiones")
-        reopened.focus(zoneID: nil)
-        expectEqual(reopened.focusedZone, nil)
+        expectEqual(reopened.currentZone.id, zone.id, "cazar algo concreto lleva sesiones")
+    }
+
+    /// La partida guardada con el nombre viejo del ajuste sigue valiendo.
+    static func testLegacyFocusedZoneIsRead() throws {
+        let url = TemporaryFiles.uniqueDirectory().appendingPathComponent("state.json")
+        let payload = #"{"schemaVersion":8,"settings":{"focusedZoneID":"bosque-verde"},"box":[],"ledger":{"total":0,"eventCount":0,"monthly":{}}}"#
+        try Data(payload.utf8).write(to: url)
+        let store = GameStore(file: StateFileStore(url: url), rng: SeededRandomProvider(seed: 8))
+        expectEqual(store.state.settings.currentZoneID, "bosque-verde")
     }
 
     static func testCoverage() {
@@ -197,75 +216,70 @@ enum ZoneTests: TestSuite {
         expectGreaterThan(catalog.availableSpecies(access(16, kanto: true, champion: true)).count, 180)
     }
 
-    static func testClosedZoneIsNotOffered() throws {
-        // Los de la Senda Helada no pueden salir antes de abrirla, salvo que
-        // vivan además en otra zona ya abierta. (Es de la región 2 y pide 15
-        // medallas: la zona más tardía con especies propias.)
-        let central = try unwrap(catalog["senda-helada"])
-        let cerrado = access(14, kanto: true)
-        let exclusivos = central.species.filter { id in
-            catalog.zones(for: id).allSatisfy { !cerrado.opens($0) }
-        }
-        expectGreaterThan(exclusivos.count, 0, "la zona debe aportar algo propio")
+    /// Con la zona como bombo único, "no sale nada de una zona cerrada" deja
+    /// de ser una propiedad del sorteo y pasa a ser una del sitio: no puedes
+    /// estar allí. Es más fuerte y más fácil de comprobar.
+    static func testYouCannotHuntInAClosedZone() throws {
+        let store = store(medals: 14, kanto: true, champion: false)
+        let helada = try unwrap(catalog["senda-helada"])
+        expectFalse(store.zoneAccess.opens(helada), "con 14 medallas sigue cerrada")
 
-        for rarity in Rarity.allCases {
-            let ofrecidas = Set(spawner.candidates(rarity: rarity, access: cerrado).map(\.id))
-            for id in exclusivos where !catalog.unassigned.contains(id) {
-                expectFalse(ofrecidas.contains(id), "#\(id) sale con la Senda Helada cerrada")
-            }
+        let antes = store.currentZone.id
+        expectFalse(store.move(toZone: helada.id))
+        expectEqual(store.currentZone.id, antes)
+
+        // Y lo suyo propio no puede aparecer, porque no se sortea fuera de la
+        // zona en la que estás.
+        let exclusivos = Set(helada.species.filter { id in
+            catalog.zones(for: id).allSatisfy { !store.zoneAccess.opens($0) }
+        })
+        expectGreaterThan(exclusivos.count, 0, "la zona debe aportar algo propio")
+        var rng = SeededRandomProvider(seed: 4)
+        for _ in 0..<2_000 {
+            let wild = spawner.spawn(zone: store.currentZone, rank: store.rank, using: &rng)
+            expectFalse(exclusivos.contains(wild.speciesID), "#\(wild.speciesID) sale con la Senda Helada cerrada")
         }
     }
 
-    /// La forma general de lo anterior: no una zona concreta, sino **todas**
-    /// con **cualquier** progreso. Es el invariante que se le pide al bombo.
-    static func testNothingLeaksFromClosedZones() {
+    /// La forma general: con cualquier progreso, la zona en la que estás está
+    /// abierta. Incluye el caso de la partida que aún no ha elegido.
+    static func testCurrentZoneIsAlwaysOpen() {
         for medals in 0...16 {
             for kanto in [false, true] {
-                let estado = access(medals, kanto: kanto)
-                // Solo los tiers que se sortean. El de legendarios sí devuelve
-                // los suyos con las zonas cerradas —viven en zonas de campeón,
-                // así que el bombo sale vacío y salta la red de "ningún tier
-                // sin candidatas"—, pero `availableTiers` no lo ofrece nunca,
-                // que es lo que se comprueba justo debajo.
-                for rarity in Rarity.allCases where rarity.spawnsInTheWild {
-                    for species in spawner.candidates(rarity: rarity, access: estado) {
-                        // La red de seguridad de las que no tienen zona es
-                        // aparte: no vienen de ninguna ruta.
-                        guard !catalog.unassigned.contains(species.id) else { continue }
-                        expectTrue(
-                            catalog.zones(for: species.id).contains { estado.opens($0) },
-                            "#\(species.id) \(species.name) se ofrece con \(medals) medallas y todas sus zonas cerradas"
-                        )
-                    }
-                }
+                let store = store(medals: medals, kanto: kanto, champion: false)
+                expectTrue(
+                    store.zoneAccess.opens(store.currentZone),
+                    "con \(medals) medallas la zona actual está cerrada"
+                )
             }
         }
     }
 
-    /// El cortafuegos del que depende lo de arriba: por muchas medallas que
-    /// tengas, el tier de legendarios no entra en el sorteo.
+    /// El cortafuegos: por muchas medallas que tengas y en la zona que estés,
+    /// el tier de legendarios no entra en el sorteo.
     static func testLegendaryTierIsNeverRolled() {
         for rank in TrainerRank.allCases {
-            expectFalse(
-                spawner.availableTiers(rank: rank).contains(.legendary),
-                "\(rank.label) puede sortear el tier de legendarios"
-            )
+            for zone in catalog.all {
+                expectFalse(
+                    spawner.availableTiers(rank: rank, in: zone).contains(.legendary),
+                    "\(rank.label) puede sortear legendarios en \(zone.name)"
+                )
+            }
         }
     }
 
-    /// Y por el camino que recorre la app: sorteando rivales de verdad, con
-    /// tier incluido, no solo mirando el bombo.
-    static func testSpawnStaysInsideOpenZones() {
+    /// Y por el camino que recorre la app: sorteando rivales de verdad, todo
+    /// lo que sale vive donde estás.
+    static func testSpawnStaysInsideTheZone() {
         var rng = SeededRandomProvider(seed: 4)
-        for medals in [0, 2, 4] {
-            let estado = access(medals, kanto: false)
-            let rank = TrainerRank.rank(forMedals: medals)
-            for _ in 0..<5_000 {
-                let encounter = spawner.spawn(rank: rank, access: estado, using: &rng)
-                guard !catalog.unassigned.contains(encounter.speciesID) else { continue }
+        for medals in [0, 2, 4, 8] {
+            let store = store(medals: medals, kanto: false, champion: false)
+            let vive = Set(spawner.pool(store.currentZone).map(\.id))
+            for _ in 0..<3_000 {
+                let encounter = spawner.spawn(zone: store.currentZone, rank: store.rank, using: &rng)
                 expectTrue(
-                    catalog.zones(for: encounter.speciesID).contains { estado.opens($0) },
-                    "#\(encounter.speciesID) aparece con \(medals) medallas y sin zona abierta"
+                    vive.contains(encounter.speciesID),
+                    "#\(encounter.speciesID) aparece con \(medals) medallas fuera de \(store.currentZone.name)"
                 )
             }
         }
@@ -282,34 +296,19 @@ enum ZoneTests: TestSuite {
         expectEqual(huerfanos, [151], "solo Mew: \(huerfanos)")
     }
 
-    static func testFallbackTier() throws {
-        // Mew es legendario, así que se ofrece como legendario y no como raro.
-        let mew = dex.require(151)
-        expectEqual(spawner.fallbackTier(for: mew), Rarity.legendary)
-        // Un común o poco común sin zona subiría a raro.
-        expectEqual(spawner.fallbackTier(for: dex.require(19)), Rarity.rare, "Rattata (común)")
-        expectEqual(spawner.fallbackTier(for: dex.require(92)), Rarity.rare, "Gastly (poco común)")
-        expectEqual(spawner.fallbackTier(for: dex.require(147)), Rarity.rare, "Dratini (raro)")
-
-        let legendarias = Set(spawner.candidates(rarity: .legendary, access: access(0)).map(\.id))
-        expectTrue(legendarias.contains(151), "Mew entra en el tier legendario")
-        let raras = Set(spawner.candidates(rarity: .rare, access: access(0)).map(\.id))
-        expectFalse(raras.contains(151), "pero no en el de raros")
-    }
-
-    static func testNoTierEverStarves() {
-        for medals in [0, 1, 4, 8, 16] {
-            for kanto in [false, true] {
-                let estado = access(medals, kanto: kanto)
-                for rarity in Rarity.allCases {
-                    let pool = spawner.candidates(rarity: rarity, access: estado)
-                    expectFalse(
-                        pool.isEmpty,
-                        "\(rarity) sin candidatas con \(medals) medallas y kanto=\(kanto)"
-                    )
-                    expectTrue(pool.allSatisfy(\.isBaseForm), "\(rarity) ofrece evoluciones")
-                }
-            }
+    /// Lo que no tiene zona no se caza: con el bombo global existía una red
+    /// que las ofrecía en el tier más difícil, y con la zona como único bombo
+    /// esa red no tiene dónde engancharse. No se pierde nada, porque de las 58
+    /// sin zona la única forma base es Mew, que es un hito.
+    static func testWhatHasNoZoneIsNotHuntable() {
+        let sinZona = catalog.unassigned.compactMap { dex[$0] }
+        expectTrue(
+            sinZona.allSatisfy { !$0.isBaseForm || $0.isLegendary },
+            "algo capturable se quedaría sin sitio donde salir"
+        )
+        for zone in catalog.all {
+            let pool = Set(spawner.pool(zone).map(\.id))
+            expectTrue(pool.isDisjoint(with: catalog.unassigned), "\(zone.name) ofrece algo sin zona")
         }
     }
 }

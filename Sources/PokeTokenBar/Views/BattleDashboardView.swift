@@ -71,13 +71,13 @@ struct EvolutionProgress: View {
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.orange)
             } else if let remaining, !branches.isEmpty {
-                Text("\(Fmt.tokens(remaining)) tokens para evolucionar")
+                Text("\(Fmt.tokens(remaining)) de daño para evolucionar")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 HPBar(fraction: stageFraction, height: 5)
                     .frame(width: 180)
             } else if let remaining, let next = store.activeNextForm {
-                Text("\(Fmt.tokens(remaining)) tokens para \(next.localizedName)")
+                Text("\(Fmt.tokens(remaining)) de daño para \(next.localizedName)")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 HPBar(fraction: stageFraction, height: 5)
@@ -112,7 +112,9 @@ struct EncounterCard: View {
     @EnvironmentObject private var store: GameStore
 
     var body: some View {
-        SectionCard(title: "Combate") {
+        // Con el título: dónde estás es ahora la mitad de la dificultad, y sin
+        // decirlo aquí habría que abrir la lista de zonas para saberlo.
+        SectionCard(title: "Combate · \(store.currentZone.name)") {
             if let encounter = store.state.encounter, let rival = store.rivalSpecies,
                store.inspectingRival {
                 RivalDetailView(encounter: encounter, species: rival)

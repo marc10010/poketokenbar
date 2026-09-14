@@ -473,10 +473,14 @@ enum GameStoreTests: TestSuite {
         // Rellenamos la caja a mano hasta media Pokédex.
         for id in 2...130 { store.debugCapture(speciesID: id) }
         let media = store.collectionBonus
-        expectEqual(media, Double(store.pokedexCaptured) / 251.0, accuracy: 0.0001)
+        expectEqual(
+            media,
+            Double(store.pokedexCaptured) / 251.0 * GameRules.collectionBonusCap,
+            accuracy: 0.0001
+        )
         expectTrue(media > 0.4, "con media dex el bonus se nota: \(media)")
 
-        // Acotado: ni con más entradas que especies pasa de +1,0.
+        // Acotado: ni con más entradas que especies pasa del techo.
         for id in 131...251 { store.debugCapture(speciesID: id) }
         expectTrue(store.collectionBonus <= GameRules.collectionBonusCap)
 
