@@ -482,7 +482,7 @@ tabla escrita a mano.
 ## 10. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 214 tests, ~43k comprobaciones
+swift run PokeTokenBarSelfTest     # 220 tests, ~136k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 
@@ -752,6 +752,12 @@ generaciones conviven en el mapa.
 | Visto | en gris: le has ganado en libertad pero no se quedó |
 | Sin ver | silueta y solo su número |
 
+La ficha del rival dice **lo que va a pasar al vencerlo**, y lo saca de la misma
+función que lo decide (`captureOutcome`): nuevo, repetido —cuenta la victoria y
+no se queda— o el caso de la rama, que es el único en que una línea que ya
+tienes acepta otro ejemplar. El aviso vivía en la vista y decía "no se queda"
+también en ese tercer caso.
+
 **La Pokédex es un registro, no una foto de la caja.** Cuenta la especie con la
 que capturaste, la forma en la que se ve ahora **y todas las etapas por las que
 ha pasado**. Es lo que hace que la meta exista: antes se derivaba solo de la
@@ -949,13 +955,14 @@ quedan porque explican **por qué** cada regla es como es:
 - **Ficha grande**, en la caja, en el rival y en cada gimnasio: sprite a tamaño,
   tipos, etapa, progreso hacia la siguiente forma y sus números (combates
   ganados, gimnasios, veces vencido en libertad, cuándo se capturó). Desde ahí
-  se envía a luchar, y un variocolor puede alternar a su paleta normal **si
-también tienes el normal de esa línea**: con el shiny como único ejemplar,
-dibujarlo en normal enseñaría un Pokémon que no está en la caja, y la caja tiene
-que decir la verdad sobre lo que has conseguido.
-- La caja PC apila por especie + variante + etapa alcanzada, y como no se
-  repiten líneas evolutivas su techo real son **258 huecos** (129 líneas × normal
-  y shiny). A ese tamaño una rejilla plana no se navega, así que la caja tiene:
+  se envía a luchar, y se puede **cambiar de paleta en las dos direcciones si
+tienes las dos**: con una sola, dibujar la otra enseñaría un Pokémon que no has
+conseguido, y la caja tiene que decir la verdad.
+- La caja PC apila por especie + etapa alcanzada, y como no se repiten líneas
+  evolutivas su techo real son **129 huecos**, uno por línea. **El shiny no
+  ocupa hueco**: cazar el variocolor de una línea que ya tienes le desbloquea la
+  paleta al ejemplar que tienes, y al revés igual. Antes eran 258 y la mitad
+  eran el mismo Pokémon repintado. A ese tamaño una rejilla plana no se navega, así que la caja tiene:
   búsqueda y filtros (nombre en español o inglés, nº de Pokédex, tipo,
   generación, shiny, evolucionados), **cuatro órdenes que además parten la caja
   en tramos con cabecera pegajosa** (generación, rareza, mes de captura o banda

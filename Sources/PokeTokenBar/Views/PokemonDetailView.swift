@@ -272,11 +272,20 @@ struct RivalDetailView: View {
 
     private var ownedNotice: String {
         let defeats = store.timesDefeated(familyOf: species.id)
-        if store.ownsFamily(of: species.id, shiny: encounter.isShiny) {
-            return "Ya tienes esta línea: al vencerlo contará la victoria (\(defeats) hasta ahora) pero no se queda."
+        switch store.captureOutcome(of: species.id, shiny: encounter.isShiny) {
+        case .repeated:
+            let color = encounter.isShiny ? " shiny" : ""
+            return "Ya tienes esta línea\(color): al vencerlo contará la victoria (\(defeats) hasta ahora) pero no se queda."
+        case .newPalette:
+            return encounter.isShiny
+                ? "Ya tienes esta línea, pero no en shiny: no ocupará otro hueco, le desbloquea la paleta."
+                : "De esta línea solo tienes el shiny: vencerlo desbloquea la paleta normal, sin ocupar otro hueco."
+        case .anotherForTheBranch:
+            return "Ya tienes esta línea, pero le falta una rama y los tuyos ya no evolucionan: este sí se queda."
+        case .newLine:
+            return defeats > 0
+                ? "Le has ganado \(defeats) veces. Esta vez sí se queda: te falta en la caja."
+                : "Nuevo: al vencerlo entra en la caja."
         }
-        return defeats > 0
-            ? "Le has ganado \(defeats) veces. Esta vez sí se queda: te falta en la caja."
-            : "Nuevo: al vencerlo entra en la caja."
     }
 }

@@ -219,23 +219,23 @@ enum BranchTests: TestSuite {
     /// puede salir otro, en vez de acumular cinco Eevees sin evolucionar.
     static func testSecondSpecimenNeedsTheFirstEvolved() throws {
         let store = try withEevee(hour: 12, rival: 19)
-        expectTrue(!store.acceptsAnother(baseFormID: 133, shiny: false), "con un Eevee sin evolucionar, no")
+        expectTrue(!store.acceptsAnother(baseFormID: 133), "con un Eevee sin evolucionar, no")
 
         store.ingest(UsageEvent(id: "evoluciona", inputTokens: 260_000, outputTokens: 0, timestamp: at(12)))
         expectEqual(activeForm(store), 196, "ya es Espeon")
-        expectTrue(store.acceptsAnother(baseFormID: 133, shiny: false), "y ahora sí puede salir otro")
+        expectTrue(store.acceptsAnother(baseFormID: 133), "y ahora sí puede salir otro")
 
         // Con las cinco ramas registradas ya no hace falta ningún Eevee más.
         for id in [134, 135, 136, 197] { store.debugRegister(speciesID: id) }
-        expectTrue(!store.acceptsAnother(baseFormID: 133, shiny: false), "no faltan ramas")
+        expectTrue(!store.acceptsAnother(baseFormID: 133), "no faltan ramas")
     }
 
     static func testLinearLinesStillRejectDuplicates() throws {
         let store = makeStore()
         store.chooseStarter(speciesID: 7)
-        expectTrue(!store.acceptsAnother(baseFormID: 7, shiny: false), "Squirtle no bifurca")
+        expectTrue(!store.acceptsAnother(baseFormID: 7), "Squirtle no bifurca")
         store.debugCapture(speciesID: 19)
-        expectTrue(!store.acceptsAnother(baseFormID: 19, shiny: false), "ni Rattata")
+        expectTrue(!store.acceptsAnother(baseFormID: 19), "ni Rattata")
     }
 
     /// Una partida de la versión anterior no puede cambiar de forma al abrir la
@@ -287,7 +287,7 @@ enum BranchTests: TestSuite {
             // rama saldría con el rival de la vuelta anterior.
             store.debugSetGymCounters(tokens: 0, captures: 0)
             expectTrue(
-                index == 0 || store.acceptsAnother(baseFormID: 133, shiny: false),
+                index == 0 || store.acceptsAnother(baseFormID: 133),
                 "el paso \(index) necesita poder capturar otro Eevee"
             )
             store.debugCapture(speciesID: 133)

@@ -8,11 +8,54 @@ enum CollectionTests: TestSuite {
     static let tests: [(String, () throws -> Void)] = [
         ("una línea repetida no se captura", testRepeatedFamilyIsNotCaptured),
         ("tener a Wartortle bloquea al Squirtle", testEvolvedFormBlocksItsBaseForm),
-        ("el shiny de una línea que tienes sí se queda", testShinyOfOwnedFamilyIsKept),
+        ("el shiny de una línea que tienes desbloquea su paleta", testShinyUnlocksThePalette),
         ("dos iguales en el mismo evento solo dejan uno", testTwoOfTheSameFamilyInOneEvent),
         ("las victorias se apuntan al compañero", testDefeatsCreditTheCompanion),
         ("alternar shiny solo va en los shiny", testShinyDisplayToggle),
+        ("con una sola paleta se dibuja esa, diga lo que diga la preferencia", testStoredPreferenceCannotShowWhatYouLack),
+        ("el aviso dice lo que de verdad va a pasar", testCaptureOutcomeMatchesWhatHappens),
     ]
+
+    /// El aviso de la ficha del rival sale de aquí, así que tiene que decir lo
+    /// mismo que hace `collect`. Decía "no se queda" también en las líneas que
+    /// bifurcan y sí aceptan un segundo ejemplar.
+    static func testCaptureOutcomeMatchesWhatHappens() throws {
+        let store = primed()
+        store.debugGrandfatherRegion("johto")
+
+        // Línea nueva.
+        expectEqual(store.captureOutcome(of: 43, shiny: false), GameStore.CaptureOutcome.newLine)
+        store.debugCapture(speciesID: 43)                       // Oddish
+
+        // Ya la tienes y todavía puede evolucionar: no se queda otro.
+        expectEqual(store.captureOutcome(of: 43, shiny: false), GameStore.CaptureOutcome.repeated)
+        func oddishEnLaCaja() -> Int {
+            store.state.box.filter { store.pokedex[$0.speciesID]?.baseFormID == 43 }.count
+        }
+        let antes = oddishEnLaCaja()
+        store.debugSetEncounter(wild(43, hp: 200))
+        store.ingest(event("repetido", tokens: 200))
+        expectEqual(oddishEnLaCaja(), antes, "no debería haberse quedado")
+
+        // El shiny de una línea que tienes no es un hueco: es su paleta.
+        expectEqual(store.captureOutcome(of: 43, shiny: true), GameStore.CaptureOutcome.newPalette)
+
+        // Evolucionado hasta el final y con una rama sin registrar: sí se queda.
+        let oddish = try unwrap(store.state.box.first { $0.speciesID == 43 })
+        store.setActiveCompanion(oddish.id)
+        store.ingest(event("sube", tokens: 1_200_000))
+        let evolucionado = try unwrap(store.state.box.first { $0.id == oddish.id })
+        expectTrue(
+            [45, 182].contains(evolucionado.evolvedForms.last ?? 43),
+            "el Oddish tiene que haber llegado a Vileplume o Bellossom: \(evolucionado.evolvedForms)"
+        )
+        expectEqual(store.captureOutcome(of: 43, shiny: false), GameStore.CaptureOutcome.anotherForTheBranch)
+
+        let antesDeLaRama = oddishEnLaCaja()
+        store.debugSetEncounter(wild(43, hp: 200))
+        store.ingest(event("segunda-rama", tokens: 200))
+        expectEqual(oddishEnLaCaja(), antesDeLaRama + 1, "el segundo de la rama sí se queda")
+    }
 
     private static func makeStore(seed: UInt64 = 4) -> GameStore {
         GameStore(
@@ -70,21 +113,51 @@ enum CollectionTests: TestSuite {
         expectEqual(store.state.box.count, before, "Blastoise es la misma línea")
     }
 
-    static func testShinyOfOwnedFamilyIsKept() throws {
+    /// Un shiny de una línea que ya tienes no ocupa otro hueco: desbloquea su
+    /// paleta en el ejemplar que tienes, que es lo que se pidió. Antes eran dos
+    /// entradas de caja y la mitad de los 258 huecos eran duplicados de color.
+    static func testShinyUnlocksThePalette() throws {
         let store = primed()
         store.debugSetEncounter(wild(19))
         store.ingest(event("normal", tokens: 100))
         let after = store.state.box.count
+        let rattata = try unwrap(store.state.box.last { $0.speciesID == 19 })
+        expectFalse(rattata.isShiny)
+        expectFalse(store.canToggleShinyDisplay(rattata), "sin el shiny no hay nada que alternar")
 
         store.debugSetEncounter(wild(19, shiny: true))
         store.ingest(event("shiny", tokens: 100))
-        expectEqual(store.state.box.count, after + 1, "un shiny es otra cosa y sí se queda")
-        expectTrue(try unwrap(store.state.box.last).isShiny)
+        expectEqual(store.state.box.count, after, "no ocupa un hueco nuevo")
 
-        // Pero un segundo shiny de la misma línea ya no.
+        let ahora = try unwrap(store.state.box.first { $0.id == rattata.id })
+        expectTrue(ahora.isShiny, "el que tenías pasa a tener su paleta shiny")
+        expectTrue(ahora.caughtNormal, "y conserva la normal")
+        expectTrue(ahora.displaysShiny, "un shiny se enseña")
+        expectTrue(store.canToggleShinyDisplay(ahora), "y con las dos ya se puede cambiar")
+
+        // Y un segundo shiny no vuelve a hacer nada.
         store.debugSetEncounter(wild(19, shiny: true))
         store.ingest(event("shiny-2", tokens: 100))
-        expectEqual(store.state.box.count, after + 1)
+        expectEqual(store.state.box.count, after)
+    }
+
+    /// La preferencia guardada no manda sobre lo que tienes. Una partida que
+    /// quedó con `prefersShiny = false` en un shiny sin su normal —el cambio de
+    /// paleta no pedía tener las dos hasta que se arregló— seguiría dibujando
+    /// un Pokémon que no está en la caja.
+    static func testStoredPreferenceCannotShowWhatYouLack() {
+        let soloShiny = CapturedPokemon(
+            speciesID: 21,
+            isShiny: true,
+            capturedAtTotalTokens: 0,
+            prefersShiny: false
+        )
+        expectFalse(soloShiny.caughtNormal)
+        expectTrue(soloShiny.displaysShiny, "sin el normal se dibuja shiny aunque pida lo otro")
+
+        var conLasDos = soloShiny
+        conLasDos.caughtNormal = true
+        expectFalse(conLasDos.displaysShiny, "con las dos, manda la preferencia")
     }
 
     static func testTwoOfTheSameFamilyInOneEvent() throws {
@@ -126,6 +199,7 @@ enum CollectionTests: TestSuite {
         store.ingest(event("shiny", tokens: 100))
         let shiny = try unwrap(store.state.box.last { $0.isShiny })
         expectTrue(shiny.displaysShiny, "de fábrica se muestra shiny")
+        expectFalse(shiny.caughtNormal, "solo tienes la paleta shiny")
         expectTrue(!store.canToggleShinyDisplay(shiny), "sin el normal, no se puede cambiar")
 
         store.toggleShinyDisplay(shiny.id)
@@ -134,18 +208,22 @@ enum CollectionTests: TestSuite {
             "y pedirlo no hace nada"
         )
 
-        // Con el normal de la misma línea en la caja, ya sí.
+        // Cazando el normal de la misma línea, ya sí: no entra otro hueco,
+        // se le apunta la paleta que faltaba al que tienes.
+        let antes = store.state.box.count
         store.debugSetEncounter(wild(19))
         store.ingest(event("normal", tokens: 100))
-        expectTrue(store.ownsFamily(of: 19, shiny: false), "el Rattata normal está en la caja")
-        expectTrue(store.canToggleShinyDisplay(shiny))
+        expectEqual(store.state.box.count, antes, "la paleta no ocupa hueco")
+        let conLasDos = try unwrap(store.state.box.first { $0.id == shiny.id })
+        expectTrue(conLasDos.caughtNormal, "el normal se apunta en el que tienes")
+        expectTrue(store.canToggleShinyDisplay(conLasDos))
 
         store.toggleShinyDisplay(shiny.id)
         expectFalse(try unwrap(store.state.box.first { $0.id == shiny.id }).displaysShiny, "ahora en normal")
         store.toggleShinyDisplay(shiny.id)
         expectTrue(try unwrap(store.state.box.first { $0.id == shiny.id }).displaysShiny, "y vuelta")
 
-        // Un normal no se puede "pintar" de shiny.
+        // Uno del que solo tienes el normal no se puede "pintar" de shiny.
         let plain = try unwrap(store.state.box.first { !$0.isShiny })
         expectTrue(!store.canToggleShinyDisplay(plain))
         store.toggleShinyDisplay(plain.id)
