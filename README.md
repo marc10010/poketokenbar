@@ -180,10 +180,19 @@ Chansey **Blissey**, ni Scyther **Scizor**, ni Seadra **Kingdra**, ni Poliwhirl
 **Politoed**, ni Gloom **Bellossom**, ni Slowpoke **Slowking**, ni Porygon
 **Porygon2**, ni Eevee **Espeon** o **Umbreon**.
 
-Cuando la rama que toca está bloqueada, **espera**: no cae a otra, que sería dar
-la que no se pidió. Un Eevee de noche antes del barco no se convierte en
-Vaporeon por descarte; se queda Eevee hasta que abras Johto, o hasta que venzas
-un rival de agua, fuego o eléctrico.
+Cuando la rama que toca está bloqueada y **quedan varias alcanzables**,
+**espera**: no cae a otra, que sería dar la que no se pidió. Un Eevee de noche
+antes del barco no se convierte en Vaporeon por descarte; se queda Eevee hasta
+que abras Johto, o hasta que venzas un rival de agua, fuego o eléctrico.
+
+Pero si solo queda **una** alcanzable, se coge esa a cualquier hora, porque ahí
+no hay elección que quitar. Gloom se bifurca por el reloj —de día Bellossom, de
+noche Vileplume— y Bellossom es de Johto: antes del barco, un Gloom de día se
+quedaba parado esperando algo inalcanzable, cuando Vileplume, que es de su
+propia región, estaba ahí. Ahora es Vileplume a cualquier hora, y en cuanto
+abres Johto vuelve a mandar la hora. Lo mismo con Poliwhirl (Poliwrath) y
+Slowpoke (Slowbro). La ficha marca con **· necesita Johto** la rama que está
+fuera de alcance.
 
 Solo bloquea cuando **cruza**. La versión estricta —"nada de una región cerrada
 evoluciona"— congelaría casi todas las líneas de Johto que se capturan en las
@@ -473,7 +482,7 @@ tabla escrita a mano.
 ## 10. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 211 tests, ~43k comprobaciones
+swift run PokeTokenBarSelfTest     # 214 tests, ~43k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 

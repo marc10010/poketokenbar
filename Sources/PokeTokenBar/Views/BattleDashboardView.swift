@@ -71,13 +71,13 @@ struct EvolutionProgress: View {
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.orange)
             } else if let remaining, !branches.isEmpty {
-                Text("\(Fmt.tokens(remaining)) tokens para evolucionar")
+                Text("\(Fmt.tokens(remaining)) de daño para evolucionar")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 HPBar(fraction: stageFraction, height: 5)
                     .frame(width: 180)
             } else if let remaining, let next = store.activeNextForm {
-                Text("\(Fmt.tokens(remaining)) tokens para \(next.localizedName)")
+                Text("\(Fmt.tokens(remaining)) de daño para \(next.localizedName)")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 HPBar(fraction: stageFraction, height: 5)
