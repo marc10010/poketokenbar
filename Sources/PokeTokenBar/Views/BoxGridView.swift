@@ -4,8 +4,9 @@ import SwiftUI
 /// La caja PC. La comparten el popover y el HUD expandido.
 ///
 /// Está partida en tramos con cabecera pegajosa porque el techo de la caja son
-/// 258 huecos (129 líneas evolutivas × normal y shiny) y una rejilla plana de
-/// ese tamaño no se navega: solo se busca lo que ya sabes que tienes.
+/// 129 huecos —uno por línea evolutiva; el shiny es una paleta del hueco, no
+/// otro— y una rejilla plana de ese tamaño no se navega: solo se busca lo que
+/// ya sabes que tienes.
 struct BoxGridView: View {
     @EnvironmentObject private var store: GameStore
     @EnvironmentObject private var sprites: SpriteStore
