@@ -19,15 +19,13 @@ public enum BossHit: Equatable, Sendable {
 /// con un cruce de tipos insuficiente el progreso es cero por muchos tokens que
 /// se le tiren. La medalla se gana eligiendo bien el compañero, no esperando.
 public struct GymCombat {
-    /// Lo que suma cada etapa evolutiva al multiplicador, antes de restar la
-    /// absorción: criar a un Pokémon tiene que servir para algo. Solo aplica en
-    /// gimnasios; en los salvajes cambiaría la economía de todo el juego.
-    public static let stageBonusPerStage = 0.25
-
     public init() {}
 
+    /// Lo que suma la etapa al multiplicador, antes de restar la absorción. La
+    /// constante vive en `GameRules` porque el mismo bonus cuenta contra los
+    /// salvajes.
     public func stageBonus(for stage: EvolutionStage) -> Double {
-        Double(stage.rawValue) * Self.stageBonusPerStage
+        GameRules.stageBonus(for: stage)
     }
 
     /// HP que quita cada token contra este líder. Cero significa bloqueado.

@@ -584,12 +584,13 @@ public final class GameStore: ObservableObject {
         return typeChart.matchup(attacker: attacker.types, defender: defender.types)
     }
 
-    /// Daño por token contra el salvaje actual, bonus de colección incluido.
-    /// Es lo que de verdad pasa, así que es lo que se muestra.
+    /// Daño por token contra el salvaje actual, con el cruce de tipos, la etapa
+    /// del compañero y el bonus de colección. Es lo que de verdad pasa, así que
+    /// es lo que se muestra.
     public var wildDamagePerToken: Double {
         guard state.encounter != nil else { return 0 }
         let base = state.settings.typeEffectivenessEnabled ? currentMatchup.multiplier : 1
-        return base + collectionBonus
+        return base + GameRules.stageBonus(for: stage) + collectionBonus
     }
 
     /// A qué le estás pegando ahora mismo y con qué tasa. Existe porque la
@@ -962,6 +963,10 @@ public final class GameStore: ObservableObject {
         let chart = typeChart
         let pokedex = pokedex
         let collection = collectionBonus
+        // La etapa se lee **antes** del evento, igual que contra un jefe: si el
+        // compañero evoluciona a mitad, el ritmo real tiene que seguir siendo
+        // el que la UI acaba de enseñar.
+        let stageBonus = GameRules.stageBonus(for: stage)
         // El gimnasio ya no se abre solo. Antes el evento se cortaba al
         // terminar un salvaje y el líder ocupaba su sitio; ahora queda
         // **disponible** y se entra cuando el jugador quiera, igual que una
@@ -976,9 +981,9 @@ public final class GameStore: ObservableObject {
             multiplier: { encounter in
                 guard typesEnabled, !attackerTypes.isEmpty,
                       let defender = pokedex[encounter.speciesID]
-                else { return 1 + collection }
+                else { return 1 + stageBonus + collection }
                 let matchup = chart.matchup(attacker: attackerTypes, defender: defender.types).multiplier
-                return matchup + collection
+                return matchup + stageBonus + collection
             },
             using: &rng,
             now: event.timestamp

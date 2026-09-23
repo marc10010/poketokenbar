@@ -247,10 +247,22 @@ son Hada aunque en Gen 1 y 2 no existiera ese tipo.
   mejor BST de la familia), no de una lista a mano. La regla está en
   `tools/generate_pokedex.mjs`.
 - **La colección da poder.** Cada hueco de la Pokédex suma daño contra
-  salvajes: `especies / 251`, hasta `+1,0`. La caja deja de ser decoración y
+  salvajes: `especies / 251 × 3`, hasta `+3,0`. La caja deja de ser decoración y
   capturar pasa a ser inversión. **Solo cuenta contra salvajes**: si contara
   contra jefes, una Pokédex avanzada anularía su absorción y dejarían de ser un
   problema de cobertura de tipos para ser uno de acumulación.
+- **Criar también da poder, y en los dos sitios.** Cada etapa suma `+0,25` al
+  daño por token, contra jefes **y** contra salvajes. El bonus existía solo
+  contra jefes, que es donde menos rato se pasa: evolucionar no servía de nada
+  mientras cazabas, y un Charizard le pegaba a un Pidgey igual que un
+  Charmander. Es el mismo número en los dos sitios, así que los gimnasios no se
+  reequilibran.
+
+  Las dos palancas se compensan por lo que cuestan, no por lo que dan: criar
+  hasta etapa 2 pide 1.000.001 de daño y devuelve `+0,5`; completar la Pokédex
+  pide 251 capturas —unos 14M de tokens— y devuelve `+3,0`. Por token invertido,
+  criar rinde **más del triple**, pero se queda ahí; coleccionar es lento y no
+  tiene techo cercano. La una es la de hoy y la otra la de la partida entera.
 - **La evolución es de cada Pokémon, no del jugador.** Cada capturado acumula
   `tokensEarned`: el **HP que ha quitado** mientras lo llevabas equipado. Los
   umbrales son los del spec (base ≤ 200.000 · etapa 1 200.001–1.000.000 ·
@@ -482,7 +494,7 @@ tabla escrita a mano.
 ## 10. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 220 tests, ~136k comprobaciones
+swift run PokeTokenBarSelfTest     # 221 tests, ~136k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 
