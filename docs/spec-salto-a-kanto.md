@@ -143,6 +143,11 @@ bloquea contenido, solo el paso de región — que es la forma del Dock Pass.
 
 **K4 — ¿Escalamos el HP de los salvajes por región?** Propuesta: **no** (ver B).
 
+**Superada por [spec-zona-como-unidad](spec-zona-como-unidad.md)**: no se escala
+por región —PokéClicker tampoco lo hace— sino por **profundidad de zona**, que
+es su curva de verdad. El razonamiento de B seguía siendo correcto para la
+pregunta que se hacía; la pregunta era la equivocada.
+
 **K5 — ¿Y las regiones siguientes?** Propuesta: el mismo patrón, con el umbral
 en proporción a lo alcanzable de cada región. Así Hoenn no necesita inventar
 nada: liga + registro de la región anterior.

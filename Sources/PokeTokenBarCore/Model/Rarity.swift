@@ -21,17 +21,6 @@ public enum Rarity: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// HP de los jefes de este tier. Los salvajes ya no lo usan: su vida sale
-    /// de la profundidad de la zona.
-    public var hpRange: ClosedRange<Int> {
-        switch self {
-        case .common: return 10_000...50_000
-        case .uncommon: return 75_000...200_000
-        case .rare: return 250_000...600_000
-        case .legendary: return 1_500_000...4_000_000
-        }
-    }
-
     /// Si aparece en libertad. Los legendarios no: son hitos con sitio y
     /// requisito, y dejarlos también en el sorteo los abarataría.
     public var spawnsInTheWild: Bool { self != .legendary }

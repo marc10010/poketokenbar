@@ -124,18 +124,26 @@ rival de turno, no con quién empezaste) y ofrecía los tres de Johto para empez
 en Kanto. Nunca duplica una línea: si ya tienes ese Pokémon, no te dan otro.
 
 
-| Tier | Prob. | HP | Requiere | Ejemplos |
-|---|---|---|---|---|
-| Común | 60 % | 10.000 – 50.000 | — | Rattata, Sentret |
-| Poco común | 28 % | 75.000 – 200.000 | — | Gastly, Scyther |
-| Raro | 10 % | 250.000 – 600.000 | > 200.000 tokens | Dratini, Larvitar, iniciales |
-| Legendario | 2 % | 1.500.000 – 4.000.000 | > 2.000.000 tokens | Mewtwo, Lugia |
+| Tier | Peso dentro de su zona | Requiere | Ejemplos |
+|---|---|---|---|
+| Común | 45 % | — | Rattata, Sentret |
+| Poco común | 33 % | — | Gastly, Scyther |
+| Raro | 22 % | 2 medallas (rango Entrenador) | Dratini, Larvitar, iniciales |
+| Legendario | — | no aparece en libertad | Mewtwo, Lugia |
 
+- **La rareza es probabilidad, no vida.** Cuánto aguanta un salvaje lo dice la
+  zona en la que estás (§13), no su tier: dentro de una zona, un raro sale menos
+  pero cuesta lo mismo que un común.
+- Un tier que la zona no tiene reparte su peso entre los que sí, en proporción:
+  en una zona sin raros, el 22 % se va a comunes y poco comunes.
 - Variocolor (shiny): 1 % en cualquier aparición, y se conserva al capturar.
-- Un tier bloqueado no "reintenta": su peso se reparte entre los disponibles.
-### Evolución: los tokens dan derecho, el combate decide la forma
+### Evolución: el daño da derecho, el combate decide la forma
 
-Cada Pokémon evoluciona con **sus** tokens (200.000 y 1.000.000 ganados
+<p align="center">
+  <img src="docs/screenshots/popover-ramas.png" width="260" alt="Ficha de un Eevee con sus cinco ramas y la condición de cada una">
+</p>
+
+Cada Pokémon evoluciona con **su** daño (200.001 y 1.000.001 de HP quitados
 estando equipado), y la evolución es un **hecho que se registra en el
 ejemplar**, no algo que se recalcule a partir de los tokens. Eso importa para
 las cinco líneas que bifurcan: antes la rama la fijaba una semilla desde la
@@ -547,6 +555,10 @@ de dejar el avance en silencio.
 
 ### El barco entre regiones
 
+<p align="center">
+  <img src="docs/screenshots/popover-barco.png" width="260" alt="El barco: Alto Mando ganado y el requisito de Pokédex a medias">
+</p>
+
 El billete tiene **dos mitades**:
 
 1. ganar el **Alto Mando de Kanto**, y
@@ -555,7 +567,8 @@ El billete tiene **dos mitades**:
 El requisito de Pokédex es lo que hace que la región 1 haya que jugarla y no
 solo atravesarla: sin él se ganaba el Alto Mando con la mitad de la región sin
 ver. Son las **66 que se encuentran antes de Johto** más criar cuatro, unos
-800.000 tokens, y con la zona enfocada es trabajo dirigido y no lotería.
+800.000 de daño, y como siempre estás en una zona concreta es trabajo dirigido
+y no lotería.
 
 Es el equivalente al **Dock Pass** de PokéClicker, que allí se compra con
 moneda: aquí no hay monedas, así que el peaje es la Pokédex.
@@ -609,7 +622,7 @@ seguidas, y es ese número el que mueve todo lo demás.
 | 0 | Kanto | rutas del sur; tier común y poco común |
 | 2 | Kanto | tier **raro** (rango Entrenador) |
 | 5 | Kanto | rango Veterano y la Central Eléctrica |
-| 8 | Kanto | tier **legendario** (rango As), los tres pájaros y el Alto Mando |
+| 8 | Kanto | rango As, los tres pájaros y el Alto Mando |
 | 8 + liga | — | **se abre Johto**: sus zonas base y su primer gimnasio |
 | 10 a 16 | Johto | sus zonas por tramos (Ruinas Alfa, Monte Mortar, Senda Helada…) |
 | 16 | Johto | Torre Quemada, Torre Campana e Islas Remolino: los legendarios de Johto |
@@ -624,12 +637,14 @@ estaba la confusión.
 ## 12. Hitos legendarios
 
 Los 11 legendarios **no aparecen en el sorteo**: tienen sitio y requisito, y se
-retan cuando quieras desde la sección *Legendarios*. Su 2 % de aparición se
-reparte entre los tiers que sí salen, así que el sorteo sigue sumando 1.
+retan cuando quieras desde la sección *Legendarios*. Su peso de aparición es
+**cero**, y hay un test que comprueba que ningún rango puede sortear ese tier en
+ninguna zona.
 
 El sitio de cada hito **es una zona del catálogo de zonas**, así que su requisito
 base es "esa zona está abierta" y no hay reglas de desbloqueo duplicadas. Encima
-puede pedir medallas extra (Ho-Oh, 10) o Pokédex (Mew, 200 especies).
+puede pedir medallas extra (los tres pájaros, 8; Celebi, 16) o Pokédex (Mew,
+200 especies).
 
 | Legendario | Sitio | Requisito |
 |---|---|---|
@@ -684,6 +699,10 @@ más difícil entre "raro" y el suyo; con la zona como bombo único esa red no
 tiene dónde engancharse, y no se pierde nada porque no pescaba a nadie.
 
 ### La zona es la unidad de dificultad
+
+<p align="center">
+  <img src="docs/screenshots/popover-zonas.png" width="300" alt="Lista de zonas con dónde estás y el HP de cada una">
+</p>
 
 **Siempre estás en una zona**, y el rival sale de su bombo. No hay modo "todo
 mezclado": era lo que hacía que el juego se volviera **más fácil** según
@@ -926,7 +945,7 @@ quedan porque explican **por qué** cada regla es como es:
 | `docs/spec-liga-zonas-hitos.md` | fases 1-4 implementadas; 5 y 6 pendientes |
 | `docs/spec-ramas-y-cola.md` | ramas por condición **implementadas**; el resto (regiones, misiones, logros) sigue en borrador |
 | `docs/spec-salto-a-kanto.md` | **borrador para decidir**: el requisito para abrir Kanto, si Kanto pesa más, y el momento del salto. Su decisión K4 (no escalar el HP) la sustituye la spec de abajo |
-| `docs/spec-zona-como-unidad.md` | **borrador para decidir**: el HP sale de la zona y no del tier, como en PokéClicker, para que el juego deje de volverse un 36 % más fácil según avanzas |
+| `docs/spec-zona-como-unidad.md` | **implementada** con la curva B (HP ×6 y techo del bonus a +3) y la rareza ponderada 45/33/22 |
 
 ## 21. Límites conocidos del MVP
 
@@ -944,17 +963,20 @@ quedan porque explican **por qué** cada regla es como es:
   edita el `state.json` a mano.
 - Los GIF de las fichas se dibujan a **tamaño nativo** y se escalan por
   transformación de capa: si los escalara `NSImageView` al dibujar, el suavizado
-  lo haría el dibujado y «pixel nítido» no tendría ningún efecto. (~80 KB cada uno, frente a ~2 KB del PNG), así que la
-  caché crece con el uso; las rejillas siguen con el estático porque animar 251
-  celdas a la vez no compensa. Si una especie no tuviera animado, cae al
-  estático sola. Sin red, la app
-  funciona y muestra el número de Pokédex como placeholder.
+  lo haría el dibujado y «pixel nítido» no tendría ningún efecto. Pesan unos
+  80 KB cada uno frente a los ~2 KB del PNG, así que la caché crece con el uso;
+  las rejillas siguen con el estático porque animar 251 celdas a la vez no
+  compensa. Si una especie no tuviera animado, cae al estático sola. Sin red la
+  app funciona y muestra el número de Pokédex como placeholder.
 - No hay notificaciones del sistema en las capturas (evita pedir permisos): la
   barra muestra "¡X capturado!" durante 6 segundos.
 - **No se repiten líneas evolutivas.** Un Squirtle salvaje sigue apareciendo
-  aunque tengas un Wartortle, pero al vencerlo no se queda: cuenta como
-  victoria (`familyDefeats`) y nada más. La excepción es el variocolor, que sí
-  entra aunque tengas la línea en normal, porque es otra cosa a la vista.
+  aunque tengas un Wartortle, pero al vencerlo no se queda: cuenta como victoria
+  (`familyDefeats`) y nada más. Dos excepciones: el **variocolor**, que no ocupa
+  hueco pero le desbloquea la paleta al que tienes (y al revés), y las líneas
+  que **bifurcan**, que aceptan un segundo ejemplar cuando los tuyos ya no
+  evolucionan y les falta una rama. La ficha del rival dice cuál de los tres
+  casos es antes de que gastes nada.
 - **Clic abre la ficha, doble clic envía a luchar.** Antes era al revés, con la
   ficha escondida en el clic derecho: mirar es lo que se hace todo el rato y
   cambiar de compañero cambia el daño por token, así que lo barato va en el
