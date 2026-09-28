@@ -975,7 +975,9 @@ quedan porque explican **por qué** cada regla es como es:
   (`familyDefeats`) y nada más. Dos excepciones: el **variocolor**, que no ocupa
   hueco pero le desbloquea la paleta al que tienes (y al revés), y las líneas
   que **bifurcan**, que aceptan un segundo ejemplar cuando los tuyos ya no
-  evolucionan y les falta una rama. La ficha del rival dice cuál de los tres
+  evolucionan y les falta una rama **que puedas alcanzar**: con Poliwrath hecho
+  y Johto cerrado, a la línea solo le falta Politoed, así que otro Poliwag daría
+  un Poliwrath repetido y la caja espera. La ficha del rival dice cuál de los tres
   casos es antes de que gastes nada.
 - **Clic abre la ficha, doble clic envía a luchar.** Antes era al revés, con la
   ficha escondida en el clic derecho: mirar es lo que se hace todo el rato y
