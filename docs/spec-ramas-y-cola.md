@@ -1,6 +1,10 @@
 # Spec: ramas por condición, y qué viene después
 
-Estado: **borrador para decidir**. Nada de esto está implementado.
+Estado: **fase 1 implementada** (ramas por condición, sección 1), con dos
+vueltas posteriores: la rama se decide por el **último Pokémon vencido** y por
+el reloj, y si la que toca vive en una región cerrada pero solo queda **una**
+alcanzable, se coge esa en vez de esperar. Las fases 2 a 5 siguen en borrador.
+Las notificaciones de la sección 4 están **descartadas**.
 
 Cubre cuatro cosas en un solo documento porque comparten el mismo objetivo —que
 la Pokédex se pueda terminar y que el medio juego tenga qué hacer— y porque las
@@ -190,8 +194,8 @@ antes.
 
 ## Fases propuestas
 
-1. **Ramas por condición** (sección 1). Es lo que desbloquea el 100 % de la
-   Pokédex actual, y lo único de aquí que arregla algo roto.
+1. ~~**Ramas por condición** (sección 1)~~ — **hecho**. Es lo que desbloquea el
+   100 % de la Pokédex actual, y lo único de aquí que arreglaba algo roto.
 2. **Misiones** (3.A), que es lo que sostiene el medio juego.
 3. **Logros** (3.B), encima de las misiones.
 4. **Hoenn** (sección 2), cuando lo anterior esté jugado.

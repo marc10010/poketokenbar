@@ -93,9 +93,44 @@ enum UIRender {
         store.selectedTab = "progreso"
         write("popover-progreso", hosted(RootView(), size: popoverSize))
 
-        // El barco a Kanto: el Alto Mando ganado y la Pokédex a medias.
+        // --- Gimnasio: abrirlo de verdad, no simularlo
+        store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
+        store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
+        store.ingest(UsageEvent(id: "render-gym", inputTokens: 10, outputTokens: 0))
+        if let waiting = store.availableGym {
+            warm([waiting.signatureSpeciesID])
+            store.selectedTab = "combate"
+            write("popover-gimnasio-disponible", hosted(RootView(), size: popoverSize))
+            store.startGym(waiting.id)
+        }
+        if let gym = store.activeGym {
+            warm([gym.gym.signatureSpeciesID])
+            write("hud-gimnasio", hosted(HUDView(), size: compactHUD))
+            store.selectedTab = "combate"
+            write("popover-gimnasio", hosted(RootView(), size: popoverSize))
+            // Y ganarlo, para la celebración de medalla.
+            store.ingest(UsageEvent(id: "render-medalla", inputTokens: gym.battle.maxHP * 6, outputTokens: 0))
+            if store.lastMedal != nil {
+                write("hud-medalla", hosted(HUDView(), size: NSSize(width: 300, height: 120)))
+                write("popover-medalla", hosted(RootView(), size: popoverSize))
+            }
+        }
+        // La celebración dura 12 s y taparía todo lo que viene después, y el
+        // gimnasio deja la pestaña en Combate: las dos siguientes son de
+        // Progreso.
+        store.dismissMedalCelebration()
+        store.selectedTab = "progreso"
+
+        // El barco a la región 2: su Alto Mando ganado y la Pokédex a medias.
+        // La liga se busca por su recompensa y no por su id: cuando se invirtió
+        // el orden de juego, el id escrito a mano pasó a ser el de la liga
+        // final y este bloque dejó de enseñar el barco (y de paso se llevó por
+        // delante las cuatro capturas de gimnasio, que dependen de que la
+        // región 2 siga cerrada).
         store.debugDefeatGyms(upTo: 8)
-        store.debugWinLeague("johto")
+        if let ferry = store.leagueCatalog.all.first(where: { $0.reward.opensRegion != nil }) {
+            store.debugWinLeague(ferry.id)
+        }
         store.toggleSection("Rango")
         store.toggleSection("Legendarios")
         store.toggleSection("Zonas")
@@ -159,29 +194,6 @@ enum UIRender {
         store.selectedTab = "pokedex"
         write("popover-pokedex", hosted(RootView(), size: popoverSize))
         store.selectedTab = "combate"
-
-        // --- Gimnasio: abrirlo de verdad, no simularlo
-        store.debugSetGymCounters(tokens: GameRules.gymTokenInterval, captures: 0)
-        store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 10))
-        store.ingest(UsageEvent(id: "render-gym", inputTokens: 10, outputTokens: 0))
-        if let waiting = store.availableGym {
-            warm([waiting.signatureSpeciesID])
-            store.selectedTab = "combate"
-            write("popover-gimnasio-disponible", hosted(RootView(), size: popoverSize))
-            store.startGym(waiting.id)
-        }
-        if let gym = store.activeGym {
-            warm([gym.gym.signatureSpeciesID])
-            write("hud-gimnasio", hosted(HUDView(), size: compactHUD))
-            store.selectedTab = "combate"
-            write("popover-gimnasio", hosted(RootView(), size: popoverSize))
-            // Y ganarlo, para la celebración de medalla.
-            store.ingest(UsageEvent(id: "render-medalla", inputTokens: gym.battle.maxHP * 6, outputTokens: 0))
-            if store.lastMedal != nil {
-                write("hud-medalla", hosted(HUDView(), size: NSSize(width: 300, height: 120)))
-                write("popover-medalla", hosted(RootView(), size: popoverSize))
-            }
-        }
 
         for name in written.sorted() { print(name) }
         return written.isEmpty ? 1 : 0
