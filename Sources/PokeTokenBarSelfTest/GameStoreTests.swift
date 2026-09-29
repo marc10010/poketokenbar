@@ -25,6 +25,7 @@ enum GameStoreTests: TestSuite {
         ("la migración acredita al equipado", testMigrationCreditsTheEquippedCompanion),
         ("el multiplicador de tipos escala el daño real", testTypeMultiplierScalesDamage),
         ("la colección suma daño solo a los salvajes", testCollectionBonus),
+        ("la etapa del compañero suma también contra salvajes", testStageCountsAgainstWildsToo),
         ("el cruce de cada ejemplar contra el rival de ahora", testMatchupAgainstCurrentTarget),
         ("las secciones plegadas se recuerdan", testCollapsedSectionsPersist),
         ("abrir una ficha no cambia el tamaño del HUD", testOpeningDetailNeverResizesTheHUD),
@@ -459,6 +460,63 @@ enum GameStoreTests: TestSuite {
     /// contra salvajes. Y **solo** contra salvajes: si contara contra jefes,
     /// una Pokédex avanzada anularía su absorción y dejarían de ser un problema
     /// de cobertura de tipos.
+    /// Criar un Pokémon valía **cero** mientras cazabas: el bonus de etapa solo
+    /// entraba contra jefes, que es donde menos rato se pasa. Ahora cuenta en
+    /// los dos sitios, con el mismo número.
+    static func testStageCountsAgainstWildsToo() throws {
+        // Los tres tienen la misma Pokédex —capturan las tres formas— y solo
+        // cambia cuál llevan equipado: así la diferencia es la etapa y no el
+        // bonus de colección.
+        func conCompañero(_ especie: Int) throws -> GameStore {
+            let store = makeStore(seed: 71)
+            store.chooseStarter(speciesID: 7)
+            store.updateSettings { $0.typeEffectivenessEnabled = false }
+            store.debugCapture(speciesID: 8)
+            store.debugCapture(speciesID: 9)
+            let elegido = try unwrap(store.state.box.first { $0.speciesID == especie })
+            store.setActiveCompanion(elegido.id)
+            store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 5_000_000))
+            return store
+        }
+
+        let base = try conCompañero(7)
+        let una = try conCompañero(8)
+        let dos = try conCompañero(9)
+        expectEqual(base.stage, EvolutionStage.base)
+        expectEqual(una.stage, EvolutionStage.one)
+        expectEqual(dos.stage, EvolutionStage.two)
+        expectEqual(base.collectionBonus, dos.collectionBonus, accuracy: 0.0001, "la dex es la misma")
+
+        expectEqual(base.wildDamagePerToken, 1 + base.collectionBonus, accuracy: 0.0001, "la base no suma")
+        expectEqual(
+            una.wildDamagePerToken - base.wildDamagePerToken,
+            GymCombat().stageBonus(for: .one),
+            accuracy: 0.0001,
+            "el mismo bonus que contra un jefe"
+        )
+        expectEqual(
+            dos.wildDamagePerToken - base.wildDamagePerToken,
+            GymCombat().stageBonus(for: .two),
+            accuracy: 0.0001
+        )
+
+        // Y el daño de verdad, no solo la métrica que se enseña.
+        func hpQuitado(_ store: GameStore) throws -> Int {
+            let antes = try unwrap(store.state.encounter).currentHP
+            store.ingest(event("pega", input: 100_000, output: 0))
+            return antes - (try unwrap(store.state.encounter).currentHP)
+        }
+        let quitaBase = try hpQuitado(base)
+        let quitaDos = try hpQuitado(dos)
+        expectGreaterThan(quitaDos, quitaBase, "una etapa 2 tiene que quitar más")
+        expectEqual(
+            Double(quitaDos - quitaBase),
+            100_000 * GymCombat().stageBonus(for: .two),
+            accuracy: 1,
+            "dos etapas son +0,5 por token"
+        )
+    }
+
     static func testCollectionBonus() throws {
         let store = makeStore(seed: 71)
         store.chooseStarter(speciesID: 7)

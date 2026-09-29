@@ -110,6 +110,16 @@ public enum GameRules {
     /// contra salvajes, así que no toca el equilibrio de los jefes.
     public static let collectionBonusCap = 3.0
 
+    /// Lo que suma cada etapa evolutiva al daño por token. Criar un Pokémon
+    /// vale lo mismo delante de un líder que delante de un salvaje: tenerlo en
+    /// un solo sitio hacía que evolucionar no sirviera de nada mientras cazas,
+    /// que es donde se pasa el rato.
+    public static let stageBonusPerStage = 0.25
+
+    public static func stageBonus(for stage: EvolutionStage) -> Double {
+        Double(stage.rawValue) * stageBonusPerStage
+    }
+
     /// Vida de un salvaje en la zona menos profunda. Las demás salen de aquí
     /// multiplicando por `zoneHPGrowth` una vez por escalón.
     public static let zoneBaseHP = 60_000.0
