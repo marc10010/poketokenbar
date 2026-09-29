@@ -1018,10 +1018,21 @@ public final class GameStore: ObservableObject {
     public func acceptsAnother(baseFormID: Int) -> Bool {
         let line = pokedex.all.filter { $0.baseFormID == baseFormID }
         guard line.contains(where: { !BranchRules.branches(of: $0.id).isEmpty }) else { return false }
-        guard line.contains(where: { !state.registeredSpeciesIDs.contains($0.id) }) else { return false }
+        // Y que lo que falta esté a tiro: con Poliwrath hecho y Johto cerrado,
+        // a la línea solo le falta Politoed, así que otro Poliwag no daría una
+        // rama nueva sino un Poliwrath repetido.
+        guard line.contains(where: { !state.registeredSpeciesIDs.contains($0.id) && isReachable($0, from: baseFormID) })
+        else { return false }
 
         let mine = state.box.filter { pokedex[$0.speciesID]?.baseFormID == baseFormID }
         return mine.allSatisfy { evolution.options(for: $0).isEmpty }
+    }
+
+    /// Si una forma de la línea se puede conseguir ya: las de la región de la
+    /// propia línea siempre, las de otra solo con esa región abierta.
+    private func isReachable(_ form: Pokemon, from baseFormID: Int) -> Bool {
+        guard let home = pokedex[baseFormID]?.homeRegion, form.homeRegion != home else { return true }
+        return isOpen(region: form.homeRegion.lowercased())
     }
 
     /// Qué pasaría si venciera al rival de ahora. Lo decide `collect`, así que

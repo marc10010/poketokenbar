@@ -19,6 +19,7 @@ enum BranchTests: TestSuite {
         ("con una sola rama alcanzable, se coge esa", testSingleReachableBranchIsTaken),
         ("y en cuanto abre la región vuelve a mandar la hora", testTheClockRulesAgainOnceTheRegionOpens),
         ("la ficha dice qué rama está fuera de alcance", testBranchOptionsSayWhatIsOutOfReach),
+        ("un segundo ejemplar solo si su rama es alcanzable", testSecondSpecimenNeedsAReachableBranch),
     ]
 
     private static let dex = Pokedex.shared
@@ -151,6 +152,33 @@ enum BranchTests: TestSuite {
         let eevee = try primed(species: 133, rival: 19, hour: 23)
         eevee.ingest(UsageEvent(id: "espera", inputTokens: 260_000, outputTokens: 0, timestamp: at(23)))
         expectEqual(activeForm(eevee), 133, "sigue siendo Eevee")
+    }
+
+    /// Con Poliwrath ya hecho y Johto cerrado, lo único que le falta a la línea
+    /// es Politoed, que no se puede alcanzar. Aceptar otro Poliwag ahí es
+    /// regalar un Poliwrath repetido: la caja tiene que esperar a que la rama
+    /// que falta esté a tiro.
+    static func testSecondSpecimenNeedsAReachableBranch() throws {
+        let store = try primed(species: 60, rival: 19, hour: 10)
+        let poliwag = try unwrap(store.state.activeCompanion)
+
+        // Hasta Poliwrath: sin Johto, la rama del reloj no cuenta y la única
+        // alcanzable es esa.
+        store.ingest(UsageEvent(id: "sube", inputTokens: 1_300_000, outputTokens: 0, timestamp: at(10)))
+        expectEqual(activeForm(store), 62, "Poliwrath")
+        expectFalse(store.state.registeredSpeciesIDs.contains(186), "Politoed sigue sin registrar")
+
+        expectFalse(
+            store.acceptsAnother(baseFormID: 60),
+            "otro Poliwag solo daría un Poliwrath repetido"
+        )
+        expectEqual(store.captureOutcome(of: 60, shiny: false), GameStore.CaptureOutcome.repeated)
+
+        // Con Johto abierta, Politoed entra a tiro y el segundo sí sirve.
+        store.debugGrandfatherRegion("johto")
+        expectTrue(store.acceptsAnother(baseFormID: 60))
+        expectEqual(store.captureOutcome(of: 60, shiny: false), GameStore.CaptureOutcome.anotherForTheBranch)
+        _ = poliwag
     }
 
     static func testBranchOptionsSayWhatIsOutOfReach() throws {
