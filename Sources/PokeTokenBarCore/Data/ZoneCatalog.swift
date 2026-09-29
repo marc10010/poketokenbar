@@ -71,6 +71,11 @@ public final class ZoneCatalog: @unchecked Sendable {
 
     public func zones(for speciesID: Int) -> [Zone] { zonesBySpecies[speciesID] ?? [] }
 
+    /// Si una especie vive en alguna zona de esa región.
+    public func lives(_ speciesID: Int, in region: String) -> Bool {
+        zones(for: speciesID).contains { $0.region == region }
+    }
+
     public func unlocked(_ access: ZoneAccess) -> [Zone] {
         all.filter { access.opens($0) }
     }

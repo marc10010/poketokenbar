@@ -722,12 +722,30 @@ del sur no sirven para buscar nada concreto, y lo que cuesta cada sitio.
 
 Lo que la zona **no** hace:
 
-- no cuela legendarios (son hitos, no salvajes) ni formas evolucionadas (un
-  salvaje arranca su línea), que es lo que nunca aparece en libertad;
+- no cuela legendarios (son hitos, no salvajes) ni formas evolucionadas: un
+  salvaje **arranca su línea**, con una excepción medida abajo;
 - no toca el disparador del gimnasio, que cuenta **victorias** de cualquier
   sitio: volver a una zona vieja a por lo que falta nunca frena el progreso;
 - no se salta el rango: de Novato no salen raros ni en su zona. La puerta de la
   zona dice dónde puedes ir; el rango, qué se te pone delante al llegar.
+
+**La excepción: una zona da la forma que lista cuando la base no es de esa
+región.** Gen 2 metió crías por debajo de media Gen 1 —Pichu bajo Pikachu,
+Elekid bajo Electabuzz, Cleffa bajo Clefairy— y esas crías solo viven en Johto.
+Con la regla a rajatabla, **14 especies listadas en zonas de Kanto eran
+incapturables hasta el barco**, Pikachu entre ellas: listado en su propio Bosque
+Verde y en su Central Eléctrica, y sin forma de conseguirlo.
+
+Así que si la línea no tiene base en esa región, la zona da **la forma más baja
+que ella lista**: Pikachu en el Bosque Verde, Electabuzz en la Central, Clefairy
+en el Monte Moon. Son 31 casos contados sobre los datos. No es barra libre de
+evolucionadas: el Geodude del Monte Plateado es de Kanto, así que su Graveler
+sigue sin salir de la nada, y en Johto —donde Pichu sí vive— lo que sale es
+Pichu.
+
+Un rescatado entra **en su etapa**: un Pikachu salvaje cuenta como etapa 1, así
+que suma su `+0,25` desde el primer token y le hace falta el millón para
+Raichu, no los 200.001. Se caza medio criado y se paga en la otra mitad.
 
 ## 14. Pokédex completa
 

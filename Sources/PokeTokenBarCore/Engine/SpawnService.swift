@@ -38,10 +38,26 @@ public struct SpawnService {
     /// Un salvaje arranca su línea, y los legendarios son hitos con sitio y
     /// requisito.
     public func pool(_ zone: Zone) -> [Pokemon] {
-        zone.species
-            .compactMap { pokedex[$0] }
-            .filter { $0.isBaseForm && $0.rarity.spawnsInTheWild }
-            .sorted { $0.id < $1.id }
+        let vivos = zone.species.compactMap { pokedex[$0] }.filter(\.rarity.spawnsInTheWild)
+        let base = vivos.filter(\.isBaseForm)
+
+        // Rescate: una zona da la forma que lista, aunque no sea la base,
+        // cuando la base **no es de esta región**. Gen 2 metió crías por debajo
+        // de media Gen 1 —Pichu bajo Pikachu, Elekid bajo Electabuzz— y esas
+        // crías solo viven en Johto, así que Pikachu era incapturable en Kanto
+        // pese a estar listado en su Bosque Verde y en su Central Eléctrica.
+        // Solo la más baja que la zona liste, y solo si su línea no tiene ya
+        // base aquí: el Geodude del Monte Plateado es de Kanto, así que su
+        // Graveler sigue sin salir.
+        let conBase = Set(base.map(\.baseFormID))
+        var rescatadas: [Int: Pokemon] = [:]
+        for forma in vivos where !forma.isBaseForm && !conBase.contains(forma.baseFormID) {
+            guard !zones.lives(forma.baseFormID, in: zone.region) else { continue }
+            if let previa = rescatadas[forma.baseFormID], previa.stage <= forma.stage { continue }
+            rescatadas[forma.baseFormID] = forma
+        }
+
+        return (base + rescatadas.values).sorted { $0.id < $1.id }
     }
 
     /// Un rival de la zona en la que estás. La zona decide **quién** sale
