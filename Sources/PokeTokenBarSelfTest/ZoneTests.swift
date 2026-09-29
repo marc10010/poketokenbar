@@ -18,6 +18,7 @@ enum ZoneTests: TestSuite {
         ("lo que no tiene zona no se caza", testWhatHasNoZoneIsNotHuntable),
         ("una zona de una sola rareza reparte a partes iguales", testUniformInsideASingleTierZone),
         ("una zona no cuela legendarios ni formas evolucionadas", testZoneExcludesWhatNeverSpawns),
+        ("una zona da la forma que lista si su base no es de aquí", testAZoneGivesWhatItListsWhenTheBaseIsForeign),
         ("no se puede ir a una zona cerrada", testMovingNeedsAnOpenZone),
         ("sin elegir, estás en la más profunda abierta", testDefaultsToTheDeepestOpenZone),
         ("la partida vieja conserva su zona", testLegacyFocusedZoneIsRead),
@@ -53,8 +54,8 @@ enum ZoneTests: TestSuite {
     /// uniforme, que es lo que hace legible el tamaño del bombo: en una zona
     /// de dos, lo que buscas sale una de cada dos.
     static func testUniformInsideASingleTierZone() throws {
-        // Bosque Verde: Caterpie, Weedle y Pidgey, los tres comunes.
-        let zone = try unwrap(catalog["bosque-verde"])
+        // Calle Victoria: siete, todos poco comunes.
+        let zone = try unwrap(catalog["calle-victoria"])
         let pool = spawner.pool(zone)
         expectGreaterThan(pool.count, 1)
         expectEqual(Set(pool.map(\.rarity)).count, 1, "el test necesita una zona de una sola rareza")
@@ -82,12 +83,51 @@ enum ZoneTests: TestSuite {
     /// Enfocar no filtra por tipo ni por rareza —sale todo lo de la zona— pero
     /// lo que **nunca** aparece en libertad sigue sin aparecer: los legendarios
     /// son hitos, y un salvaje arranca su línea evolutiva.
+    /// Gen 2 metió crías por debajo de media Gen 1, y esas crías solo viven en
+    /// Johto: con "un salvaje siempre arranca su línea" a rajatabla, Pikachu
+    /// era incapturable en Kanto pese a estar listado en su propio Bosque Verde
+    /// y en su Central Eléctrica. Eran 14 especies así.
+    static func testAZoneGivesWhatItListsWhenTheBaseIsForeign() throws {
+        let bosque = try unwrap(catalog["bosque-verde"])
+        expectTrue(bosque.species.contains(25), "el Bosque Verde lista a Pikachu")
+        expectTrue(spawner.pool(bosque).contains { $0.id == 25 }, "y ahora sale")
+        expectFalse(catalog.lives(172, in: "kanto"), "Pichu no vive en Kanto")
+
+        // Solo la más baja que la zona liste: la Central lista Pikachu y
+        // Raichu, y sale Pikachu.
+        let central = try unwrap(catalog["central-electrica"])
+        let pool = Set(spawner.pool(central).map(\.id))
+        expectTrue(pool.contains(25), "Pikachu")
+        expectFalse(pool.contains(26), "Raichu no, que Pikachu está delante")
+        expectTrue(pool.contains(125), "Electabuzz, que su base es Elekid y es de Johto")
+
+        // Y no es barra libre de evolucionadas: el Geodude del Monte Plateado
+        // es de Kanto, así que su Graveler sigue sin salir.
+        let plateado = try unwrap(catalog["monte-plateado"])
+        expectTrue(plateado.species.contains(75), "el Monte Plateado lista a Graveler")
+        expectFalse(spawner.pool(plateado).contains { $0.id == 75 }, "pero no sale")
+        expectTrue(catalog.lives(74, in: "kanto"), "porque Geodude es de Kanto")
+
+        // En Johto la base sí está, así que ahí sale la cría.
+        let sur = try unwrap(catalog["rutas-johto-sur"])
+        let johto = Set(spawner.pool(sur).map(\.id))
+        expectTrue(johto.contains(172), "Pichu")
+        expectFalse(johto.contains(25), "y no Pikachu, que aquí sí hay base")
+    }
+
     static func testZoneExcludesWhatNeverSpawns() throws {
         let electrica = try unwrap(catalog.all.first { $0.species.contains(145) })
         let pool = spawner.pool(electrica)
         expectTrue(!pool.contains { $0.id == 145 }, "Zapdos es un hito, no un salvaje")
-        expectTrue(pool.allSatisfy { $0.isBaseForm }, "solo formas base")
         expectTrue(pool.allSatisfy { $0.rarity.spawnsInTheWild })
+        // Formas base, salvo el rescate de las líneas que aquí no tienen base
+        // (ver `una zona da la forma que lista si su base no es de aquí`).
+        for forma in pool where !forma.isBaseForm {
+            expectFalse(
+                catalog.lives(forma.baseFormID, in: electrica.region),
+                "\(forma.name) sale sin ser base y su línea sí tiene base aquí"
+            )
+        }
 
         // El rango sí gatea dentro de la zona: de novato, una zona con raras
         // no las da. La puerta de la zona dice dónde puedes ir; el rango, qué
