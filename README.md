@@ -502,7 +502,7 @@ tabla escrita a mano.
 ## 10. Tests
 
 ```bash
-swift run PokeTokenBarSelfTest     # 221 tests, ~136k comprobaciones
+swift run PokeTokenBarSelfTest     # 223 tests, ~136k comprobaciones
 swift run PokeTokenBar --ui-smoke-test
 ```
 
