@@ -46,12 +46,16 @@ public struct SpawnService {
         // de media Gen 1 —Pichu bajo Pikachu, Elekid bajo Electabuzz— y esas
         // crías solo viven en Johto, así que Pikachu era incapturable en Kanto
         // pese a estar listado en su Bosque Verde y en su Central Eléctrica.
-        // Solo la más baja que la zona liste, y solo si su línea no tiene ya
-        // base aquí: el Geodude del Monte Plateado es de Kanto, así que su
-        // Graveler sigue sin salir.
+        //
+        // Tres condiciones, y las tres hacen falta: que la forma sea **de esta
+        // región** (si no, el rescate colaba Quagsire y Ursaring en Kanto
+        // saltándose a Wooper y Teddiursa), que su línea no tenga ya base aquí
+        // (el Geodude del Monte Plateado es de Kanto, así que su Graveler no
+        // sale) y que sea la más baja que esta zona liste.
         let conBase = Set(base.map(\.baseFormID))
         var rescatadas: [Int: Pokemon] = [:]
         for forma in vivos where !forma.isBaseForm && !conBase.contains(forma.baseFormID) {
+            guard forma.homeRegion.caseInsensitiveCompare(zone.region) == .orderedSame else { continue }
             guard !zones.lives(forma.baseFormID, in: zone.region) else { continue }
             if let previa = rescatadas[forma.baseFormID], previa.stage <= forma.stage { continue }
             rescatadas[forma.baseFormID] = forma

@@ -108,6 +108,14 @@ enum ZoneTests: TestSuite {
         expectFalse(spawner.pool(plateado).contains { $0.id == 75 }, "pero no sale")
         expectTrue(catalog.lives(74, in: "kanto"), "porque Geodude es de Kanto")
 
+        // Y solo rescata lo que es de esta región: Quagsire es de Johto, así
+        // que en Kanto no sale aunque su Wooper tampoco viva aquí. Esa se caza
+        // en Johto, desde Wooper.
+        let surKanto = try unwrap(catalog["rutas-kanto-sur"])
+        expectTrue(surKanto.species.contains(195), "la ruta lista a Quagsire")
+        expectFalse(spawner.pool(surKanto).contains { $0.id == 195 }, "pero es de Johto y no sale")
+        expectTrue(spawner.pool(surKanto).contains { $0.id == 25 }, "Pikachu sí, que es de Kanto")
+
         // En Johto la base sí está, así que ahí sale la cría.
         let sur = try unwrap(catalog["rutas-johto-sur"])
         let johto = Set(spawner.pool(sur).map(\.id))
