@@ -763,16 +763,23 @@ Lo que la zona **no** hace:
 **La excepción: una zona da la forma que lista cuando la base no es de esa
 región.** Gen 2 metió crías por debajo de media Gen 1 —Pichu bajo Pikachu,
 Elekid bajo Electabuzz, Cleffa bajo Clefairy— y esas crías solo viven en Johto.
-Con la regla a rajatabla, **14 especies listadas en zonas de Kanto eran
-incapturables hasta el barco**, Pikachu entre ellas: listado en su propio Bosque
+Con la regla a rajatabla, **10 especies de Kanto listadas en sus propias zonas
+eran incapturables hasta el barco** —Pikachu, Raichu, Clefairy, Jigglypuff,
+Wigglytuff, Jynx, Electabuzz, Magmar, Hitmonlee y Hitmonchan—: listado en su propio Bosque
 Verde y en su Central Eléctrica, y sin forma de conseguirlo.
 
-Así que si la línea no tiene base en esa región, la zona da **la forma más baja
-que ella lista**: Pikachu en el Bosque Verde, Electabuzz en la Central, Clefairy
-en el Monte Moon. Son 31 casos contados sobre los datos. No es barra libre de
-evolucionadas: el Geodude del Monte Plateado es de Kanto, así que su Graveler
-sigue sin salir de la nada, y en Johto —donde Pichu sí vive— lo que sale es
-Pichu.
+Así que la zona da **la forma más baja que ella lista** cuando se cumplen tres
+cosas: que la forma sea **de esa región**, que su línea no tenga ya base allí y
+que no haya otra suya más abajo en la misma zona. Pikachu en el Bosque Verde,
+Electabuzz en la Central, Clefairy en el Monte Moon: **19 casos** contados sobre
+los datos.
+
+Las tres condiciones hacen falta. Sin la primera, el rescate colaba 12 formas de
+la otra región —Quagsire, Ursaring y Donphan en rutas de Kanto; Dodrio y Rhydon
+en las de Johto— saltándose a Wooper, Teddiursa, Phanpy, Doduo y Rhyhorn, que es
+justo lo contrario de lo que se arregla aquí. Sin la segunda sería barra libre
+de evolucionadas: el Geodude del Monte Plateado es de Kanto, así que su Graveler
+no sale de la nada. Y en Johto —donde Pichu sí vive— lo que sale es Pichu.
 
 Un rescatado entra **en su etapa**: un Pikachu salvaje cuenta como etapa 1, así
 que suma su `+0,25` desde el primer token y le hace falta el millón para
