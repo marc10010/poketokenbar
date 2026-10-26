@@ -20,7 +20,7 @@ struct ZonesView: View {
                 Image(systemName: "figure.walk")
                     .font(.system(size: 10))
                     .foregroundStyle(.orange)
-                Text("Estás en \(here.name)")
+                Text("Estás en \(here.name) · \(here.region.capitalized)")
                     .font(.system(size: 11, weight: .semibold))
                 Spacer(minLength: 4)
                 Text("\(Fmt.tokens(store.zoneHP(here))) HP")
@@ -35,12 +35,54 @@ struct ZonesView: View {
 
             Divider().padding(.vertical, 1)
 
-            // En orden de desbloqueo: es el orden en que aparecen, el que dice
-            // cuánto pega cada una, y por tanto el que se quiere leer.
-            ForEach(store.zoneCatalog.inUnlockOrder) { zone in
-                row(zone, open: access.opens(zone), here: zone.id == here.id)
+            // Por región y, dentro, en orden de desbloqueo: el que dice cuánto
+            // pega cada una. Solo la región donde estás sale desplegada.
+            ForEach(regions, id: \.self) { region in
+                let zones = store.zoneCatalog.inUnlockOrder.filter { $0.region == region }
+                let collapsed = store.isZoneRegionCollapsed(region)
+                regionHeader(region, zones: zones, access: access, here: here, collapsed: collapsed)
+                if !collapsed {
+                    ForEach(zones) { zone in
+                        row(zone, open: access.opens(zone), here: zone.id == here.id)
+                    }
+                }
             }
         }
+    }
+
+    /// En el orden en que se llega a ellas.
+    private var regions: [String] {
+        store.zoneCatalog.inUnlockOrder.reduce(into: [String]()) { acc, zone in
+            if !acc.contains(zone.region) { acc.append(zone.region) }
+        }
+    }
+
+    private func regionHeader(_ region: String, zones: [Zone], access: ZoneAccess, here: Zone, collapsed: Bool) -> some View {
+        let open = zones.filter { access.opens($0) }.count
+        return Button {
+            store.toggleZoneRegion(region)
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: collapsed ? "chevron.right" : "chevron.down")
+                    .font(.system(size: 8, weight: .bold))
+                Text(region.uppercased())
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(0.5)
+                if region == here.region {
+                    Image(systemName: "figure.walk")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.orange)
+                }
+                Spacer(minLength: 4)
+                Text("\(open) de \(zones.count) abiertas")
+                    .font(.system(size: 9, design: .monospaced))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        .padding(.top, 2)
+        .help(collapsed ? "Desplegar" : "Plegar")
     }
 
     /// Con una sola especie las plurales cantan: "Salen sus 1 especies".

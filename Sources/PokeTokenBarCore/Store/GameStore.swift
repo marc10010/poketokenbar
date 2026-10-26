@@ -259,8 +259,25 @@ public final class GameStore: ObservableObject {
     public func move(toZone zoneID: String) -> Bool {
         guard let zone = zoneCatalog[zoneID], zoneAccess.opens(zone), !spawner.pool(zone).isEmpty
         else { return false }
-        updateSettings { $0.currentZoneID = zone.id }
+        let changesRegion = zone.region != currentZone.region
+        updateSettings { settings in
+            settings.currentZoneID = zone.id
+            // Lo plegado a mano se refería a la región que dejas.
+            if changesRegion { settings.collapsedSections = settings.collapsedSections.filter { !$0.hasPrefix(Self.zoneRegionPrefix) } }
+        }
         return true
+    }
+
+    private static let zoneRegionPrefix = "zonas:"
+
+    /// Por defecto solo está desplegada la región donde estás; la clave guarda
+    /// el cambio respecto a eso.
+    public func isZoneRegionCollapsed(_ region: String) -> Bool {
+        (region != currentZone.region) != isCollapsed(Self.zoneRegionPrefix + region)
+    }
+
+    public func toggleZoneRegion(_ region: String) {
+        toggleSection(Self.zoneRegionPrefix + region)
     }
 
     /// Lo que se puede cazar en una zona y cuánto te falta de ahí: en una zona

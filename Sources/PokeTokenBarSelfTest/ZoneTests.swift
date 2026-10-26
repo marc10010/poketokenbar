@@ -23,6 +23,7 @@ enum ZoneTests: TestSuite {
         ("sin elegir, estás en la más profunda abierta", testDefaultsToTheDeepestOpenZone),
         ("la partida vieja conserva su zona", testLegacyFocusedZoneIsRead),
         ("la zona se persiste", testCurrentZonePersists),
+        ("viajar de región despliega la nueva aunque la abrieras a mano", testTravellingResetsRegionFolding),
     ]
 
     private static let catalog = ZoneCatalog.shared
@@ -165,6 +166,29 @@ enum ZoneTests: TestSuite {
 
         expectFalse(store.move(toZone: "no-existe"))
         expectEqual(store.currentZone.id, open.id, "un id inventado no cambia nada")
+    }
+
+    static func testTravellingResetsRegionFolding() throws {
+        let store = store()
+        store.debugOpenRegion("johto")
+        let kanto = try unwrap(store.unlockedZones.first { $0.region == "kanto" })
+        let johto = try unwrap(store.unlockedZones.first { $0.region == "johto" && store.zoneSummary($0).pool > 0 })
+        expectTrue(store.move(toZone: kanto.id))
+        expectFalse(store.isZoneRegionCollapsed("kanto"))
+        expectTrue(store.isZoneRegionCollapsed("johto"), "la región donde no estás sale plegada")
+
+        // Lo que se hace para darle a "Ir": desplegar Johto a mano.
+        store.toggleZoneRegion("johto")
+        expectFalse(store.isZoneRegionCollapsed("johto"))
+        expectTrue(store.move(toZone: johto.id))
+        expectFalse(store.isZoneRegionCollapsed("johto"), "al llegar sigue desplegada")
+        expectTrue(store.isZoneRegionCollapsed("kanto"))
+
+        // Dentro de la misma región, lo plegado a mano se respeta.
+        store.toggleZoneRegion("kanto")
+        let otra = try unwrap(store.unlockedZones.first { $0.region == "johto" && $0.id != johto.id && store.zoneSummary($0).pool > 0 })
+        expectTrue(store.move(toZone: otra.id))
+        expectFalse(store.isZoneRegionCollapsed("kanto"))
     }
 
     /// Sin haber elegido nunca, estás en la más profunda que tengas abierta:
