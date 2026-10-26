@@ -39,7 +39,7 @@ struct ZonesView: View {
             // pega cada una. Solo la región donde estás sale desplegada.
             ForEach(regions, id: \.self) { region in
                 let zones = store.zoneCatalog.inUnlockOrder.filter { $0.region == region }
-                let collapsed = isCollapsed(region, here: here)
+                let collapsed = store.isZoneRegionCollapsed(region)
                 regionHeader(region, zones: zones, access: access, here: here, collapsed: collapsed)
                 if !collapsed {
                     ForEach(zones) { zone in
@@ -57,18 +57,10 @@ struct ZonesView: View {
         }
     }
 
-    // La clave guarda el cambio respecto al estado por defecto, que depende de
-    // dónde estés: así al viajar se despliega sola la región nueva.
-    private func sectionID(_ region: String) -> String { "zonas:\(region)" }
-
-    private func isCollapsed(_ region: String, here: Zone) -> Bool {
-        (region != here.region) != store.isCollapsed(sectionID(region))
-    }
-
     private func regionHeader(_ region: String, zones: [Zone], access: ZoneAccess, here: Zone, collapsed: Bool) -> some View {
         let open = zones.filter { access.opens($0) }.count
         return Button {
-            store.toggleSection(sectionID(region))
+            store.toggleZoneRegion(region)
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: collapsed ? "chevron.right" : "chevron.down")
