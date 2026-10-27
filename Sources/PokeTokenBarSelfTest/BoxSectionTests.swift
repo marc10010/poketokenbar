@@ -17,6 +17,7 @@ enum BoxSectionTests: TestSuite {
         ("una columna deja la caja en lista", testSingleColumn),
         ("el teclado no sale de lo filtrado", testKeyboardStaysInsideTheFilter),
         ("intro equipa el seleccionado", testReturnEquipsSelection),
+        ("el teclado salta los tramos plegados", testKeyboardSkipsCollapsedSections),
         ("la densidad se persiste", testDensitySurvivesReload),
     ]
 
@@ -202,6 +203,24 @@ enum BoxSectionTests: TestSuite {
             let moved = try unwrap(store.moveBoxSelection(direction, columns: 3))
             expectTrue(visible.contains(moved), "seleccionó \(moved), que está filtrado")
         }
+    }
+
+    static func testKeyboardSkipsCollapsedSections() throws {
+        let store = primedStore()
+        let sections = store.boxSections
+        expectEqual(sections.map(\.id), ["gen-1", "gen-2"])
+        let kanto = Set(try unwrap(sections.first).groups.map(\.id))
+
+        store.toggleBoxSection("gen-1")
+        expectTrue(store.isBoxSectionCollapsed("gen-1"))
+        expectFalse(store.isBoxSectionCollapsed("gen-2"))
+        for direction in [BoxMove.right, .down, .left, .up] {
+            let moved = try unwrap(store.moveBoxSelection(direction, columns: 3))
+            expectFalse(kanto.contains(moved), "seleccionó \(moved), que está plegado")
+        }
+
+        store.toggleBoxSection("gen-1")
+        expectFalse(store.isBoxSectionCollapsed("gen-1"))
     }
 
     static func testReturnEquipsSelection() throws {

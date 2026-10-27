@@ -830,11 +830,15 @@ public final class GameStore: ObservableObject {
 
     /// Alterna entre la paleta shiny y la normal. Solo tiene efecto en un
     /// shiny de verdad: no se puede "pintar" uno normal.
+    public func isBoxSectionCollapsed(_ id: String) -> Bool { isCollapsed("caja:" + id) }
+    public func toggleBoxSection(_ id: String) { toggleSection("caja:" + id) }
+
     /// Mueve la selección de la caja con el teclado. Devuelve el hueco nuevo
     /// para que la vista pueda hacerle scroll.
     @discardableResult
     public func moveBoxSelection(_ direction: BoxMove, columns: Int) -> String? {
-        let next = BoxSection.move(direction, from: selectedBoxGroupID, in: boxSections, columns: columns)
+        let open = boxSections.filter { !isBoxSectionCollapsed($0.id) }
+        let next = BoxSection.move(direction, from: selectedBoxGroupID, in: open, columns: columns)
         if let next { selectedBoxGroupID = next }
         return next
     }

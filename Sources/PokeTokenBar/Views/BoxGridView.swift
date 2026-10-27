@@ -43,7 +43,9 @@ struct BoxGridView: View {
                 LazyVStack(alignment: .leading, spacing: 8, pinnedViews: [.sectionHeaders]) {
                     ForEach(store.boxSections) { section in
                         Section {
-                            body(of: section)
+                            if !store.isBoxSectionCollapsed(section.id) {
+                                body(of: section)
+                            }
                         } header: {
                             header(section)
                         }
@@ -104,7 +106,21 @@ struct BoxGridView: View {
     }
 
     private func header(_ section: BoxSection) -> some View {
+        let collapsed = store.isBoxSectionCollapsed(section.id)
+        return Button {
+            store.toggleBoxSection(section.id)
+        } label: {
+            headerLabel(section, collapsed: collapsed)
+        }
+        .buttonStyle(.plain)
+        .help(collapsed ? "Desplegar" : "Plegar")
+    }
+
+    private func headerLabel(_ section: BoxSection, collapsed: Bool) -> some View {
         HStack(spacing: 5) {
+            Image(systemName: collapsed ? "chevron.right" : "chevron.down")
+                .font(.system(size: 8, weight: .bold))
+                .foregroundStyle(.secondary)
             Text(section.title)
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.secondary)
@@ -115,6 +131,7 @@ struct BoxGridView: View {
         }
         .padding(.vertical, 3)
         .padding(.horizontal, 2)
+        .contentShape(Rectangle())
         .background(.regularMaterial)
     }
 
