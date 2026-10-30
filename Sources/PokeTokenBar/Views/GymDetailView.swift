@@ -56,6 +56,9 @@ struct GymDetailView: View {
             if isNext, store.activeGym == nil {
                 let left = store.gymTriggerProgress
                 row("Se abre en", "\(Fmt.tokens(left.tokensLeft)) tokens o \(left.capturesLeft) victorias")
+                if !store.gymCountsHere {
+                    row("Cuenta", "solo cazando en \(gym.region.capitalized)")
+                }
             }
         }
     }

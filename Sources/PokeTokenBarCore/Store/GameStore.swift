@@ -408,6 +408,13 @@ public final class GameStore: ObservableObject {
         return candidate
     }
 
+    /// El siguiente gimnasio solo se acerca cazando en su región: si no,
+    /// repasar Kanto abría los de Johto.
+    public var gymCountsHere: Bool {
+        guard let next = nextGym else { return true }
+        return currentZone.region == next.region
+    }
+
     /// Qué bloquea el avance de gimnasios, si algo lo bloquea.
     public var gymGate: League? {
         guard let candidate = gymCatalog.next(defeated: state.gyms.defeatedIDs),
@@ -967,7 +974,7 @@ public final class GameStore: ObservableObject {
             return nil
         }
 
-        state.gyms.tokensSinceLastGym += damage
+        if gymCountsHere { state.gyms.tokensSinceLastGym += damage }
 
         let bosses = resolveOpenBosses(tokens: damage, now: event.timestamp)
         guard bosses.leftover > 0 else {
@@ -1162,7 +1169,7 @@ public final class GameStore: ObservableObject {
             let base = pokedex[wild.speciesID]?.baseFormID ?? wild.speciesID
             state.lastDefeatedSpeciesID = wild.speciesID
             state.familyDefeats[base, default: 0] += 1
-            state.gyms.capturesSinceLastGym += 1
+            if gymCountsHere { state.gyms.capturesSinceLastGym += 1 }
             creditCompanionWildDefeat()
 
             if owned.contains(base) {
