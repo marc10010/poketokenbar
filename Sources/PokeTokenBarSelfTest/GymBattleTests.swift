@@ -13,6 +13,7 @@ enum GymBattleTests: TestSuite {
         ("con el cruce bloqueado el HP no se mueve", testBlockedGymDoesNotBudge),
         ("cambiar de compañero desbloquea el combate", testSwitchingCompanionUnblocks),
         ("los contadores se reinician al terminar", testCountersResetOnGymEnd),
+        ("el siguiente gimnasio solo se acerca cazando en su región", testCountersOnlyInTheGymRegion),
         ("las medallas abren los tiers", testMedalsUnlockTiers),
         ("los tokens del gimnasio cuentan para el ledger, el HP para la evolución", testGymTokensStillCount),
         ("el compañero cobra el HP que quita, no los tokens que gasta", testCreditIsWorkDoneNotFuelBurnt),
@@ -54,6 +55,31 @@ enum GymBattleTests: TestSuite {
         let available = try unwrap(store.availableGym)
         expectTrue(store.startGym(available.id), "no se pudo entrar")
         return try unwrap(store.activeGym).battle
+    }
+
+    static func testCountersOnlyInTheGymRegion() throws {
+        let store = makeStore()
+        store.chooseStarter(speciesID: 7)
+        store.updateSettings { $0.typeEffectivenessEnabled = false }
+        store.debugDefeatGyms(upTo: 8)
+        store.debugOpenRegion("johto")
+        expectEqual(store.nextGym?.region, "johto")
+
+        let kanto = try unwrap(store.unlockedZones.first { $0.region == "kanto" && store.zoneSummary($0).pool > 0 })
+        expectTrue(store.move(toZone: kanto.id))
+        expectFalse(store.gymCountsHere, "en Kanto no cuenta para Johto")
+        store.debugSetEncounter(WildEncounter(speciesID: 19, isShiny: false, rarity: .common, maxHP: 100))
+        store.ingest(event("kanto", tokens: 1_000))
+        expectEqual(store.state.gyms.tokensSinceLastGym, 0, "los tokens en Kanto no acercan a Johto")
+        expectEqual(store.state.gyms.capturesSinceLastGym, 0, "ni las victorias")
+
+        let johto = try unwrap(store.unlockedZones.first { $0.region == "johto" && store.zoneSummary($0).pool > 0 })
+        expectTrue(store.move(toZone: johto.id))
+        expectTrue(store.gymCountsHere)
+        store.debugSetEncounter(WildEncounter(speciesID: 161, isShiny: false, rarity: .common, maxHP: 100))
+        store.ingest(event("johto", tokens: 1_000))
+        expectEqual(store.state.gyms.tokensSinceLastGym, 1_000)
+        expectTrue(store.state.gyms.capturesSinceLastGym >= 1)
     }
 
     /// El gimnasio ya no se impone: al cumplirse el disparador queda
