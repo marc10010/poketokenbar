@@ -216,7 +216,9 @@ struct PokedexView: View {
             Divider()
             VStack(alignment: .leading, spacing: 3) {
                 row("Veces vencido", Fmt.tokens(entry.defeats))
-                row("Aparece con rango", entry.species.requiredRankLabel)
+                if store.milestoneCatalog.milestone(forSpecies: entry.species.id) == nil {
+                    row("Aparece con rango", entry.species.requiredRankLabel)
+                }
                 zonesRow(entry)
                 if entry.species.stage > 0, let base = store.pokedex[entry.species.baseFormID] {
                     row("Evoluciona de", base.localizedName)
@@ -238,7 +240,10 @@ struct PokedexView: View {
     @ViewBuilder
     private func zonesRow(_ entry: PokedexEntry) -> some View {
         let zonas = store.zones(for: entry.species.id)
-        if zonas.isEmpty {
+        if let reto = store.milestoneCatalog.milestone(forSpecies: entry.species.id) {
+            // Los legendarios no salen cazando aunque la zona los liste.
+            row("Cómo se consigue", "reto en \(reto.place)")
+        } else if zonas.isEmpty {
             row("Dónde aparece", "sin ruta conocida")
         } else {
             VStack(alignment: .leading, spacing: 2) {
@@ -264,6 +269,11 @@ struct PokedexView: View {
     }
 
     private func hint(_ entry: PokedexEntry) -> String {
+        if let reto = store.milestoneCatalog.milestone(forSpecies: entry.species.id) {
+            let estado = store.availability(of: reto)
+            let cuando = estado.isAvailable ? "Ya puedes retarlo" : "Ahora mismo: \(estado.reason)"
+            return "No aparece en libertad: se reta en Progreso → Legendarios. \(cuando)."
+        }
         if entry.species.stage > 0 {
             return "Las formas evolucionadas no aparecen en libertad: consigue su forma base y hazla evolucionar llevándola equipada."
         }
